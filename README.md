@@ -40,6 +40,8 @@ Formula is:
 
 sum(Bestprice in your country 1 + Bestprice in your country 2 + Bestprice in your country 3 + Bestprice in your country 3 ) / 4 = your price
 
+*Only offers with same or better condition are checked, also only offers from the same country as you (avoids bad pricing due to foregin low price offers).*
+
 There is also a Bot mode for this, you can make the tool execute this task every X minutes . The preset is 360 minutes = 6 hours. Keep your API Limit in mind, the tool needs to request the product data for every article you own to calculate the price, 1 call per item is needed. 
 
 You must feel confortable with the formula or change it to your demands, be aware that making mistaked in price calculation can cost you real money. Handle with care.
