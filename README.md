@@ -8,14 +8,14 @@ This tool is intended for everyone who is curious about buying and selling MTG c
 
 First a small disclaimer and things to remember:
 
-*The entire tool uses the mkmapi 2.0 and is purely designed as prove of concept. If you use this application always remember that this is coded for fun and not 100% perfectly tested. I am not responsible for any damage or anything it might cause. You are using it in a real environment where real loose of money is possible. Don’t blame me if you sell your lotus for pennies.
-*This is not an official MKM software product, it’s a private venture for the fun of it.
-*Non commercial users have 5000 API calls by day, depending on the function these can be exhausted very quickly (check for cheap deals, get box value i.e.).
-*I am german, the code was written to sell Magic Cards in Germany. Everything else will need some adjustments. If you are from another country just change the country ID in MKMHelper.css to yours. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
-*Beware the program might be slow or if it is calculating it might be not responding a while. This is ok, I didn’t multithread it so this is no problem. Keep an eye on the main log window.
-*In the evening hours if magiccardmarket is crowded, the api seems to be slower, please take this in account if you use the tool.
-*If you find bugs, feel free to report them on github. 
-*This is GPL v3, free software written in C#.
++The entire tool uses the mkmapi 2.0 and is purely designed as prove of concept. If you use this application always remember that this is coded for fun and not 100% perfectly tested. I am not responsible for any damage or anything it might cause. You are using it in a real environment where real loose of money is possible. Don’t blame me if you sell your lotus for pennies.
++This is not an official MKM software product, it’s a private venture for the fun of it.
++Non commercial users have 5000 API calls by day, depending on the function these can be exhausted very quickly (check for cheap deals, get box value i.e.).
++I am german, the code was written to sell Magic Cards in Germany. Everything else will need some adjustments. If you are from another country just change the country ID in MKMHelper.css to yours. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
++Beware the program might be slow or if it is calculating it might be not responding a while. This is ok, I didn’t multithread it so this is no problem. Keep an eye on the main log window.
++In the evening hours if magiccardmarket is crowded, the api seems to be slower, please take this in account if you use the tool.
++If you find bugs, feel free to report them on github. 
++This is GPL v3, free software written in C#.
 
 ##Installation and starting off
 
@@ -27,17 +27,15 @@ Before you can use the tool please rename config_template.xml to config.xml and 
 MKMTool has 4 Main Features:
 
 ###Price Update
-The most interesting function (for me at least) is the automatic price update. This function will update all your card sale prices to a match the middle of the best 4 prices from your country. This will guarantee you a good sale rate by not matching the cheapest seller who is sometimes off and could cause you a bad deal. This could be easily changed to match the 4 best prices by dealers as well, would be a simple code change in the parameters of the call in MKMBot.cs line 234.
+The most interesting function (for me at least) is the automatic price update. This function will update all your card sale prices to a match the middle value of the best 4 prices from your country. This will guarantee you a good sale rate by not matching the cheapest seller who is sometimes off and could cause you a bad deal. This could be easily changed to match the 4 best prices by dealers as well, would be a simple code change in the parameters of the call in MKMBot.cs line 234.
+
 Formula is:
 
-Bestprice in your country 1
-+ Bestprice in your country 2
-+ Bestprice in your country 3
-+ Bestprice in your country 3
-= sum / 4
-= your price
+sum(Bestprice in your country 1 + Bestprice in your country 2 + Bestprice in your country 3 + Bestprice in your country 3 ) / 4 = your price
 
 There is also a Bot mode for this, you can make the tool execute this task every X minutes . The preset is 360 minutes = 6 hours. Keep your API Limit in mind, the tool needs to request the product data for every article you own to calculate the price, 1 call per item is needed. 
+
+You must feel confortable with the formula or change it to your demands, be aware that making mistaked in price calculation can cost you real money. Handle with care.
 
 ###Check for cheap deals
 
@@ -70,9 +68,9 @@ Updates the local offline database provided from MKM. This csv is usually mainta
 
 Here are some URLs I thing you need to know about:
 
-*MKM International site: https://www.magiccardmarket.eu/
-*MKM German site: https://www.magickartenmarkt.de/
-*MS Visual Studio 2015 Community: https://www.visualstudio.com/de/downloads/
++MKM International site: https://www.magiccardmarket.eu/
++MKM German site: https://www.magickartenmarkt.de/
++MS Visual Studio 2015 Community: https://www.visualstudio.com/de/downloads/
 
 ###And finally
 
