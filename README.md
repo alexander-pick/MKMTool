@@ -70,18 +70,20 @@ Updates the local offline database provided from MKM. This csv is usually mainta
 
 Here are some URLs I thing you need to know about:
 
-MKM International site: https://www.magiccardmarket.eu/
-MKM German site: https://www.magickartenmarkt.de/
-MS Visual Studio 2015 Community: https://www.visualstudio.com/de/downloads/
+*MKM International site: https://www.magiccardmarket.eu/
+*MKM German site: https://www.magickartenmarkt.de/
+*MS Visual Studio 2015 Community: https://www.visualstudio.com/de/downloads/
 
 ###And finally
 
 The development of this tool cost me a lot of time recently and a few bad (luckily bulk card) sales during the adjustment of the algorithm but it was worth it to see it done now. 
 
 If you like this tool, you can donate me some bitcoin leftovers to my wallet here:
+
 13Jjvvnmn6t1ytbqWTZaio1zWNVWpbcEpG
 
 Or by me something of my amazon wishlist here:
+
 https://www.amazon.de/registry/wishlist/PY25W6O71YIV/ref=cm_sw_em_r_mt_ws__ugkRybY0HFNYD
 
 *Sorry I don’t have paypal.*
