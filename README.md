@@ -20,9 +20,16 @@ First a small disclaimer and things to remember:
 ##Installation and starting off
 
 You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. Again, beware that the country is hardcoded to Germany at the moment, check above how to change that.
+
+If you are too lazy to compile, here is a build (germany hardcoded! see above): 
+
+http://www.alexander-pick.com/github/MKMTool-05b-Release_21022017.rar
+
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
 ##Ok - ok, but what can MKMTool do?
+
+![screenshot](http://www.alexander-pick.com/github/tool1.PNG)
 
 MKMTool has 4 Main Features:
 
@@ -39,15 +46,21 @@ You must feel confortable with the formula or change it to your demands, be awar
 
 ###Check for cheap deals
 
+![screenshot](http://www.alexander-pick.com/github/tool2.PNG)
+
 For the fun of it – with this feature you can find cheap deals with X percent cheaper than other vendors and cheaper than the Trend if selected.- The algo calcs + 1 Eur fixed for shipping to score you a good deal with resale value. It’s also possible to check for cheap deals of cards on your wants list, use this if you are only looking for specific cards. Beware, this feature is API call heavy.
 
 If cards are found they are directly added to your cart on MKM, just log in and check your cart.
 
 ###Check Display Value
 
+![screenshot](http://www.alexander-pick.com/github/tool3.PNG)
+
 This is more of an experimental feature, I written it to roughly calculate the expected ROI (return of invest) of a display/box compared to current “real time” MKM SELL prices. Math is a bit clumsy but should be correct, I am always open for improvements to this. I learned that most data published on various sites tends to be rather old or trashy, this gives me a nice view on the “real” site of things. The ROI is shitty, but I still love buying Boxes.
 
 ###Want List Editor
+
+![screenshot](http://www.alexander-pick.com/github/tool4.PNG)
 
 Easy Editor for MKM want list, I written this since the MKM features to build a list were too unhandy for me. This works well with the check for cheap deals feature.
 
