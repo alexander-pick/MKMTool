@@ -37,7 +37,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
 using System.Timers;
@@ -68,8 +67,26 @@ namespace MKMTool
 
             if (!File.Exists(@".\\mkminventory.csv"))
             {
-                MKMBot bot = new MKMBot();
-                bot.getProductList(this);
+                XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
+
+                XmlNodeList node = doc.GetElementsByTagName("response");
+
+                string zipPath = @".\\mkminventory.zip";
+
+                foreach (XmlNode aFile in node)
+                {
+                    if (aFile["productsfile"].InnerText != null)
+                    {
+                        byte[] data = Convert.FromBase64String(aFile["productsfile"].InnerText);
+                        File.WriteAllBytes(zipPath, data);
+
+                    }
+                }
+
+                byte[] file = File.ReadAllBytes(zipPath);
+                byte[] aDecompressed = MKMHelpers.gzDecompress(file);
+
+                File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
             }
         }
 
