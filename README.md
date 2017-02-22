@@ -32,7 +32,8 @@ Before you can use the tool please rename config_template.xml to config.xml and 
 + download the binaries
 + unzip everything to a folder
 + at MKM go to your account -> profile -> get a token for a dedicated (!) app
-+ rename config_template.xml to config.xml, open it with an editor and put the token details in the file like that <MARKS>TOKENDATAHERE<MARK>, field names should be self explainin
++ rename config_template.xml to config.xml
++ open config.xml with an editor and put the token details in the file - field names should be self explaining and this is simple xml
 + run the tool - should work!
 
 The first startup takes a bit since 1 mb of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.
