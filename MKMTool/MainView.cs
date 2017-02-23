@@ -53,36 +53,52 @@ namespace MKMTool
 #if DEBUG
             logBox.AppendText("DEBUG MODE ON!\n");
 #endif
-
-            if (!File.Exists(@".\\config.xml"))
+            try
             {
-                MessageBox.Show("No config file found! Create a config.xml first.");
 
-                Application.Exit();
-            }
 
-            if (!File.Exists(@".\\mkminventory.csv"))
-            {
-                var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
-
-                var node = doc.GetElementsByTagName("response");
-
-                var zipPath = @".\\mkminventory.zip";
-
-                foreach (XmlNode aFile in node)
+                if (!File.Exists(@".\\config.xml"))
                 {
-                    if (aFile["productsfile"].InnerText != null)
-                    {
-                        var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
-                        File.WriteAllBytes(zipPath, data);
-                    }
+                    MessageBox.Show("No config file found! Create a config.xml first.");
+
+                    Application.Exit();
                 }
 
-                var file = File.ReadAllBytes(zipPath);
-                var aDecompressed = MKMHelpers.gzDecompress(file);
+                if (!File.Exists(@".\\mkminventory.csv"))
+                {
+                    var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
 
-                File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
+                    var node = doc.GetElementsByTagName("response");
+
+                    var zipPath = @".\\mkminventory.zip";
+
+                    foreach (XmlNode aFile in node)
+                    {
+                        if (aFile["productsfile"].InnerText != null)
+                        {
+                            var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
+                            File.WriteAllBytes(zipPath, data);
+                        }
+                    }
+
+                    var file = File.ReadAllBytes(zipPath);
+                    var aDecompressed = MKMHelpers.gzDecompress(file);
+
+                    File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
+                }
+
+                var bot = new MKMBot();
+
+                var doc2 = bot.getAccount();
+
+                MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
+
             }
+            catch (Exception eError)
+            {
+                MessageBox.Show(eError.Message);
+            }
+
         }
 
         private void loginButton_Click(object sender, EventArgs e)

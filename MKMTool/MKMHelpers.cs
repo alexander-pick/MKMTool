@@ -43,7 +43,7 @@ namespace MKMTool
     public static class MKMHelpers
     {
         // My origin country (to find domnestic deals)
-        public const string sMyOwnCountry = "D";
+        public static string sMyOwnCountry = "D";
 
         // treashold price - bulk cards tend to be 0.02 but I hate shipping them at this price, 
         // some people will order 100+ cards for 2 cts making this incredibly tiresome

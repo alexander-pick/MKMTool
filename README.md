@@ -1,5 +1,13 @@
 # Welcome to MKMTool 0.5b
 
+## Last changes
+
+23.02.2017
++ country is no longer hardcoded and now determained at startup from your account details
++ code was cleaned up
+22.02.2017
++ bug preventing the startup was fixed
+
 ## What is this?
 
 MKMTool ist a helper application I wrote for tinkering around with optimization of sale processes on magiccardmarket.eu and the idea of automisation of some tasks most people wouldn’t be able to get done by pure manpower. 
@@ -11,7 +19,7 @@ First a small disclaimer and things to remember:
 + The entire tool uses the mkmapi 2.0 and is purely designed as prove of concept. If you use this application always remember that this is coded for fun and not 100% perfectly tested. I am not responsible for any damage or anything it might cause. You are using it in a real environment where real loose of money is possible. Don’t blame me if you sell your lotus for pennies.
 + This is not an official MKM software product, it’s a private venture for the fun of it.
 + Non commercial users have 5000 API calls by day, depending on the function these can be exhausted very quickly (check for cheap deals, get box value i.e.).
-+ I am german, the code was written to sell Magic Cards in Germany. Everything else will need some adjustments. If you are from another country just change the country ID in MKMHelper.css to yours. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
++ I am german, the code was written to sell Magic Cards. Everything else will need some adjustments. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
 + Beware the program might be slow or if it is calculating it might be not responding a while. This is ok, I didn’t multithread it so this is no problem. Keep an eye on the main log window.
 + In the evening hours if magiccardmarket is crowded, the api seems to be slower, please take this in account if you use the tool.
 + If you find bugs, feel free to report them on github. 
@@ -19,11 +27,11 @@ First a small disclaimer and things to remember:
 
 ##Installation and starting off
 
-You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. Again, beware that the country is hardcoded to Germany at the moment, check above how to change that.
+You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
 
-If you are too lazy to compile, here is a build (germany hardcoded! see above): 
+If you are too lazy to compile, here is a build: 
 
-http://www.alexander-pick.com/github/MKMTool-05b-Release_21022017.rar
+http://www.alexander-pick.com/github/MKMTool-05b-Release_23022017.rar
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
