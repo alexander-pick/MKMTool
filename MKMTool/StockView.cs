@@ -30,22 +30,15 @@
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml;
-using System.IO;
-using System.IO.Compression;
 
 namespace MKMTool
 {
     public partial class StockView : Form
     {
-        DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
 
         public StockView()
         {
@@ -55,17 +48,18 @@ namespace MKMTool
 
             try
             {
-                MKMBot bot = new MKMBot();
+                var bot = new MKMBot();
 
-                XmlDocument doc = bot.readStock();
+                var doc = bot.readStock();
 
-                XmlNodeReader xmlReader = new XmlNodeReader(doc);
+                var xmlReader = new XmlNodeReader(doc);
 
-                DataSet ds = new DataSet();
+                var ds = new DataSet();
 
                 ds.ReadXml(xmlReader);
 
-                DataTable dj = MKMHelpers.JoinDataTables(ds.Tables[0], dt, (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
+                var dj = MKMHelpers.JoinDataTables(ds.Tables[0], dt,
+                    (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
 
                 dj.Columns.Remove("article_Id");
                 dj.Columns.Remove("Date Added");
@@ -76,13 +70,11 @@ namespace MKMTool
 
                 stockGridView.DataSource = dj;
                 //dataGridView1.DataSource = dt;
-
             }
             catch (Exception eError)
             {
                 MessageBox.Show(eError.ToString());
             }
-
         }
     }
 }

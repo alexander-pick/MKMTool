@@ -29,31 +29,21 @@
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
-
 #undef DEBUG
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
-using System.IO.Compression;
-using System.Text;
 using System.Windows.Forms;
-using System.Reflection;
-using System.Timers;
 using System.Xml;
 
 namespace MKMTool
 {
-    class MKMBot
+    internal class MKMBot
     {
-
-        DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
-
         public delegate void logboxAppendCallback(string text, MainView frm1);
+
+        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
 
         private void logBoxAppend(string text, MainView frm1)
         {
@@ -62,74 +52,79 @@ namespace MKMTool
 
         public XmlDocument getExpansionsSingles(string ExpansionID)
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/expansions/"+ ExpansionID + "/singles", "GET");
+            var doc =
+                MKMInteract.RequestHelper.makeRequest(
+                    "https://www.mkmapi.eu/ws/v2.0/expansions/" + ExpansionID + "/singles", "GET");
 
             return doc;
         }
 
         public XmlDocument getExpansions(string sGameID)
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/games/" + sGameID + "/expansions", "GET");
+            var doc =
+                MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/games/" + sGameID + "/expansions",
+                    "GET");
 
             return doc;
         }
 
         public XmlDocument getAccount()
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/account", "GET");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/account", "GET");
 
             return doc;
         }
 
         public XmlDocument getWantsLists()
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist", "GET");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist", "GET");
 
             return doc;
         }
 
         public XmlDocument getWantsListByID(string sID)
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sID, "GET");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sID, "GET");
 
             return doc;
         }
 
         public XmlDocument readStock()
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
 
             return doc;
         }
 
         public XmlDocument emptyCart()
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/shoppingcart", "DELETE");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/shoppingcart", "DELETE");
 
             return doc;
         }
 
         public void getProductList(MainView frm1)
         {
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
 
-            XmlNodeList node = doc.GetElementsByTagName("response");
+            var node = doc.GetElementsByTagName("response");
 
-            string zipPath = @".\\mkminventory.zip";
+            var zipPath = @".\\mkminventory.zip";
 
             foreach (XmlNode aFile in node)
             {
                 if (aFile["productsfile"].InnerText != null)
                 {
-                    byte[] data = Convert.FromBase64String(aFile["productsfile"].InnerText);
+                    var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
                     File.WriteAllBytes(zipPath, data);
 
-                    frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "Downloaded inventory successfully!\n", frm1);
+                    frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Downloaded inventory successfully!\n",
+                        frm1);
                 }
             }
 
-            byte[] file = File.ReadAllBytes(zipPath);
-            byte[] aDecompressed = MKMHelpers.gzDecompress(file);
+            var file = File.ReadAllBytes(zipPath);
+            var aDecompressed = MKMHelpers.gzDecompress(file);
 
             File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
         }
@@ -138,13 +133,13 @@ namespace MKMTool
         {
             try
             {
-                MKMBot bot = new MKMBot();
+                var bot = new MKMBot();
 
-                XmlDocument doc = bot.getWantsListByID(sListId);
+                var doc = bot.getWantsListByID(sListId);
 
-                XmlNodeReader xmlReader = new XmlNodeReader(doc);
+                var xmlReader = new XmlNodeReader(doc);
 
-                DataSet ds = new DataSet();
+                var ds = new DataSet();
 
                 ds.ReadXml(xmlReader);
 
@@ -153,15 +148,15 @@ namespace MKMTool
                     return new DataTable();
                 }
 
-                XmlDocument doc2 = bot.getExpansions("1"); // Only MTG at present
+                var doc2 = bot.getExpansions("1"); // Only MTG at present
 
-                XmlNodeList node = doc2.GetElementsByTagName("expansion");
+                var node = doc2.GetElementsByTagName("expansion");
 
-                DataTable eS = new DataTable();
+                var eS = new DataTable();
 
-                eS.Columns.Add("idExpansion", typeof(string));
-                eS.Columns.Add("abbreviation", typeof(string));
-                eS.Columns.Add("enName", typeof(string));
+                eS.Columns.Add("idExpansion", typeof (string));
+                eS.Columns.Add("abbreviation", typeof (string));
+                eS.Columns.Add("enName", typeof (string));
 
                 foreach (XmlNode nExpansion in node)
                 {
@@ -171,7 +166,7 @@ namespace MKMTool
 
                 //DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
 
-                DataTable dv = MKMHelpers.JoinDataTables(dt, eS,
+                var dv = MKMHelpers.JoinDataTables(dt, eS,
                     (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
                 dv = MKMHelpers.JoinDataTables(dv, ds.Tables["item"],
@@ -190,22 +185,20 @@ namespace MKMTool
                 MessageBox.Show(eError.ToString());
                 return new DataTable();
             }
-
         }
 
         public void updatePrices(MainView frm1)
         {
+            var debugCounter = 0;
 
-            int debugCounter = 0;
+            var iRequestCount = 0;
+            var sRequestXML = "";
 
-            int iRequestCount = 0;
-            string sRequestXML = "";
-
-            XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
 
             //logBox.AppendText(OutputFormat.PrettyXml(doc.OuterXml));
 
-            XmlNodeList node = doc.GetElementsByTagName("article");
+            var node = doc.GetElementsByTagName("article");
 
             foreach (XmlNode article in node)
             {
@@ -221,43 +214,43 @@ namespace MKMTool
 
                 if (article["idArticle"].InnerText != null)
                 {
-
                     if (article["price"].InnerText != null)
                     {
-
-                        string sArticleID = article["idProduct"].InnerText;
+                        var sArticleID = article["idProduct"].InnerText;
 
                         /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/products/" + sArticleID, "GET");
 
                         logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
 
-                        string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID + "?userType=private&idLanguage=" + article["language"]["idLanguage"].InnerText + 
-                            "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil=" 
-                            + article["isFoil"].InnerText +
-                            "&isSigned=" + article["isSigned"].InnerText +
-                            "&isAltered=" + article["isAltered"].InnerText;
+                        var sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID +
+                                   "?userType=private&idLanguage=" + article["language"]["idLanguage"].InnerText +
+                                   "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
+                                   + article["isFoil"].InnerText +
+                                   "&isSigned=" + article["isSigned"].InnerText +
+                                   "&isAltered=" + article["isAltered"].InnerText;
 
                         //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID;
                         //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID + "?start=0&maxResults=250";
 
                         try
                         {
+                            var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
 
-                            XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
+                            var node2 = doc2.GetElementsByTagName("article");
 
-                            XmlNodeList node2 = doc2.GetElementsByTagName("article");
+                            var counter = 0;
 
-                            int counter = 0;
+                            var aPrices = new float[4];
 
-                            float[] aPrices = new float[4];
-
-                            frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), sArticleID + ">>> " + article["product"]["enName"].InnerText + "\n", frm1);
+                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                sArticleID + ">>> " + article["product"]["enName"].InnerText + "\n", frm1);
 
                             foreach (XmlNode offer in node2)
                             {
-
                                 if (offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
-                                    && offer["language"]["idLanguage"].InnerText == article["language"]["idLanguage"].InnerText
+                                    &&
+                                    offer["language"]["idLanguage"].InnerText ==
+                                    article["language"]["idLanguage"].InnerText
                                     && offer["isFoil"].InnerText == article["isFoil"].InnerText
                                     && offer["isSigned"].InnerText == article["isSigned"].InnerText
                                     && offer["isAltered"].InnerText == article["isAltered"].InnerText
@@ -268,7 +261,7 @@ namespace MKMTool
                                     //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["product"]["enName"].InnerText + "\n", frm1);
                                     //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["price"].InnerText + " " + offer["price"].InnerText + "\n", frm1);
 
-                                    string sXPrice = offer["price"].InnerText.Replace(".", ",");
+                                    var sXPrice = offer["price"].InnerText.Replace(".", ",");
 
                                     aPrices[counter] = Convert.ToSingle(sXPrice);
 
@@ -276,18 +269,20 @@ namespace MKMTool
 
                                     if (counter == 4)
                                     {
-                                        float dSetPrice = (aPrices[0] + aPrices[1] + aPrices[2] + aPrices[3]) / 4;
+                                        var dSetPrice = (aPrices[0] + aPrices[1] + aPrices[2] + aPrices[3])/4;
 
                                         if (dSetPrice < MKMHelpers.fAbsoluteMinPrice)
                                         {
                                             dSetPrice = MKMHelpers.fAbsoluteMinPrice;
                                         }
 
-                                        string sNewPrice = dSetPrice.ToString("0.00").Replace(",", ".");
+                                        var sNewPrice = dSetPrice.ToString("0.00").Replace(",", ".");
 
-                                        string sOldPrice = article["price"].InnerText;
+                                        var sOldPrice = article["price"].InnerText;
 
-                                        frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "Current Price: " + sOldPrice + " Calcualted Price:" + sNewPrice + "\n", frm1);
+                                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                            "Current Price: " + sOldPrice + " Calcualted Price:" + sNewPrice + "\n",
+                                            frm1);
 
                                         try
                                         {
@@ -296,46 +291,46 @@ namespace MKMTool
 
                                             iRequestCount++;
 
-                                            frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "UPDATE\n", frm1);
+                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "UPDATE\n", frm1);
 
 
-                                            string sArticleRequest = MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
+                                            var sArticleRequest =
+                                                MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
 
                                             sRequestXML += sArticleRequest;
 
                                             iRequestCount++;
                                             //}
-
                                         }
                                         catch (Exception eError)
                                         {
-                                            frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), eError.ToString(), frm1);
+                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), eError.ToString(),
+                                                frm1);
                                         }
 
 
                                         break;
                                     }
                                 }
-
                             }
                         }
                         catch (Exception eError)
                         {
-                            frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "ERR at  : " + article["product"]["enName"].InnerText + "\n", frm1);
-                            frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "ERR Msg : " + eError.Message + "\n", frm1);
-                            frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "ERR URL : " + sUrl + "\n", frm1);
+                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                "ERR at  : " + article["product"]["enName"].InnerText + "\n", frm1);
+                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                "ERR Msg : " + eError.Message + "\n", frm1);
+                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR URL : " + sUrl + "\n", frm1);
 
-                            using (StreamWriter sw = File.AppendText(@".\\error_log.txt"))
+                            using (var sw = File.AppendText(@".\\error_log.txt"))
                             {
                                 sw.WriteLine("ERR at  : " + article["product"]["enName"].InnerText);
                                 sw.WriteLine("ERR Msg : " + eError.Message);
                                 sw.WriteLine("ERR URL : " + sUrl);
                             }
                         }
-
                     }
                 }
-
             }
 
             if (iRequestCount > 0)
@@ -349,23 +344,24 @@ namespace MKMTool
 
                 try
                 {
-                    rdoc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "PUT", sRequestXML);
+                    rdoc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "PUT",
+                        sRequestXML);
                 }
                 catch (Exception eError)
                 {
-                    frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "ERR Msg : " + eError.Message + "\n", frm1);
+                    frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR Msg : " + eError.Message + "\n",
+                        frm1);
                 }
 
-                XmlNodeList xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
-                XmlNodeList xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
+                var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
+                var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
 
-                int iUpdated = xUpdatedArticles.Count;
-                int iFailed = xNotUpdatedArticles.Count;
+                var iUpdated = xUpdatedArticles.Count;
+                var iFailed = xNotUpdatedArticles.Count;
 
-                frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), debugCounter + "/" + iUpdated + " Articles updated successfully, " + iFailed + " failed\n", frm1);
-
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                    debugCounter + "/" + iUpdated + " Articles updated successfully, " + iFailed + " failed\n", frm1);
             }
         }
-
     }
 }

@@ -42,7 +42,6 @@ namespace MKMTool
 {
     public static class MKMHelpers
     {
-
         // My origin country (to find domnestic deals)
         public const string sMyOwnCountry = "D";
 
@@ -50,82 +49,69 @@ namespace MKMTool
         // some people will order 100+ cards for 2 cts making this incredibly tiresome
         public const float fAbsoluteMinPrice = 0.05F;
 
-        static DataTable dt = new DataTable();
+        private static DataTable dt = new DataTable();
 
-        public static Dictionary<string, string> dLanguages = new Dictionary<string, string>()
+        public static Dictionary<string, string> dLanguages = new Dictionary<string, string>
         {
-
             {
                 "",
                 "All"
             }
-                    ,
+            ,
             {
                 "1",
                 "English"
             }
-                    ,
+            ,
             {
                 "2",
                 "French"
             }
-                    ,
+            ,
             {
                 "3",
                 "German"
             }
-                    ,
+            ,
             {
                 "4",
                 "Spanish"
             }
-                    ,
+            ,
             {
                 "5",
                 "Italian"
-            }        ,
+            },
             {
                 "6",
                 "Simplified Chinese"
             }
-                    ,
+            ,
             {
                 "7",
                 "Japanese"
             }
-                    ,
+            ,
             {
                 "8",
                 "Portuguese"
             }
-                    ,
+            ,
             {
                 "9",
                 "Russian"
             }
-                    ,
+            ,
             {
                 "10",
                 "Korean"
             }
-                    ,
+            ,
             {
                 "11",
                 "Traditional Chinese"
             }
-
         };
-        
-        public class ComboboxItem
-        {
-            public string Text { get; set; }
-            public object Value { get; set; }
-
-            public override string ToString()
-            {
-                return Text;
-            }
-        }
 
         public static string PrettyXml(string xml)
         {
@@ -151,40 +137,35 @@ namespace MKMTool
 
         public static DataTable ConvertCSVtoDataTable(string strFilePath)
         {
-
             if (dt != null && dt.Rows.Count > 0)
             {
                 return dt;
             }
-            else
+            using (var sr = new StreamReader(strFilePath))
             {
-                using (StreamReader sr = new StreamReader(strFilePath))
+                var headers = sr.ReadLine().Split(',');
+
+                foreach (var header in headers)
                 {
-                    string[] headers = sr.ReadLine().Split(',');
-
-                    foreach (string header in headers)
-                    {
-                        dt.Columns.Add(header.Replace("\"", ""));
-                    }
-
-                    while (!sr.EndOfStream)
-                    {
-                        string[] rows = sr.ReadLine().Split(',');
-                        DataRow dr = dt.NewRow();
-
-                        for (int i = 0; i < headers.Length; i++)
-                        {
-                            dr[i] = rows[i].Replace("\"", "");
-                        }
-
-                        dt.Rows.Add(dr);
-                    }
-
+                    dt.Columns.Add(header.Replace("\"", ""));
                 }
 
-                dt = dt.Select("[Category ID] = '1'").CopyToDataTable(); // grab only MTG Singles
+                while (!sr.EndOfStream)
+                {
+                    var rows = sr.ReadLine().Split(',');
+                    var dr = dt.NewRow();
+
+                    for (var i = 0; i < headers.Length; i++)
+                    {
+                        dr[i] = rows[i].Replace("\"", "");
+                    }
+
+                    dt.Rows.Add(dr);
+                }
             }
- 
+
+            dt = dt.Select("[Category ID] = '1'").CopyToDataTable(); // grab only MTG Singles
+
             return dt;
         }
 
@@ -193,7 +174,7 @@ namespace MKMTool
 
         public static DataTable JoinDataTables(DataTable t1, DataTable t2, params Func<DataRow, DataRow, bool>[] joinOn)
         {
-            DataTable result = new DataTable();
+            var result = new DataTable();
             foreach (DataColumn col in t1.Columns)
             {
                 if (result.Columns[col.ColumnName] == null)
@@ -214,9 +195,9 @@ namespace MKMTool
                     }
                     return true;
                 });
-                foreach (DataRow fromRow in joinRows)
+                foreach (var fromRow in joinRows)
                 {
-                    DataRow insertRow = result.NewRow();
+                    var insertRow = result.NewRow();
                     foreach (DataColumn col1 in t1.Columns)
                     {
                         insertRow[col1.ColumnName] = row1[col1.ColumnName];
@@ -235,14 +216,14 @@ namespace MKMTool
         {
             // Create a GZIP stream with decompression mode.
             // ... Then create a buffer and write into while reading from the GZIP stream.
-            using (GZipStream stream = new GZipStream(new MemoryStream(gzip),
+            using (var stream = new GZipStream(new MemoryStream(gzip),
                 CompressionMode.Decompress))
             {
                 const int size = 4096;
-                byte[] buffer = new byte[size];
-                using (MemoryStream memory = new MemoryStream())
+                var buffer = new byte[size];
+                using (var memory = new MemoryStream())
                 {
-                    int count = 0;
+                    var count = 0;
                     do
                     {
                         count = stream.Read(buffer, 0, size);
@@ -250,10 +231,20 @@ namespace MKMTool
                         {
                             memory.Write(buffer, 0, count);
                         }
-                    }
-                    while (count > 0);
+                    } while (count > 0);
                     return memory.ToArray();
                 }
+            }
+        }
+
+        public class ComboboxItem
+        {
+            public string Text { get; set; }
+            public object Value { get; set; }
+
+            public override string ToString()
+            {
+                return Text;
             }
         }
     }

@@ -29,12 +29,6 @@
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -42,6 +36,23 @@ namespace MKMTool
 {
     public partial class AccountInfo : Form
     {
+        public AccountInfo()
+        {
+            InitializeComponent();
+
+            var bot = new MKMBot();
+
+            var doc = bot.getAccount();
+
+            treeView1.Nodes.Clear();
+            treeView1.Nodes.Add(new TreeNode("Account Details"));
+            var tNode = new TreeNode();
+            tNode = treeView1.Nodes[0];
+
+            AddNode(doc["response"]["account"], tNode);
+            //treeView1.ExpandAll();
+        }
+
         // SRC:
         // https://support.microsoft.com/de-de/help/317597/how-to-populate-a-treeview-control-with-xml-data-in-visual-c-2005-or-in-visual-c-.net
 
@@ -69,26 +80,8 @@ namespace MKMTool
             {
                 // Here you need to pull the data from the XmlNode based on the
                 // type of node, whether attribute values are required, and so forth.
-                inTreeNode.Text = (inXmlNode.OuterXml).Trim();
+                inTreeNode.Text = inXmlNode.OuterXml.Trim();
             }
-        }
-
-        public AccountInfo()
-        {
-            InitializeComponent();
-
-            MKMBot bot = new MKMBot();
-
-            XmlDocument doc = bot.getAccount();
-
-            treeView1.Nodes.Clear();
-            treeView1.Nodes.Add(new TreeNode("Account Details"));
-            TreeNode tNode = new TreeNode();
-            tNode = treeView1.Nodes[0];
-
-            AddNode(doc["response"]["account"], tNode);
-            //treeView1.ExpandAll();
-
         }
     }
 }

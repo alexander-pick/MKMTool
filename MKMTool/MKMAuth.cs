@@ -31,78 +31,78 @@
 */
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Net;
-using System.Windows.Forms;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 
 public class MKMAuth
 {
-
-
     /// <summary>
-    /// Class encapsulates tokens and secret to create OAuth signatures and return Authorization headers for web requests.
+    ///     Class encapsulates tokens and secret to create OAuth signatures and return Authorization headers for web requests.
     /// </summary>
     public class OAuthHeader
     {
+        /// <summary>Access Token Secret (Class should also implement an AccessToken property to set the value)</summary>
+        protected string accessSecret = "";
+
+        /// <summary>Access Token (Class should also implement an AccessToken property to set the value)</summary>
+        protected string accessToken = "";
+
+        /// <summary>App Secret</summary>
+        protected string appSecret = "";
 
 
         /// <summary>App Token</summary>
-        protected String appToken = "";
-        /// <summary>App Secret</summary>
-        protected String appSecret = "";
-        /// <summary>Access Token (Class should also implement an AccessToken property to set the value)</summary>
-        protected String accessToken = "";
-        /// <summary>Access Token Secret (Class should also implement an AccessToken property to set the value)</summary>
-        protected String accessSecret = "";
-        /// <summary>OAuth Signature Method</summary>
-        protected String signatureMethod = "HMAC-SHA1";
-        /// <summary>OAuth Version</summary>
-        protected String version = "1.0";
+        protected string appToken = "";
+
         /// <summary>All Header params compiled into a Dictionary</summary>
-        protected IDictionary<String, String> headerParams;
+        protected IDictionary<string, string> headerParams;
+
+        /// <summary>OAuth Signature Method</summary>
+        protected string signatureMethod = "HMAC-SHA1";
+
+        /// <summary>OAuth Version</summary>
+        protected string version = "1.0";
 
         /// <summary>
-        /// Constructor
+        ///     Constructor
         /// </summary>
         public OAuthHeader()
         {
-            XmlDocument xConfigFile = new XmlDocument();
+            var xConfigFile = new XmlDocument();
 
             xConfigFile.Load(@".//config.xml");
 
-            this.appToken = xConfigFile["config" ]["appToken"].InnerText;
-            this.appSecret = xConfigFile["config"]["appSecret"].InnerText;
-            this.accessToken = xConfigFile["config"]["accessToken"].InnerText;
-            this.accessSecret = xConfigFile["config"]["accessSecret"].InnerText;
+            appToken = xConfigFile["config"]["appToken"].InnerText;
+            appSecret = xConfigFile["config"]["appSecret"].InnerText;
+            accessToken = xConfigFile["config"]["accessToken"].InnerText;
+            accessSecret = xConfigFile["config"]["accessSecret"].InnerText;
 
             // String nonce = Guid.NewGuid().ToString("n");
-            String nonce = "53eb1f44909d6";
+            var nonce = "53eb1f44909d6";
             // String timestamp = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
-            String timestamp = "1407917892";
+            var timestamp = "1407917892";
             /// Initialize all class members
-            this.headerParams = new Dictionary<String, String>();
-            this.headerParams.Add("oauth_consumer_key", this.appToken);
-            this.headerParams.Add("oauth_token", this.accessToken);
-            this.headerParams.Add("oauth_nonce", nonce);
-            this.headerParams.Add("oauth_timestamp", timestamp);
-            this.headerParams.Add("oauth_signature_method", this.signatureMethod);
-            this.headerParams.Add("oauth_version", this.version);
+            headerParams = new Dictionary<string, string>();
+            headerParams.Add("oauth_consumer_key", appToken);
+            headerParams.Add("oauth_token", accessToken);
+            headerParams.Add("oauth_nonce", nonce);
+            headerParams.Add("oauth_timestamp", timestamp);
+            headerParams.Add("oauth_signature_method", signatureMethod);
+            headerParams.Add("oauth_version", version);
         }
 
-        public static SortedDictionary<string, string> ParseQueryString(String query)
+        public static SortedDictionary<string, string> ParseQueryString(string query)
         {
-            SortedDictionary<string, string> queryParameters = new SortedDictionary<string, string>();
-            string[] querySegments = query.Split('&');
-            foreach (string segment in querySegments)
+            var queryParameters = new SortedDictionary<string, string>();
+            var querySegments = query.Split('&');
+            foreach (var segment in querySegments)
             {
-                string[] parts = segment.Split('=');
+                var parts = segment.Split('=');
                 if (parts.Length > 0)
                 {
-                    string key = parts[0].Trim(new char[] { '?', ' ' });
-                    string val = parts[1].Trim();
+                    var key = parts[0].Trim('?', ' ');
+                    var val = parts[1].Trim();
 
                     queryParameters.Add(key, val);
                 }
@@ -112,45 +112,44 @@ public class MKMAuth
         }
 
         /// <summary>
-        /// Pass request method and URI parameters to get the Authorization header value
+        ///     Pass request method and URI parameters to get the Authorization header value
         /// </summary>
         /// <param name="method">Request Method</param>
         /// <param name="url">Request URI</param>
         /// <returns>Authorization header value</returns>
-        public String getAuthorizationHeader(String method, String url)
+        public string getAuthorizationHeader(string method, string url)
         {
-            Uri uri = new Uri(url);
-            string baseUri = uri.GetLeftPart(System.UriPartial.Path);
+            var uri = new Uri(url);
+            var baseUri = uri.GetLeftPart(UriPartial.Path);
 
             //MessageBox.Show(baseUri);
 
             /// Add the realm parameter to the header params
-            this.headerParams.Add("realm", baseUri);
-           
-            /// Start composing the base string from the method and request URI
-            String baseString = method.ToUpper()
-                              + "&"
-                              + Uri.EscapeDataString(baseUri)
-                              + "&";
+            headerParams.Add("realm", baseUri);
 
-            int index = url.IndexOf("?");
+            /// Start composing the base string from the method and request URI
+            var baseString = method.ToUpper()
+                             + "&"
+                             + Uri.EscapeDataString(baseUri)
+                             + "&";
+
+            var index = url.IndexOf("?");
 
             if (index > 0)
             {
-                string urlParams = url.Substring(index).Remove(0, 1);
+                var urlParams = url.Substring(index).Remove(0, 1);
 
-                SortedDictionary<string, string> args = ParseQueryString(urlParams);
+                var args = ParseQueryString(urlParams);
 
-                foreach (KeyValuePair< string, string> k in args)
+                foreach (var k in args)
                 {
-                    this.headerParams.Add(k.Key, k.Value);
+                    headerParams.Add(k.Key, k.Value);
                 }
-
             }
 
             /// Gather, encode, and sort the base string parameters
-            SortedDictionary<String, String> encodedParams = new SortedDictionary<String, String>();
-            foreach (KeyValuePair<String, String> parameter in this.headerParams)
+            var encodedParams = new SortedDictionary<string, string>();
+            foreach (var parameter in headerParams)
             {
                 if (false == parameter.Key.Equals("realm"))
                 {
@@ -159,31 +158,31 @@ public class MKMAuth
             }
 
             /// Expand the base string by the encoded parameter=value pairs
-            List<String> paramStrings = new List<String>();
-            foreach (KeyValuePair<String, String> parameter in encodedParams)
+            var paramStrings = new List<string>();
+            foreach (var parameter in encodedParams)
             {
                 paramStrings.Add(parameter.Key + "=" + parameter.Value);
             }
-            String paramString = Uri.EscapeDataString(String.Join<String>("&", paramStrings));
+            var paramString = Uri.EscapeDataString(string.Join<string>("&", paramStrings));
             baseString += paramString;
 
             /// Create the OAuth signature
-            String signatureKey = Uri.EscapeDataString(this.appSecret) + "&" + Uri.EscapeDataString(this.accessSecret);
-            HMAC hasher = HMACSHA1.Create();
+            var signatureKey = Uri.EscapeDataString(appSecret) + "&" + Uri.EscapeDataString(accessSecret);
+            var hasher = HMAC.Create();
             hasher.Key = Encoding.UTF8.GetBytes(signatureKey);
-            Byte[] rawSignature = hasher.ComputeHash(Encoding.UTF8.GetBytes(baseString));
-            String oAuthSignature = Convert.ToBase64String(rawSignature);
+            var rawSignature = hasher.ComputeHash(Encoding.UTF8.GetBytes(baseString));
+            var oAuthSignature = Convert.ToBase64String(rawSignature);
 
             /// Include the OAuth signature parameter in the header parameters array
-            this.headerParams.Add("oauth_signature", oAuthSignature);
+            headerParams.Add("oauth_signature", oAuthSignature);
 
             /// Construct the header string
-            List<String> headerParamStrings = new List<String>();
-            foreach (KeyValuePair<String, String> parameter in this.headerParams)
+            var headerParamStrings = new List<string>();
+            foreach (var parameter in headerParams)
             {
                 headerParamStrings.Add(parameter.Key + "=\"" + parameter.Value + "\"");
             }
-            String authHeader = "OAuth " + String.Join<String>(", ", headerParamStrings);
+            var authHeader = "OAuth " + string.Join<string>(", ", headerParamStrings);
 
             return authHeader;
         }

@@ -32,22 +32,19 @@
 #undef DEBUG
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.IO;
-using System.Text;
-using System.Windows.Forms;
-using System.Reflection;
 using System.Timers;
+using System.Windows.Forms;
 using System.Xml;
+using Timer = System.Timers.Timer;
 
 namespace MKMTool
 {
-
     public partial class MainView : Form
     {
-        private static System.Timers.Timer timer = new System.Timers.Timer();
+        public delegate void logboxAppendCallback(string text);
+
+        private static readonly Timer timer = new Timer();
 
         public MainView()
         {
@@ -62,29 +59,27 @@ namespace MKMTool
                 MessageBox.Show("No config file found! Create a config.xml first.");
 
                 Application.Exit();
-               
             }
 
             if (!File.Exists(@".\\mkminventory.csv"))
             {
-                XmlDocument doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
+                var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
 
-                XmlNodeList node = doc.GetElementsByTagName("response");
+                var node = doc.GetElementsByTagName("response");
 
-                string zipPath = @".\\mkminventory.zip";
+                var zipPath = @".\\mkminventory.zip";
 
                 foreach (XmlNode aFile in node)
                 {
                     if (aFile["productsfile"].InnerText != null)
                     {
-                        byte[] data = Convert.FromBase64String(aFile["productsfile"].InnerText);
+                        var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
                         File.WriteAllBytes(zipPath, data);
-
                     }
                 }
 
-                byte[] file = File.ReadAllBytes(zipPath);
-                byte[] aDecompressed = MKMHelpers.gzDecompress(file);
+                var file = File.ReadAllBytes(zipPath);
+                var aDecompressed = MKMHelpers.gzDecompress(file);
 
                 File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
             }
@@ -92,37 +87,36 @@ namespace MKMTool
 
         private void loginButton_Click(object sender, EventArgs e)
         {
-            AccountInfo ac1 = new AccountInfo();
+            var ac1 = new AccountInfo();
             ac1.ShowDialog();
         }
 
         private void readStockButton_Click(object sender, EventArgs e)
         {
- /*           MKMBot bot = new MKMBot();
+            /*           MKMBot bot = new MKMBot();
 #if !DEBUG
             bot.getProductList(this);
 #endif*/
-            StockView sv1 = new StockView();
+            var sv1 = new StockView();
             sv1.ShowDialog();
         }
 
         private void updatePriceButton_Click(object sender, EventArgs e)
         {
-            MKMBot bot = new MKMBot();
+            var bot = new MKMBot();
 
             bot.updatePrices(this);
         }
 
         private void getProductListButton_Click(object sender, EventArgs e)
         {
-            MKMBot bot = new MKMBot();
+            var bot = new MKMBot();
 
             bot.getProductList(this);
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)
         {
-
             if (autoUpdateCheck.Checked)
             {
                 status.Text = "Bot Mode";
@@ -137,12 +131,12 @@ namespace MKMTool
 
                 runtimeIntervall.Enabled = false;
 
-                logBox.AppendText("Timing MKM Update job every " + Convert.ToInt32(runtimeIntervall.Text).ToString() +
+                logBox.AppendText("Timing MKM Update job every " + Convert.ToInt32(runtimeIntervall.Text) +
                                   " minutes.\n");
 
-                timer.Interval = Convert.ToInt32(runtimeIntervall.Text) * 1000 * 60;
+                timer.Interval = Convert.ToInt32(runtimeIntervall.Text)*1000*60;
 
-                timer.Elapsed += new ElapsedEventHandler(updatePriceEvent);
+                timer.Elapsed += updatePriceEvent;
 
                 timer.Start();
             }
@@ -168,25 +162,21 @@ namespace MKMTool
 
         private void updatePriceEvent(object sender, ElapsedEventArgs e)
         {
-            MainView mainForm = Application.OpenForms["Form1"] != null ? (MainView)Application.OpenForms["Form1"] : null;
+            var mainForm = Application.OpenForms["Form1"] != null ? (MainView) Application.OpenForms["Form1"] : null;
 
             try
             {
-
-                logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), "Starting scheduled MKM Update Job...\n");              
-
+                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job...\n");
             }
             catch (Exception eError)
             {
                 MessageBox.Show(eError.ToString());
             }
 
-            MKMBot bot = new MKMBot();
+            var bot = new MKMBot();
 
             bot.updatePrices(mainForm);
         }
-
-        public delegate void logboxAppendCallback(string text);
 
         public void logBoxAppend(string text)
         {
@@ -195,19 +185,19 @@ namespace MKMTool
 
         private void wantlistButton_Click(object sender, EventArgs e)
         {
-            WantlistEditorView wl1 = new WantlistEditorView();
+            var wl1 = new WantlistEditorView();
             wl1.ShowDialog();
         }
 
         private void checkWants_Click(object sender, EventArgs e)
         {
-            CheckWantsView cw = new CheckWantsView(this);
+            var cw = new CheckWantsView(this);
             cw.ShowDialog();
         }
 
         private void checkDisplayPriceButton_Click(object sender, EventArgs e)
         {
-            CheckDisplayPrices cw = new CheckDisplayPrices(this);
+            var cw = new CheckDisplayPrices(this);
             cw.ShowDialog();
         }
     }

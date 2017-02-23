@@ -31,11 +31,8 @@
 */
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -43,20 +40,83 @@ namespace MKMTool
 {
     public partial class WantlistEditorView : Form
     {
-        DataTable dj = new DataTable();
-        DataTable eS = new DataTable();
-        DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private DataTable dj = new DataTable();
+        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable eS = new DataTable();
+
+        // Column Sort for listView Elements:
+        // https://msdn.microsoft.com/en-us/library/ms996467.aspx?f=255&MSPPError=-2147217396
+
+        private int sortColumn = -1;
+
+        public WantlistEditorView()
+        {
+            InitializeComponent();
+
+            var bot = new MKMBot();
+
+            var doc = bot.getExpansions("1"); // Only MTG at present
+
+            var node = doc.GetElementsByTagName("expansion");
+
+            eS.Columns.Add("idExpansion", typeof (string));
+            eS.Columns.Add("abbreviation", typeof (string));
+            eS.Columns.Add("enName", typeof (string));
+
+            foreach (XmlNode nExpansion in node)
+            {
+                eS.Rows.Add(nExpansion["idExpansion"].InnerText, nExpansion["abbreviation"].InnerText,
+                    nExpansion["enName"].InnerText);
+            }
+
+            foreach (XmlNode nExpansion in node)
+            {
+                var item = new MKMHelpers.ComboboxItem();
+
+                item.Text = nExpansion["enName"].InnerText;
+                item.Value = nExpansion["abbreviation"].InnerText;
+
+                editionBox.Items.Add(item);
+            }
+
+            editionBox.Sorted = true;
+
+            foreach (var Lang in MKMHelpers.dLanguages)
+            {
+                try
+                {
+                    var item = new MKMHelpers.ComboboxItem();
+
+                    item.Text = Lang.Value;
+                    item.Value = Lang.Key;
+
+                    langCombo.Items.Add(item);
+
+                    langCombo.SelectedIndex = 0;
+                }
+                catch (Exception eError)
+                {
+                    addButton.Enabled = false;
+                    deleteItemButton.Enabled = false;
+                }
+            }
+
+            initWantLists();
+
+            initCardView();
+
+            conditionCombo.SelectedIndex = 3;
+        }
 
         public void initWantLists()
         {
             try
             {
+                var bot = new MKMBot();
 
-                MKMBot bot = new MKMBot();
+                var doc = bot.getWantsLists();
 
-                XmlDocument doc = bot.getWantsLists();
-
-                XmlNodeList node = doc.GetElementsByTagName("wantslist");
+                var node = doc.GetElementsByTagName("wantslist");
 
                 if (node.Count > 0)
                 {
@@ -64,7 +124,7 @@ namespace MKMTool
                     {
                         try
                         {
-                            MKMHelpers.ComboboxItem item = new MKMHelpers.ComboboxItem();
+                            var item = new MKMHelpers.ComboboxItem();
 
                             item.Text = nWantlist["name"].InnerText;
                             item.Value = nWantlist["idWantslist"].InnerText;
@@ -78,13 +138,8 @@ namespace MKMTool
                             addButton.Enabled = false;
                             deleteItemButton.Enabled = false;
                         }
-
                     }
-
-
                 }
-
-
             }
             catch (Exception eError)
             {
@@ -113,81 +168,18 @@ namespace MKMTool
 
                 foreach (DataRow row in dj.Rows)
                 {
-                    ListViewItem item = new ListViewItem(row["idProduct"].ToString());
+                    var item = new ListViewItem(row["idProduct"].ToString());
 
                     item.SubItems.Add(row["Name"].ToString());
                     item.SubItems.Add(row["enName"].ToString());
 
                     cardView.Items.Add(item);
-
                 }
-
             }
             catch (Exception eError)
             {
                 MessageBox.Show(eError.ToString());
             }
-        }
-
-        public WantlistEditorView()
-        {
-            InitializeComponent();
-
-            MKMBot bot = new MKMBot();
-
-            XmlDocument doc = bot.getExpansions("1"); // Only MTG at present
-
-            XmlNodeList node = doc.GetElementsByTagName("expansion");
-
-            eS.Columns.Add("idExpansion", typeof(string));
-            eS.Columns.Add("abbreviation", typeof(string));
-            eS.Columns.Add("enName", typeof(string));
-
-            foreach (XmlNode nExpansion in node)
-            {
-                eS.Rows.Add(nExpansion["idExpansion"].InnerText, nExpansion["abbreviation"].InnerText,
-                    nExpansion["enName"].InnerText);
-            }
-
-            foreach (XmlNode nExpansion in node)
-            {
-                MKMHelpers.ComboboxItem item = new MKMHelpers.ComboboxItem();
-
-                item.Text = nExpansion["enName"].InnerText;
-                item.Value = nExpansion["abbreviation"].InnerText;
-
-                editionBox.Items.Add(item);
-            }
-
-            editionBox.Sorted = true;
-
-            foreach (var Lang in MKMHelpers.dLanguages)
-            {
-                try
-                {
-                    MKMHelpers.ComboboxItem item = new MKMHelpers.ComboboxItem();
-
-                    item.Text = Lang.Value;
-                    item.Value = Lang.Key;
-
-                    langCombo.Items.Add(item);
-
-                    langCombo.SelectedIndex = 0;
-                }
-                catch (Exception eError)
-                {
-                    addButton.Enabled = false;
-                    deleteItemButton.Enabled = false;
-                }
-
-            }
-
-            initWantLists();
-            
-            initCardView();
-
-            conditionCombo.SelectedIndex = 3;
-
         }
 
         private void WantlistEditor_Load(object sender, EventArgs e)
@@ -202,7 +194,7 @@ namespace MKMTool
 
                 foreach (DataRow row in dj.Rows)
                 {
-                    ListViewItem item = new ListViewItem(row["idProduct"].ToString());
+                    var item = new ListViewItem(row["idProduct"].ToString());
 
                     if (row["Name"].ToString().Contains(searchBox.Text))
                     {
@@ -219,7 +211,6 @@ namespace MKMTool
                         item.SubItems.Add(row["enName"].ToString());
 
                         cardView.Items.Add(item);
-
                     }
                 }
             }
@@ -231,18 +222,17 @@ namespace MKMTool
         }
 
 
-
         private void wantsListBoxReload()
         {
             try
             {
-                MKMBot bot = new MKMBot();
+                var bot = new MKMBot();
 
-                string sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+                var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
                 wantsView.Columns.Clear();
 
-                DataTable ds = bot.buildProperWantsList(sListId);
+                var ds = bot.buildProperWantsList(sListId);
 
                 if (ds.Select().Length > 0)
                 {
@@ -266,15 +256,12 @@ namespace MKMTool
 
                     wantsView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
                     wantsView.ReadOnly = true;
-
                 }
-
             }
             catch (Exception eError)
             {
                 MessageBox.Show(eError.ToString());
             }
-
         }
 
         private void wantListsBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -286,30 +273,29 @@ namespace MKMTool
         {
             foreach (ListViewItem item in cardView.SelectedItems)
             {
-                String idProduct = item.Text;
+                var idProduct = item.Text;
 
                 //MessageBox.Show(idProduct);
 
                 //addWantsListBody(string idProduct, string minCondition, string idLanguage, string isFoil, string isAltered, string isPlayset, string isSigned)
-                string sRequestXML = MKMInteract.RequestHelper.addWantsListBody(idProduct,
-                                                                                    conditionCombo.Text,
-                                                                                    (langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString(),
-                                                                                    foilBox.CheckState.ToString(),
-                                                                                    alteredBox.CheckState.ToString(),
-                                                                                    playsetBox.CheckState.ToString(),
-                                                                                    signedBox.CheckState.ToString());
+                var sRequestXML = MKMInteract.RequestHelper.addWantsListBody(idProduct,
+                    conditionCombo.Text,
+                    (langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString(),
+                    foilBox.CheckState.ToString(),
+                    alteredBox.CheckState.ToString(),
+                    playsetBox.CheckState.ToString(),
+                    signedBox.CheckState.ToString());
 
                 sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
 
                 try
                 {
-                    string sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+                    var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
                     MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sListId, "PUT",
                         sRequestXML);
 
                     //MessageBox.Show("Item " + idProduct + " added successfully!");
-
                 }
                 catch (Exception eError)
                 {
@@ -317,7 +303,6 @@ namespace MKMTool
                     MessageBox.Show(eError.Message);
                     return;
                 }
-
             }
 
             wantsListBoxReload();
@@ -327,7 +312,7 @@ namespace MKMTool
         {
             try
             {
-                int iCellIndex = wantsView.Columns["idWant"].Index;
+                var iCellIndex = wantsView.Columns["idWant"].Index;
 
                 if (wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString() == "")
                 {
@@ -335,33 +320,26 @@ namespace MKMTool
                     return;
                 }
 
-                String idWant = wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString();
+                var idWant = wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString();
 
-                string sRequestXML = MKMInteract.RequestHelper.deleteWantsListBody(idWant);
+                var sRequestXML = MKMInteract.RequestHelper.deleteWantsListBody(idWant);
 
                 sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
 
 
-                string sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+                var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
                 MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sListId, "PUT",
                     sRequestXML);
 
                 wantsListBoxReload();
-
             }
             catch (Exception eError)
             {
                 //frm1.logBox.Invoke(new Form1.logboxAppendCallback(this.logBoxAppend), "ERR Msg : " + eError.Message + "\n", frm1);
                 MessageBox.Show(eError.Message);
-                
             }
         }
-
-        // Column Sort for listView Elements:
-        // https://msdn.microsoft.com/en-us/library/ms996467.aspx?f=255&MSPPError=-2147217396
-
-        private int sortColumn = -1;
 
         private void cardView_ColumnClick(object sender, ColumnClickEventArgs e)
         {
@@ -392,14 +370,19 @@ namespace MKMTool
             cardView.Sort();
             // Set the ListViewItemSorter property to a new ListViewItemComparer
             // object.
-            this.cardView.ListViewItemSorter = new ListViewItemComparer(e.Column, cardView.Sorting);
+            cardView.ListViewItemSorter = new ListViewItemComparer(e.Column, cardView.Sorting);
+        }
+
+        private void editionBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            processSearchBox();
         }
 
         // Implements the manual sorting of items by columns.
-        class ListViewItemComparer : IComparer
+        private class ListViewItemComparer : IComparer
         {
-            private int col;
-            private SortOrder order;
+            private readonly int col;
+            private readonly SortOrder order;
 
             public ListViewItemComparer()
             {
@@ -415,9 +398,9 @@ namespace MKMTool
 
             public int Compare(object x, object y)
             {
-                int returnVal = -1;
-                returnVal = String.Compare(((ListViewItem)x).SubItems[col].Text,
-                    ((ListViewItem)y).SubItems[col].Text);
+                var returnVal = -1;
+                returnVal = string.Compare(((ListViewItem) x).SubItems[col].Text,
+                    ((ListViewItem) y).SubItems[col].Text);
                 // Determine whether the sort order is descending.
                 if (order == SortOrder.Descending)
                     // Invert the value returned by String.Compare.
@@ -425,12 +408,5 @@ namespace MKMTool
                 return returnVal;
             }
         }
-
-        private void editionBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            processSearchBox();
-        }
-
     }
 }
-
