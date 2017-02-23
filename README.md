@@ -5,6 +5,7 @@
 23.02.2017
 + country is no longer hardcoded and now determained at startup from your account details
 + code was cleaned up
+
 22.02.2017
 + bug preventing the startup was fixed
 
