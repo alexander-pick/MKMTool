@@ -271,7 +271,7 @@ namespace MKMTool
                                     {
                                         var dSetPrice = (aPrices[0] + aPrices[1] + aPrices[2] + aPrices[3])/4;
 
-                                        if (dSetPrice < MKMHelpers.fAbsoluteMinPrice)
+                                        if (dSetPrice < MKMHelpers.fAbsoluteMinPrice && article["product"]["rarity"].InnerText == "Rare")
                                         {
                                             dSetPrice = MKMHelpers.fAbsoluteMinPrice;
                                         }
