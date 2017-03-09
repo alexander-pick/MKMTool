@@ -359,6 +359,11 @@ namespace MKMTool
                 var iUpdated = xUpdatedArticles.Count;
                 var iFailed = xNotUpdatedArticles.Count;
 
+                if (iFailed == 1)
+                {
+                    iFailed = 0;
+                }
+
                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                     debugCounter + "/" + iUpdated + " Articles updated successfully, " + iFailed + " failed\n", frm1);
             }

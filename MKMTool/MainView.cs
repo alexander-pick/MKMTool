@@ -178,7 +178,7 @@ namespace MKMTool
 
         private void updatePriceEvent(object sender, ElapsedEventArgs e)
         {
-            var mainForm = Application.OpenForms["Form1"] != null ? (MainView) Application.OpenForms["Form1"] : null;
+            //var mainForm = Application.OpenForms["Form1"] != null ? (MainView) Application.OpenForms["Form1"] : null;
 
             try
             {
@@ -191,7 +191,7 @@ namespace MKMTool
 
             var bot = new MKMBot();
 
-            bot.updatePrices(mainForm);
+            bot.updatePrices(this); //mainForm
         }
 
         public void logBoxAppend(string text)
