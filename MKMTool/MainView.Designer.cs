@@ -49,7 +49,7 @@
             // loginButton
             // 
             this.loginButton.Location = new System.Drawing.Point(1064, 567);
-            this.loginButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.loginButton.Margin = new System.Windows.Forms.Padding(4);
             this.loginButton.Name = "loginButton";
             this.loginButton.Size = new System.Drawing.Size(204, 42);
             this.loginButton.TabIndex = 0;
@@ -60,7 +60,7 @@
             // readStockButton
             // 
             this.readStockButton.Location = new System.Drawing.Point(1276, 567);
-            this.readStockButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.readStockButton.Margin = new System.Windows.Forms.Padding(4);
             this.readStockButton.Name = "readStockButton";
             this.readStockButton.Size = new System.Drawing.Size(204, 42);
             this.readStockButton.TabIndex = 3;
@@ -71,7 +71,7 @@
             // logBox
             // 
             this.logBox.Location = new System.Drawing.Point(218, 21);
-            this.logBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.logBox.Margin = new System.Windows.Forms.Padding(4);
             this.logBox.Multiline = true;
             this.logBox.Name = "logBox";
             this.logBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -81,7 +81,7 @@
             // updatePriceButton
             // 
             this.updatePriceButton.Location = new System.Drawing.Point(6, 133);
-            this.updatePriceButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.updatePriceButton.Margin = new System.Windows.Forms.Padding(4);
             this.updatePriceButton.Name = "updatePriceButton";
             this.updatePriceButton.Size = new System.Drawing.Size(204, 79);
             this.updatePriceButton.TabIndex = 5;
@@ -101,7 +101,7 @@
             // getProductListButton
             // 
             this.getProductListButton.Location = new System.Drawing.Point(6, 479);
-            this.getProductListButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.getProductListButton.Margin = new System.Windows.Forms.Padding(4);
             this.getProductListButton.Name = "getProductListButton";
             this.getProductListButton.Size = new System.Drawing.Size(204, 79);
             this.getProductListButton.TabIndex = 9;
@@ -112,11 +112,11 @@
             // runtimeIntervall
             // 
             this.runtimeIntervall.Location = new System.Drawing.Point(6, 567);
-            this.runtimeIntervall.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.runtimeIntervall.Margin = new System.Windows.Forms.Padding(6);
             this.runtimeIntervall.Name = "runtimeIntervall";
             this.runtimeIntervall.Size = new System.Drawing.Size(64, 31);
             this.runtimeIntervall.TabIndex = 10;
-            this.runtimeIntervall.Text = "360";
+            this.runtimeIntervall.Text = "1440";
             // 
             // label1
             // 
@@ -132,7 +132,7 @@
             // 
             this.autoUpdateCheck.AutoSize = true;
             this.autoUpdateCheck.Location = new System.Drawing.Point(170, 571);
-            this.autoUpdateCheck.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.autoUpdateCheck.Margin = new System.Windows.Forms.Padding(6);
             this.autoUpdateCheck.Name = "autoUpdateCheck";
             this.autoUpdateCheck.Size = new System.Drawing.Size(166, 29);
             this.autoUpdateCheck.TabIndex = 12;
@@ -153,7 +153,7 @@
             // checkWants
             // 
             this.checkWants.Location = new System.Drawing.Point(6, 219);
-            this.checkWants.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.checkWants.Margin = new System.Windows.Forms.Padding(4);
             this.checkWants.Name = "checkWants";
             this.checkWants.Size = new System.Drawing.Size(204, 79);
             this.checkWants.TabIndex = 14;
@@ -164,7 +164,7 @@
             // wantlistEditButton
             // 
             this.wantlistEditButton.Location = new System.Drawing.Point(6, 392);
-            this.wantlistEditButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.wantlistEditButton.Margin = new System.Windows.Forms.Padding(4);
             this.wantlistEditButton.Name = "wantlistEditButton";
             this.wantlistEditButton.Size = new System.Drawing.Size(204, 79);
             this.wantlistEditButton.TabIndex = 15;
@@ -175,7 +175,7 @@
             // checkDisplayPriceButton
             // 
             this.checkDisplayPriceButton.Location = new System.Drawing.Point(6, 306);
-            this.checkDisplayPriceButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.checkDisplayPriceButton.Margin = new System.Windows.Forms.Padding(4);
             this.checkDisplayPriceButton.Name = "checkDisplayPriceButton";
             this.checkDisplayPriceButton.Size = new System.Drawing.Size(204, 79);
             this.checkDisplayPriceButton.TabIndex = 16;
@@ -187,9 +187,9 @@
             // 
             this.groupBox1.Controls.Add(this.status);
             this.groupBox1.Location = new System.Drawing.Point(6, 21);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(6);
             this.groupBox1.Size = new System.Drawing.Size(204, 102);
             this.groupBox1.TabIndex = 17;
             this.groupBox1.TabStop = false;
@@ -215,7 +215,7 @@
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.Name = "MainView";
             this.Text = "MKMTool 0.5b - Alexander Pick 2017 - Licensed under GPL v3 ";

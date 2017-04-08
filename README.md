@@ -26,7 +26,7 @@ First a small disclaimer and things to remember:
 + If you find bugs, feel free to report them on github. 
 + This is GPL v3, free software written in C#.
 
-##Installation and starting off
+## Installation and starting off
 
 You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
 
@@ -47,13 +47,13 @@ Before you can use the tool please rename config_template.xml to config.xml and 
 
 The first startup takes a bit since 1 mb of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.
 
-##Ok - ok, but what can MKMTool do?
+## Ok - ok, but what can MKMTool do?
 
 ![screenshot](http://www.alexander-pick.com/github/tool1.PNG)
 
 MKMTool has 4 Main Features:
 
-###Price Update
+### Price Update
 The most interesting function (for me at least) is the automatic price update. This function will update all your card sale prices to a match the middle value of the best 4 prices from your country. This will guarantee you a good sale rate by not matching the cheapest seller who is sometimes off and could cause you a bad deal. This could be easily changed to match the 4 best prices by dealers as well, would be a simple code change in the parameters of the call in MKMBot.cs line 234.
 
 Formula is:
@@ -66,7 +66,7 @@ There is also a Bot mode for this, you can make the tool execute this task every
 
 You must feel confortable with the formula or change it to your demands, be aware that making mistaked in price calculation can cost you real money. Handle with care.
 
-###Check for cheap deals
+### Check for cheap deals
 
 ![screenshot](http://www.alexander-pick.com/github/tool2.PNG)
 
@@ -74,32 +74,32 @@ For the fun of it – with this feature you can find cheap deals with X percent 
 
 If cards are found they are directly added to your cart on MKM, just log in and check your cart.
 
-###Check Display Value
+### Check Display Value
 
 ![screenshot](http://www.alexander-pick.com/github/tool3.PNG)
 
 This is more of an experimental feature, I written it to roughly calculate the expected ROI (return of invest) of a display/box compared to current “real time” MKM SELL prices. Math is a bit clumsy but should be correct, I am always open for improvements to this. I learned that most data published on various sites tends to be rather old or trashy, this gives me a nice view on the “real” site of things. The ROI is shitty, but I still love buying Boxes.
 
-###Want List Editor
+### Want List Editor
 
 ![screenshot](http://www.alexander-pick.com/github/tool4.PNG)
 
 Easy Editor for MKM want list, I written this since the MKM features to build a list were too unhandy for me. This works well with the check for cheap deals feature.
 
-##Other Features / Options
+## Other Features / Options
 
-###Account Info
+### Account Info
 
 Does what it says, shows you the info stack of your account in raw data.
 
-###View Inventory
+### View Inventory
 
 Pretty much just shows you a list of your currently listed item – nothing special here.
 
-###Update Local MKM Product List
+### Update Local MKM Product List
 Updates the local offline database provided from MKM. This csv is usually maintained by the program, the option is just for debug purpose.
 
-###Resource URLS
+### Resource URLS
 
 Here are some URLs I thing you need to know about:
 
@@ -107,7 +107,7 @@ Here are some URLs I thing you need to know about:
 + MKM German site: https://www.magickartenmarkt.de/
 + MS Visual Studio 2015 Community: https://www.visualstudio.com/de/downloads/
 
-###And finally
+### And finally
 
 The development of this tool cost me a lot of time recently and a few bad (luckily bulk card) sales during the adjustment of the algorithm but it was worth it to see it done now. 
 
