@@ -2,6 +2,9 @@
 
 ## Last changes
 
+08.04.2017
++ changed the default minutes for the bot
+
 23.02.2017
 + country is no longer hardcoded and now determained at startup from your account details
 + code was cleaned up
