@@ -366,7 +366,31 @@ namespace MKMTool
 
                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                     debugCounter + "/" + iUpdated + " Articles updated successfully, " + iFailed + " failed\n", frm1);
+
+                String timeStamp = GetTimestamp(DateTime.Now);
+
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                    "Last Run finsihed: "+ timeStamp + "\n", frm1);
+
+                if (iFailed > 1)
+                {
+                    try
+                    {
+                        File.WriteAllText(@".\\" + DateTime.Now + ".log", MKMHelpers.PrettyXml(rdoc.ToString()));
+                    }
+                    catch (Exception eError)
+                    {
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR Msg : " + eError.Message + "\n",
+                            frm1);
+                    }
+
+                }
             }
+        }
+
+        private string GetTimestamp(DateTime now)
+        {
+            return now.ToString("dd.MM.yyyy HH:mm:ss");
         }
     }
 }

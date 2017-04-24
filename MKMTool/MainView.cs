@@ -33,6 +33,7 @@
 
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml;
@@ -117,11 +118,16 @@ namespace MKMTool
             sv1.ShowDialog();
         }
 
-        private void updatePriceButton_Click(object sender, EventArgs e)
+        private async void updatePriceRun()
         {
             var bot = new MKMBot();
 
             bot.updatePrices(this);
+        }
+
+        private async void updatePriceButton_Click(object sender, EventArgs e)
+        {
+            await Task.Run(() => updatePriceRun());
         }
 
         private void getProductListButton_Click(object sender, EventArgs e)
