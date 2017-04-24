@@ -376,7 +376,7 @@ namespace MKMTool
                 {
                     try
                     {
-                        File.WriteAllText(@".\\" + DateTime.Now + ".log", rdoc.ToString());
+                        File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
                     }
                     catch (Exception eError)
                     {

@@ -2,6 +2,10 @@
 
 ## Last changes
 
+24.04.2017
++ Made GUI respond during article update
++ Error Log improved
+
 08.04.2017
 + changed the default minutes for the bot
 
