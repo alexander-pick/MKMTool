@@ -223,7 +223,7 @@ namespace MKMTool
                         logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
 
                         var sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID +
-                                   "?userType=private&idLanguage=" + article["language"]["idLanguage"].InnerText +
+                                   "?idLanguage=" + article["language"]["idLanguage"].InnerText +
                                    "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
                                    + article["isFoil"].InnerText +
                                    "&isSigned=" + article["isSigned"].InnerText +
@@ -291,7 +291,7 @@ namespace MKMTool
 
                                             iRequestCount++;
 
-                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "UPDATE\n", frm1);
+                                            //frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "UPDATE\n", frm1);
 
 
                                             var sArticleRequest =
