@@ -2,6 +2,10 @@
 
 ## Last changes
 
+11.07.2017
++ Fixed weird ug which caused wrong price calculation on foregin systems
++ Fixed crash if articles other than singles are listed on the account
+
 24.04.2017
 + Made GUI respond during article update
 + Error Log improved
@@ -37,9 +41,9 @@ First a small disclaimer and things to remember:
 
 You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
 
-If you are too lazy to compile, here is a build: 
+If you are too lazy to compile, here is a build:
 
-http://www.alexander-pick.com/github/MKMTool-05b-Release_23022017.rar
+http://www.alexander-pick.com/github/MKMTool-05b-Release_11072017.rar 
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
