@@ -33,7 +33,9 @@
 
 using System;
 using System.Data;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -154,9 +156,9 @@ namespace MKMTool
 
                 var eS = new DataTable();
 
-                eS.Columns.Add("idExpansion", typeof (string));
-                eS.Columns.Add("abbreviation", typeof (string));
-                eS.Columns.Add("enName", typeof (string));
+                eS.Columns.Add("idExpansion", typeof(string));
+                eS.Columns.Add("abbreviation", typeof(string));
+                eS.Columns.Add("enName", typeof(string));
 
                 foreach (XmlNode nExpansion in node)
                 {
@@ -189,6 +191,12 @@ namespace MKMTool
 
         public void updatePrices(MainView frm1)
         {
+
+            // should fix weird float errors on foregin systems.
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+
+            //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), Application.CurrentCulture.EnglishName + "\n", frm1);
+
             var debugCounter = 0;
 
             var iRequestCount = 0;
@@ -216,24 +224,31 @@ namespace MKMTool
                 {
                     if (article["price"].InnerText != null)
                     {
-                        var sArticleID = article["idProduct"].InnerText;
 
-                        /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/products/" + sArticleID, "GET");
-
-                        logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
-
-                        var sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID +
-                                   "?idLanguage=" + article["language"]["idLanguage"].InnerText +
-                                   "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
-                                   + article["isFoil"].InnerText +
-                                   "&isSigned=" + article["isSigned"].InnerText +
-                                   "&isAltered=" + article["isAltered"].InnerText;
-
-                        //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID;
-                        //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID + "?start=0&maxResults=250";
+                        var sUrl = "http://not.initilaized";
 
                         try
                         {
+
+                            var sArticleID = article["idProduct"].InnerText;
+
+                            /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/products/" + sArticleID, "GET");
+
+                            logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
+
+                            //TODO: Crashs/Catchs on non single cards product, should add some detection for non card products later
+
+                            sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID +
+                                       "?idLanguage=" + article["language"]["idLanguage"].InnerText +
+                                       "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
+                                       + article["isFoil"].InnerText +
+                                       "&isSigned=" + article["isSigned"].InnerText +
+                                       "&isAltered=" + article["isAltered"].InnerText;
+
+                            //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID;
+                            //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID + "?start=0&maxResults=250";
+
+
                             var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
 
                             var node2 = doc2.GetElementsByTagName("article");
@@ -269,7 +284,7 @@ namespace MKMTool
 
                                     if (counter == 4)
                                     {
-                                        var dSetPrice = (aPrices[0] + aPrices[1] + aPrices[2] + aPrices[3])/4;
+                                        var dSetPrice = (aPrices[0] + aPrices[1] + aPrices[2] + aPrices[3]) / 4;
 
                                         if (dSetPrice < MKMHelpers.fAbsoluteMinPrice && article["product"]["rarity"].InnerText == "Rare")
                                         {
@@ -316,18 +331,21 @@ namespace MKMTool
                         }
                         catch (Exception eError)
                         {
+
+#if (DEBUG)
                             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                                 "ERR at  : " + article["product"]["enName"].InnerText + "\n", frm1);
                             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                                 "ERR Msg : " + eError.Message + "\n", frm1);
                             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR URL : " + sUrl + "\n", frm1);
-
+#endif
                             using (var sw = File.AppendText(@".\\error_log.txt"))
                             {
                                 sw.WriteLine("ERR at  : " + article["product"]["enName"].InnerText);
                                 sw.WriteLine("ERR Msg : " + eError.Message);
                                 sw.WriteLine("ERR URL : " + sUrl);
                             }
+
                         }
                     }
                 }
@@ -370,7 +388,7 @@ namespace MKMTool
                 String timeStamp = GetTimestamp(DateTime.Now);
 
                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                    "Last Run finsihed: "+ timeStamp + "\n", frm1);
+                    "Last Run finsihed: " + timeStamp + "\n", frm1);
 
                 if (iFailed > 1)
                 {
