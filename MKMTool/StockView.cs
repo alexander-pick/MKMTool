@@ -39,12 +39,36 @@ namespace MKMTool
     public partial class StockView : Form
     {
         private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable eS = new DataTable();
 
         public StockView()
         {
             InitializeComponent();
 
-            stockGridView.ReadOnly = true;
+            try
+            {
+                var bot = new MKMBot();
+
+                var doc = bot.getExpansions("1"); // Only MTG at present
+
+                var node = doc.GetElementsByTagName("expansion");
+
+                eS.Columns.Add("idExpansion", typeof(string));
+                //eS.Columns.Add("abbreviation", typeof(string));
+                eS.Columns.Add("enName", typeof(string));
+
+                foreach (XmlNode nExpansion in node)
+                {
+                    eS.Rows.Add(nExpansion["idExpansion"].InnerText, /*nExpansion["abbreviation"].InnerText,*/
+                        nExpansion["enName"].InnerText);
+                }
+
+                stockGridView.ReadOnly = true;
+            }
+            catch (Exception eError)
+            {
+                MessageBox.Show(eError.ToString());
+            }
 
             try
             {
@@ -61,10 +85,18 @@ namespace MKMTool
                 var dj = MKMHelpers.JoinDataTables(ds.Tables[0], dt,
                     (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
 
+                dj = MKMHelpers.JoinDataTables(dj, eS,
+                    (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
+
                 dj.Columns.Remove("article_Id");
                 dj.Columns.Remove("Date Added");
                 dj.Columns.Remove("Category ID");
+                dj.Columns.Remove("Category");
+                dj.Columns.Remove("Metacard ID");
+                dj.Columns.Remove("idArticle");
+                dj.Columns.Remove("idProduct");
                 dj.Columns.Remove("Expansion ID");
+                dj.Columns.Remove("idExpansion");
 
                 dj.Columns[dj.Columns.IndexOf("Name")].SetOrdinal(0);
 
@@ -75,6 +107,22 @@ namespace MKMTool
             {
                 MessageBox.Show(eError.ToString());
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string searchString = searchBox.Text.Replace("'", "");
+
+                (stockGridView.DataSource as DataTable).DefaultView.RowFilter =
+                    string.Format("Name LIKE '%{0}%'", searchString);
+            }
+            catch (Exception eError)
+            {
+                MessageBox.Show(eError.ToString());
+            }
+
         }
     }
 }

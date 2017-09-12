@@ -32,11 +32,14 @@
 #undef DEBUG
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml;
+using System.Xml.Serialization;
 using Timer = System.Timers.Timer;
 
 namespace MKMTool
@@ -221,6 +224,27 @@ namespace MKMTool
         {
             var cw = new CheckDisplayPrices(this);
             cw.ShowDialog();
+        }
+
+        private void downloadBuysToExcel_Click(object sender, EventArgs e)
+        {
+            logBox.AppendText("Downloading Buys data.\n");
+
+            var bot = new MKMBot();
+
+            XmlDocument xDoc = bot.getBuys(this, "8"); //mainForm
+
+            /*foreach (XmlElement folder in xDoc.SelectNodes("/folders/folder"))
+            {
+                string source = folder.SelectSingleNode("source").InnerText;
+                Console.WriteLine(source);
+            }
+
+            string sFilename = ".\\mcmbuys_" + DateTime.Now.ToString("yyyyMMddTHHmmss") + ".csv";
+
+            File.WriteAllLines(sFilename, list);
+
+            Process.Start(sFilename);*/
         }
     }
 }

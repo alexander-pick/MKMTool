@@ -410,5 +410,21 @@ namespace MKMTool
         {
             return now.ToString("dd.MM.yyyy HH:mm:ss");
         }
+
+        public XmlDocument getBuys(MainView mainView, string iType)
+        {
+            /*
+                bought or 1
+                paid or 2
+                sent or 4
+                received or 8
+                lost or 32
+                cancelled or 128
+            */
+
+            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v1.1/output.xml/orders/2/" + iType, "GET");
+
+            return doc;
+        }
     }
 }
