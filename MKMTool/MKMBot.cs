@@ -411,7 +411,7 @@ namespace MKMTool
             return now.ToString("dd.MM.yyyy HH:mm:ss");
         }
 
-        public XmlDocument getBuys(MainView mainView, string iType)
+        public string getBuys(MainView mainView, string iType)
         {
             /*
                 bought or 1
@@ -422,9 +422,55 @@ namespace MKMTool
                 cancelled or 128
             */
 
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v1.1/output.xml/orders/2/" + iType, "GET");
+            int count = 0;
 
-            return doc;
+            int iPage = 1;
+
+            string sFilename = ".\\mcmbuys_" + DateTime.Now.ToString("yyyyMMddTHHmmss") + ".csv";
+
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(sFilename))
+            {
+                do
+                {
+                    var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v1.1/output.xml/orders/2/" + iType + "/" + iPage, "GET");
+
+                    count = doc.SelectNodes("response/order").Count;
+
+                    iPage = iPage + 100;
+
+                    //Console.WriteLine(count);
+
+                    var oNodes = doc.GetElementsByTagName("order");
+
+                    
+
+                    foreach (XmlNode order in oNodes)
+                    {
+                        var aNodes = doc.GetElementsByTagName("article");
+
+                        string oID = order["idOrder"].InnerText;
+                        string sOdate = order["state"]["dateReceived"].InnerText;
+
+                        foreach (XmlNode article in aNodes)
+                        {
+                            try
+                            {
+                                file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + article["product"]["name"].InnerText + "\";\"" + article["product"]["expansion"].InnerText + "\";\"" + article["language"]["languageName"].InnerText + "\";\"" + article["price"].InnerText + "\"");
+                            }
+                            catch (Exception eError)
+                            {
+
+                            }
+
+                        }
+                    }
+                }
+                while (count == 100);
+            }
+            
+
+
+            return sFilename;
         }
     }
 }

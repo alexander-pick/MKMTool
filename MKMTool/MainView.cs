@@ -232,19 +232,9 @@ namespace MKMTool
 
             var bot = new MKMBot();
 
-            XmlDocument xDoc = bot.getBuys(this, "8"); //mainForm
+            string sFilename = bot.getBuys(this, "8"); //mainForm
 
-            /*foreach (XmlElement folder in xDoc.SelectNodes("/folders/folder"))
-            {
-                string source = folder.SelectSingleNode("source").InnerText;
-                Console.WriteLine(source);
-            }
-
-            string sFilename = ".\\mcmbuys_" + DateTime.Now.ToString("yyyyMMddTHHmmss") + ".csv";
-
-            File.WriteAllLines(sFilename, list);
-
-            Process.Start(sFilename);*/
+            Process.Start(sFilename);
         }
     }
 }
