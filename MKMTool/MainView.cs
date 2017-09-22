@@ -33,6 +33,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -68,28 +70,7 @@ namespace MKMTool
                     Application.Exit();
                 }
 
-                if (!File.Exists(@".\\mkminventory.csv"))
-                {
-                    var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
-
-                    var node = doc.GetElementsByTagName("response");
-
-                    var zipPath = @".\\mkminventory.zip";
-
-                    foreach (XmlNode aFile in node)
-                    {
-                        if (aFile["productsfile"].InnerText != null)
-                        {
-                            var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
-                            File.WriteAllBytes(zipPath, data);
-                        }
-                    }
-
-                    var file = File.ReadAllBytes(zipPath);
-                    var aDecompressed = MKMHelpers.gzDecompress(file);
-
-                    File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
-                }
+                MKMHelpers.GetProductList();
 
                 var bot = new MKMBot();
 
@@ -159,7 +140,7 @@ namespace MKMTool
                 logBox.AppendText("Timing MKM Update job every " + Convert.ToInt32(runtimeIntervall.Text) +
                                   " minutes.\n");
 
-                timer.Interval = Convert.ToInt32(runtimeIntervall.Text)*1000*60;
+                timer.Interval = Convert.ToInt32(runtimeIntervall.Text) * 1000 * 60;
 
                 timer.Elapsed += updatePriceEvent;
 

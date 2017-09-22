@@ -33,6 +33,7 @@
 
 using System;
 using System.Data;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -45,7 +46,7 @@ namespace MKMTool
     {
         public delegate void logboxAppendCallback(string text, MainView frm1);
 
-        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
 
         private void logBoxAppend(string text, MainView frm1)
         {
@@ -107,28 +108,7 @@ namespace MKMTool
 
         public void getProductList(MainView frm1)
         {
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
-
-            var node = doc.GetElementsByTagName("response");
-
-            var zipPath = @".\\mkminventory.zip";
-
-            foreach (XmlNode aFile in node)
-            {
-                if (aFile["productsfile"].InnerText != null)
-                {
-                    var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
-                    File.WriteAllBytes(zipPath, data);
-
-                    frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Downloaded inventory successfully!\n",
-                        frm1);
-                }
-            }
-
-            var file = File.ReadAllBytes(zipPath);
-            var aDecompressed = MKMHelpers.gzDecompress(file);
-
-            File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
+            MKMHelpers.GetProductList();
         }
 
         public DataTable buildProperWantsList(string sListId)
@@ -150,35 +130,13 @@ namespace MKMTool
                     return new DataTable();
                 }
 
-                var doc2 = bot.getExpansions("1"); // Only MTG at present
-
-                var node = doc2.GetElementsByTagName("expansion");
-
-                var eS = new DataTable();
-
-                eS.Columns.Add("idExpansion", typeof(string));
-                eS.Columns.Add("abbreviation", typeof(string));
-                eS.Columns.Add("enName", typeof(string));
-
-                foreach (XmlNode nExpansion in node)
-                {
-                    eS.Rows.Add(nExpansion["idExpansion"].InnerText, nExpansion["abbreviation"].InnerText,
-                        nExpansion["enName"].InnerText);
-                }
-
-                //DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
-
+                DataTable eS = MKMHelpers.ReadSQLiteToDt("expansions");
+                
                 var dv = MKMHelpers.JoinDataTables(dt, eS,
                     (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
                 dv = MKMHelpers.JoinDataTables(dv, ds.Tables["item"],
                     (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
-
-                /* dv.Columns.Remove("article_Id");
-             dv.Columns.Remove("Date Added");
-             dv.Columns.Remove("Category ID");*/
-
-                //dv.Columns.Remove("idExpansion");
 
                 return dv;
             }
@@ -441,8 +399,6 @@ namespace MKMTool
                     //Console.WriteLine(count);
 
                     var oNodes = doc.GetElementsByTagName("order");
-
-                    
 
                     foreach (XmlNode order in oNodes)
                     {

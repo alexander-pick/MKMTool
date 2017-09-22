@@ -41,7 +41,7 @@ namespace MKMTool
     public partial class WantlistEditorView : Form
     {
         private DataTable dj = new DataTable();
-        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
         private readonly DataTable eS = new DataTable();
 
         // Column Sort for listView Elements:

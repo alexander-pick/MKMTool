@@ -39,7 +39,7 @@ namespace MKMTool
 {
     public partial class CheckWantsView : Form
     {
-        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
 
         private readonly DataTable eS = new DataTable();
 

@@ -38,7 +38,7 @@ namespace MKMTool
 {
     public partial class StockView : Form
     {
-        private readonly DataTable dt = MKMHelpers.ConvertCSVtoDataTable(@".\\mkminventory.csv");
+        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
         private readonly DataTable eS = new DataTable();
 
         public StockView()
@@ -47,21 +47,7 @@ namespace MKMTool
 
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.getExpansions("1"); // Only MTG at present
-
-                var node = doc.GetElementsByTagName("expansion");
-
-                eS.Columns.Add("idExpansion", typeof(string));
-                //eS.Columns.Add("abbreviation", typeof(string));
-                eS.Columns.Add("enName", typeof(string));
-
-                foreach (XmlNode nExpansion in node)
-                {
-                    eS.Rows.Add(nExpansion["idExpansion"].InnerText, /*nExpansion["abbreviation"].InnerText,*/
-                        nExpansion["enName"].InnerText);
-                }
+                eS = MKMHelpers.ReadSQLiteToDt("expansions");
 
                 stockGridView.ReadOnly = true;
             }
