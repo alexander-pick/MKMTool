@@ -149,7 +149,6 @@ namespace MKMTool
 
         public void updatePrices(MainView frm1)
         {
-
             // should fix weird float errors on foregin systems.
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
 
@@ -214,10 +213,7 @@ namespace MKMTool
                             var counter = 0;
 
                             var aPrices = new float[4];
-
-                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                sArticleID + ">>> " + article["product"]["enName"].InnerText + "\n", frm1);
-
+                            
                             foreach (XmlNode offer in node2)
                             {
                                 if (offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
@@ -250,13 +246,12 @@ namespace MKMTool
                                             dSetPrice = MKMHelpers.fAbsoluteMinPrice;
                                         }
 
-                                        var sNewPrice = dSetPrice.ToString("0.00").Replace(",", ".");
-
                                         var sOldPrice = article["price"].InnerText;
-
+                                        var sNewPrice = dSetPrice.ToString("0.00").Replace(",", ".");
+                                       
                                         frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                            "Current Price: " + sOldPrice + " Calcualted Price:" + sNewPrice + "\n",
-                                            frm1);
+                                            sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                            "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
 
                                         try
                                         {
@@ -281,11 +276,16 @@ namespace MKMTool
                                             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), eError.ToString(),
                                                 frm1);
                                         }
-
-
                                         break;
                                     }
                                 }
+                            }
+                            if (counter < 4 && MKMHelpers.bLogNonUpdates)
+                            {
+                                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                    sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                    "Current Price: " + article["price"].InnerText + ", unchanged, only " + counter + " similar items found" + Environment.NewLine,
+                                    frm1);
                             }
                         }
                         catch (Exception eError)

@@ -56,6 +56,10 @@ namespace MKMTool
         // My userId (to disregard items listed by myself when setting a new price)
         public static string sMyId = "0";
 
+        // if a price is not updated for a given item, the log will list the item and tell the reason (not enough similar items, no meaningful price change...) if this is set to true
+        // when set to false, it will not be listed in the update log at all 
+        public static bool bLogNonUpdates = false; // TODO - make changable from GUI
+
         private static DataTable dt = new DataTable();
 
         public static Dictionary<string, string> dLanguages = new Dictionary<string, string>
