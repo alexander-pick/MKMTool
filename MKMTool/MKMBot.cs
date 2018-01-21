@@ -217,12 +217,6 @@ namespace MKMTool
                             foreach (XmlNode offer in node2)
                             {
                                 if (offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
-                                    &&
-                                    offer["language"]["idLanguage"].InnerText ==
-                                    article["language"]["idLanguage"].InnerText
-                                    && offer["isFoil"].InnerText == article["isFoil"].InnerText
-                                    && offer["isSigned"].InnerText == article["isSigned"].InnerText
-                                    && offer["isAltered"].InnerText == article["isAltered"].InnerText
                                     && offer["condition"].InnerText == article["condition"].InnerText
                                     && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
                                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
