@@ -246,34 +246,45 @@ namespace MKMTool
                                             dSetPrice = MKMHelpers.fAbsoluteMinPrice;
                                         }
 
-                                        var sOldPrice = article["price"].InnerText;
+                                        var sOldPrice = article["price"].InnerText.Replace(".", ",");
+                                        float dOldPrice = Convert.ToSingle(sOldPrice);
                                         var sNewPrice = dSetPrice.ToString("0.00").Replace(",", ".");
-                                       
-                                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                            sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
-                                            "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
 
-                                        try
-                                        {
-                                            // if (sNewPrice != sOldPrice)
-                                            //{
+                                        if (dSetPrice > dOldPrice + MKMHelpers.fAbsoluteMinPrice || dSetPrice < dOldPrice - MKMHelpers.fAbsoluteMinPrice) // only update the price if it changed meaningfully
+                                        {                                            
+                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                                "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
 
-                                            iRequestCount++;
+                                            try
+                                            {
+                                                // if (sNewPrice != sOldPrice)
+                                                //{
 
-                                            //frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "UPDATE\n", frm1);
+                                                iRequestCount++;
+
+                                                //frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "UPDATE\n", frm1);
 
 
-                                            var sArticleRequest =
-                                                MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
+                                                var sArticleRequest =
+                                                    MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
 
-                                            sRequestXML += sArticleRequest;
+                                                sRequestXML += sArticleRequest;
 
-                                            iRequestCount++;
-                                            //}
+                                                iRequestCount++;
+                                                //}
+                                            }
+                                            catch (Exception eError)
+                                            {
+                                                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), eError.ToString(),
+                                                    frm1);
+                                            }
                                         }
-                                        catch (Exception eError)
+                                        else if (MKMHelpers.bLogNonUpdates)
                                         {
-                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), eError.ToString(),
+                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                                "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice + " - small difference, price unchanged" + Environment.NewLine,
                                                 frm1);
                                         }
                                         break;
