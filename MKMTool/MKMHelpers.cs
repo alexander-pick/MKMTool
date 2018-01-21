@@ -53,6 +53,9 @@ namespace MKMTool
         // My origin country (to find domnestic deals)
         public static string sMyOwnCountry = "D";
 
+        // My userId (to disregard items listed by myself when setting a new price)
+        public static string sMyId = "0";
+
         private static DataTable dt = new DataTable();
 
         public static Dictionary<string, string> dLanguages = new Dictionary<string, string>

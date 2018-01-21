@@ -77,7 +77,7 @@ namespace MKMTool
                 var doc2 = bot.getAccount();
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
-
+                MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
             }
             catch (Exception eError)
             {

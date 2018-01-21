@@ -229,6 +229,7 @@ namespace MKMTool
                                     && offer["isAltered"].InnerText == article["isAltered"].InnerText
                                     && offer["condition"].InnerText == article["condition"].InnerText
                                     && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
+                                    && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                                     )
                                 {
                                     //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["product"]["enName"].InnerText + "\n", frm1);
