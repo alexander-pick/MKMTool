@@ -52,6 +52,8 @@ namespace MKMTool
 
         private static readonly Timer timer = new Timer();
 
+        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
+
         public MainView()
         {
             InitializeComponent();
@@ -216,6 +218,14 @@ namespace MKMTool
             string sFilename = bot.getBuys(this, "8"); //mainForm
 
             Process.Start(sFilename);
+        }
+
+        private void buttonSettings_Click(object sender, EventArgs e)
+        {
+            if (settingsWindow.Visible)
+                settingsWindow.Hide();
+            else
+                settingsWindow.Show(this);
         }
     }
 }

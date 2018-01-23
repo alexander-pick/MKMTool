@@ -121,6 +121,12 @@
     <Compile Include="StockView.Designer.cs">
       <DependentUpon>StockView.cs</DependentUpon>
     </Compile>
+    <Compile Include="UpdatePriceSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UpdatePriceSettings.Designer.cs">
+      <DependentUpon>UpdatePriceSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="WantlistEditorView.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -151,6 +157,9 @@
     </Compile>
     <EmbeddedResource Include="StockView.resx">
       <DependentUpon>StockView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UpdatePriceSettings.resx">
+      <DependentUpon>UpdatePriceSettings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="WantlistEditorView.resx">
       <DependentUpon>WantlistEditorView.cs</DependentUpon>
