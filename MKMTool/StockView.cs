@@ -58,9 +58,7 @@ namespace MKMTool
 
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.readStock();
+                var doc = MKMInteract.RequestHelper.readStock();
 
                 var xmlReader = new XmlNodeReader(doc);
 

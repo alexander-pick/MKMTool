@@ -435,9 +435,7 @@ namespace MKMTool
         {
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.getExpansions("1"); // Only MTG at present
+                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
 
                 var node = doc.GetElementsByTagName("expansion");
 

@@ -140,6 +140,41 @@ namespace MKMTool
 
                 return XMLContent;
             }
+
+            public static XmlDocument getAccount()
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/account", "GET");
+            }
+
+            public static XmlDocument getWantsLists()
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist", "GET");
+            }
+
+            public static XmlDocument getWantsListByID(string sID)
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sID, "GET");
+            }
+
+            public static XmlDocument readStock()
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
+            }
+
+            public static XmlDocument emptyCart()
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/shoppingcart", "DELETE");
+            }
+
+            public static XmlDocument getExpansionsSingles(string ExpansionID)
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/expansions/" + ExpansionID + "/singles", "GET"); ;
+            }
+
+            public static XmlDocument getExpansions(string sGameID)
+            {
+                return makeRequest("https://www.mkmapi.eu/ws/v2.0/games/" + sGameID + "/expansions", "GET");
+            }
         }
     }
 }

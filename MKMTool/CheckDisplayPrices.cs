@@ -49,9 +49,7 @@ namespace MKMTool
 
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.getExpansions("1"); // Only MTG at present
+                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
 
                 var node = doc.GetElementsByTagName("expansion");
 
@@ -88,13 +86,11 @@ namespace MKMTool
         {
             try
             {
-                var bot = new MKMBot();
-
                 //used to determain index of best start edition
                 //MessageBox.Show((editionBox.SelectedIndex.ToString()));
 
                 var doc =
-                    bot.getExpansionsSingles((editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
+                    MKMInteract.RequestHelper.getExpansionsSingles((editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
                 //would be easier if mkm would deliver detailed info with this call but ...
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),

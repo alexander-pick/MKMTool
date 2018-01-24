@@ -39,10 +39,8 @@ namespace MKMTool
         public AccountInfo()
         {
             InitializeComponent();
-
-            var bot = new MKMBot();
-
-            var doc = bot.getAccount();
+                        
+            var doc = MKMInteract.RequestHelper.getAccount();
 
             treeView1.Nodes.Clear();
             treeView1.Nodes.Add(new TreeNode("Account Details"));

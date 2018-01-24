@@ -73,10 +73,8 @@ namespace MKMTool
                 }
 
                 MKMHelpers.GetProductList();
-
-                var bot = new MKMBot();
-
-                var doc2 = bot.getAccount();
+                                
+                var doc2 = MKMInteract.RequestHelper.getAccount();
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
                 MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
@@ -118,9 +116,7 @@ namespace MKMTool
 
         private void getProductListButton_Click(object sender, EventArgs e)
         {
-            var bot = new MKMBot();
-
-            bot.getProductList(this);
+            MKMHelpers.GetProductList();
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)

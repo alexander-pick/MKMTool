@@ -53,71 +53,32 @@ namespace MKMTool
             frm1.logBox.AppendText(text);
         }
 
-        public XmlDocument getExpansionsSingles(string ExpansionID)
         {
-            var doc =
-                MKMInteract.RequestHelper.makeRequest(
-                    "https://www.mkmapi.eu/ws/v2.0/expansions/" + ExpansionID + "/singles", "GET");
-
-            return doc;
         }
 
-        public XmlDocument getExpansions(string sGameID)
-        {
-            var doc =
-                MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/games/" + sGameID + "/expansions",
-                    "GET");
 
-            return doc;
+
+        {
+
+
+
+
+
+
         }
 
-        public XmlDocument getAccount()
         {
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/account", "GET");
-
-            return doc;
         }
 
-        public XmlDocument getWantsLists()
         {
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist", "GET");
-
-            return doc;
-        }
-
-        public XmlDocument getWantsListByID(string sID)
-        {
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sID, "GET");
-
-            return doc;
-        }
-
-        public XmlDocument readStock()
-        {
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
-
-            return doc;
-        }
-
-        public XmlDocument emptyCart()
-        {
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/shoppingcart", "DELETE");
-
-            return doc;
-        }
-
-        public void getProductList(MainView frm1)
-        {
-            MKMHelpers.GetProductList();
         }
 
         public DataTable buildProperWantsList(string sListId)
         {
             try
             {
-                var bot = new MKMBot();
 
-                var doc = bot.getWantsListByID(sListId);
+                var doc = MKMInteract.RequestHelper.getWantsListByID(sListId);
 
                 var xmlReader = new XmlNodeReader(doc);
 
@@ -159,7 +120,7 @@ namespace MKMTool
             var iRequestCount = 0;
             var sRequestXML = "";
 
-            var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
+            var doc = MKMInteract.RequestHelper.readStock();
 
             //logBox.AppendText(OutputFormat.PrettyXml(doc.OuterXml));
 
