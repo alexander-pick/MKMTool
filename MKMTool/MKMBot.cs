@@ -39,38 +39,120 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
+using System.Collections.Generic;
 
 namespace MKMTool
 {
+    public enum PriceSetMethod { ByAverage, ByPercentageOfLowestPrice, ByPercentageOfHighestPrice };
+    public enum AcceptedCondition { OnlyMatching, // only items in matching condition will be considered similar
+        Conditional, // acceptance decided by additional constraints
+        Anything // items in any matching or better condition will be considered similar
+    };
+
+    /// <summary>
+    /// Contains all customizable settings that are used by MKMBot
+    /// </summary>
+    public struct MKMBotSettings
+    {
+        /// Price Estimation Settings
+
+        // each pair is a <max price of item; max change in % allowed for such item> - must be sorted - ascending - to function correctly!
+        public SortedList<double, double> priceMaxChangeLimits;
+        public double priceMinRarePrice;
+        public int priceMinSimilarItems, priceMaxSimilarItems;
+        public PriceSetMethod priceSetPriceBy;
+        // if price computed based on average, priceFactor = 0.5 will set price as average of similar items, at 0
+        //      it will be equal to the lowest price, at 1 to the highest price. Remaining values are linear interpolation between either 
+        //      min price and average (0-0.5) or average and highest price (0.5-1)
+        // if price computed as percentage of lowest or higest price, priceFactor is that percentage
+        public double priceFactor;
+        public double priceOutlierLowLimit, priceOutlierUpLimit; // cut-off outliers that are more than x% away from median
+
+
+        /// Card Condition Settings
+        
+        public AcceptedCondition condAcceptance;
+        // setting of conditions for the "Conditional" condAcceptance mode
+        // true to turn on condition, false to turn it off
+        public bool condAtLeastOneMatchAbove, condLastMatchSimilarPrice, condBetterOnlyBelowMinItems;
+        public double condSimilarPriceLimit; // used by the condLastMatchSimilarPrice
+        // if this is true, all conditions which are turned on must be passed to take the item into account
+        // if it is set to false, only any one is sufficient
+        public bool condRequireAllConditions;
+
+
+        /// Log Settings
+
+        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logHighPriceChange;
+
+        /// Other Settings
+
+        public bool testMode; // if set to true, price updates will be computed and logged, but not sent to MKM
+    }
+
     internal class MKMBot
     {
         public delegate void logboxAppendCallback(string text, MainView frm1);
 
         private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
 
+        private MKMBotSettings settings;
+        
+        public MKMBot()
+        {
+            this.settings = GenerateDefaultSettings();
+        }
+
+        public MKMBot(MKMBotSettings settings)
+        {
+            this.settings = settings;
+        }
+
+
+        /// <summary>
+        /// Generates the default settings for MKMBot.
+        /// To be used when GUI is not available / relevant.
+        /// </summary>
+        /// <returns>Default settings for all parameters of MKMBot</returns>
+        public static MKMBotSettings GenerateDefaultSettings()
+        {
+            MKMBotSettings s = new MKMBotSettings();
+
+            s.priceMaxChangeLimits = new SortedList<double, double>(); // empty by default
+
+            s.priceMinRarePrice = 0.05;
+            s.priceMinSimilarItems = 4; // require exactly 4 items
+            s.priceMaxSimilarItems = 4;
+            s.priceSetPriceBy = PriceSetMethod.ByAverage;
+            s.priceFactor = 0.5;
+            s.priceOutlierLowLimit = 10000; // by default virtually don't cut off any outliers
+            s.priceOutlierUpLimit = 10000;
+
+            s.condAcceptance = AcceptedCondition.OnlyMatching;
+            s.condAtLeastOneMatchAbove = false;
+            s.condLastMatchSimilarPrice = false;
+            s.condBetterOnlyBelowMinItems = false;
+            s.condSimilarPriceLimit = 1;
+            s.condRequireAllConditions = false;
+
+            s.logUpdated = true;
+            s.logLessThanMinimum = true;
+            s.logSmallPriceChange = true;
+            s.logHighPriceChange = true;
+
+            s.testMode = false;
+
+            return s;
+        }
+
+        public void setSettings(MKMBotSettings s)
+        {
+            this.settings = s;
+        }
+
         private void logBoxAppend(string text, MainView frm1)
         {
             frm1.logBox.AppendText(text);
-        }
-
-        {
-        }
-
-
-
-        {
-
-
-
-
-
-
-        }
-
-        {
-        }
-
-        {
         }
 
         public DataTable buildProperWantsList(string sListId)
@@ -119,7 +201,6 @@ namespace MKMTool
 
             var iRequestCount = 0;
             var sRequestXML = "";
-
             var doc = MKMInteract.RequestHelper.readStock();
 
             //logBox.AppendText(OutputFormat.PrettyXml(doc.OuterXml));

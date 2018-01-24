@@ -48,7 +48,7 @@ namespace MKMTool
         // it will be equal to the lowest price, at 1 to the highest price. Remaining values are linear interpolation between either 
         // min price and average (0-0.5) or average and highest price (0.5-1)
         private double priceByAvg = 0.5;
-
+        
         public UpdatePriceSettings()
         {
             InitializeComponent();
@@ -69,6 +69,150 @@ namespace MKMTool
                 Hide();
             }
         }
+
+        /// <summary>
+        /// Gathers data from the gui and creates their appropriate representation as the MKMBotSettings object.
+        /// </summary>
+        /// <returns>Settings for all parameters of the MKMBot as chosen by the user in the GUI.</returns>
+        public MKMBotSettings GenerateBotSettings()
+        {
+            MKMBotSettings s = new MKMBotSettings();
+
+            s.priceMaxChangeLimits = new SortedList<double, double>();
+
+            string[] limits = textBoxPriceEstMaxChange.Text.Split(';');
+            double threshold, allowedChange;
+            for (int i = 1; i < limits.Length; i += 2)
+            {
+                if(double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                    s.priceMaxChangeLimits.Add(threshold, allowedChange);
+            }            
+
+            s.priceMinRarePrice = Decimal.ToDouble(numericUpDownPriceEstMinPrice.Value);
+            s.priceMinSimilarItems = Decimal.ToInt32(numericUpDownPriceEstMinN.Value);
+            s.priceMaxSimilarItems = Decimal.ToInt32(numericUpDownPriceEstMaxN.Value);
+            if (radioButtonPriceEstPriceByAvg.Checked)
+            {
+                s.priceSetPriceBy = PriceSetMethod.ByAverage;
+                s.priceFactor = (double)trackBarPriceEstAvg.Value / (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum);
+            }
+            else if (radioButtonPriceEstByLowestPrice.Checked)
+            {
+                s.priceSetPriceBy = PriceSetMethod.ByPercentageOfLowestPrice;
+                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value);
+            }
+            else
+            {
+                s.priceSetPriceBy = PriceSetMethod.ByPercentageOfHighestPrice;
+                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value);
+            }
+
+            s.priceOutlierLowLimit = Decimal.ToDouble(numericUpDownPriceEstOutliersLow.Value);
+            s.priceOutlierUpLimit = Decimal.ToDouble(numericUpDownPriceEstOutliersHigh.Value);
+
+            if (checkBoxCondMatchOnly.Checked)
+                s.condAcceptance = AcceptedCondition.OnlyMatching;
+            else if (checkBoxCondAcceptBetterAlways.Checked)
+                s.condAcceptance = AcceptedCondition.Anything;
+            else
+            {
+                s.condAcceptance = AcceptedCondition.Conditional;
+                s.condAtLeastOneMatchAbove = checkBoxCondMatchesAbove.Checked;
+                s.condLastMatchSimilarPrice = checkBoxCondSimilarPrice.Checked;
+                s.condSimilarPriceLimit = Decimal.ToDouble(numericUpDownCondSimilarPrice.Value);
+                s.condBetterOnlyBelowMinItems = checkBoxCondBetterIfBelowMinimum.Checked;
+                s.condRequireAllConditions = radioButtonCondUseAND.Checked;
+            }
+            
+            s.logUpdated = checkBoxLogUpdated.Checked;
+            s.logLessThanMinimum = checkBoxLogMinItems.Checked;
+            s.logSmallPriceChange =checkBoxLogSmallChange.Checked;
+            s.logHighPriceChange = checkBoxLogLargeChange.Checked;
+            
+            s.testMode = checkBoxTestMode.Checked;
+
+            return s;
+        }
+
+        /// <summary>
+        /// Resets all GUI controls to default values.
+        /// </summary>
+        public void ResetToDefault()
+        {
+            UpdateSettingsGUI(MKMBot.GenerateDefaultSettings());
+        }
+
+        /// <summary>
+        /// Updates the GUI controls according to the provided settings.
+        /// </summary>
+        /// <param name="settings">The settings to which to set the GUI.</param>
+        public void UpdateSettingsGUI(MKMBotSettings settings)
+        {            
+            textBoxPriceEstMaxChange.Text = "";
+            foreach (var limitPair in settings.priceMaxChangeLimits)
+                textBoxPriceEstMaxChange.Text += "" + limitPair.Key + ";" + limitPair.Value;
+
+            numericUpDownPriceEstMinPrice.Value = new decimal(settings.priceMinRarePrice);
+            numericUpDownPriceEstMinN.Value = new decimal(settings.priceMinSimilarItems);
+            numericUpDownPriceEstMaxN.Value = new decimal(settings.priceMaxSimilarItems);
+            if (settings.priceSetPriceBy == PriceSetMethod.ByAverage)
+            {
+                radioButtonPriceEstPriceByAvg.Checked = true;
+                radioButtonPriceEstByLowestPrice.Checked = false;
+                radioButtonPriceEstHighestPrice.Checked = false;
+                trackBarPriceEstAvg.Value = (int)(settings.priceFactor * (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum) + trackBarPriceEstAvg.Minimum);
+            }
+            else if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
+            {
+                radioButtonPriceEstPriceByAvg.Checked = false;
+                radioButtonPriceEstByLowestPrice.Checked = true;
+                radioButtonPriceEstHighestPrice.Checked = false;
+                numericUpDownPriceEstLowestPrice.Value = new decimal(settings.priceFactor);
+            }
+            else
+            {
+                radioButtonPriceEstPriceByAvg.Checked = false;
+                radioButtonPriceEstByLowestPrice.Checked = false;
+                radioButtonPriceEstHighestPrice.Checked = true;
+                numericUpDownPriceEstHighestPrice.Value = new decimal(settings.priceFactor);
+            }
+            numericUpDownPriceEstOutliersLow.Value = new decimal(settings.priceOutlierLowLimit);
+            numericUpDownPriceEstOutliersHigh.Value = new decimal(settings.priceOutlierUpLimit);
+
+
+            if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
+            {
+                checkBoxCondMatchOnly.Checked = true;
+                checkBoxCondAcceptBetterAlways.Checked = false;
+                groupBoxCondConditional.Enabled = false;
+            }
+            else if (settings.condAcceptance == AcceptedCondition.Anything)
+            {
+                checkBoxCondAcceptBetterAlways.Checked = true;
+                checkBoxCondMatchOnly.Checked = false;
+                groupBoxCondConditional.Enabled = false;
+            }
+            else
+            {
+                checkBoxCondAcceptBetterAlways.Checked = false;
+                checkBoxCondMatchOnly.Checked = false;
+                groupBoxCondConditional.Enabled = true;
+                checkBoxCondMatchesAbove.Checked = settings.condAtLeastOneMatchAbove;
+                checkBoxCondSimilarPrice.Checked = settings.condLastMatchSimilarPrice;
+                numericUpDownCondSimilarPrice.Value = new decimal(settings.condSimilarPriceLimit);
+                checkBoxCondBetterIfBelowMinimum.Checked = settings.condBetterOnlyBelowMinItems;
+                radioButtonCondUseAND.Checked = settings.condRequireAllConditions;
+                radioButtonCondUseOR.Checked = !settings.condRequireAllConditions;
+            }
+
+            checkBoxLogUpdated.Checked = settings.logUpdated;
+            checkBoxLogMinItems.Checked = settings.logLessThanMinimum;
+            checkBoxLogSmallChange.Checked = settings.logSmallPriceChange;
+            checkBoxLogLargeChange.Checked = settings.logHighPriceChange;
+
+            checkBoxTestMode.Checked = settings.testMode;
+        }
+
 
         private void checkBoxCondSimilarPrice_CheckedChanged(object sender, EventArgs e)
         {

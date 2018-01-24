@@ -53,7 +53,8 @@ namespace MKMTool
         private static readonly Timer timer = new Timer();
 
         private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
-
+        private MKMBot bot = new MKMBot();
+        
         public MainView()
         {
             InitializeComponent();
@@ -83,7 +84,6 @@ namespace MKMTool
             {
                 MessageBox.Show(eError.Message);
             }
-
         }
 
         private void loginButton_Click(object sender, EventArgs e)
@@ -104,13 +104,12 @@ namespace MKMTool
 
         private async void updatePriceRun()
         {
-            var bot = new MKMBot();
-
             bot.updatePrices(this);
         }
 
         private async void updatePriceButton_Click(object sender, EventArgs e)
         {
+            bot.setSettings(settingsWindow.GenerateBotSettings());
             await Task.Run(() => updatePriceRun());
         }
 
@@ -177,8 +176,7 @@ namespace MKMTool
                 MessageBox.Show(eError.ToString());
             }
 
-            var bot = new MKMBot();
-
+            bot.setSettings(settingsWindow.GenerateBotSettings());
             bot.updatePrices(this); //mainForm
         }
 
@@ -209,7 +207,7 @@ namespace MKMTool
         {
             logBox.AppendText("Downloading Buys data.\n");
 
-            var bot = new MKMBot();
+            bot.setSettings(settingsWindow.GenerateBotSettings());
 
             string sFilename = bot.getBuys(this, "8"); //mainForm
 
