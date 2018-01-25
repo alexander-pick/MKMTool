@@ -182,15 +182,16 @@ namespace MKMTool
 
         public void updatePrices(MainView frm1)
         {
+            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                "Updating Prices..." + Environment.NewLine, frm1);
             // should fix weird float errors on foregin systems.
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
 
             //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), Application.CurrentCulture.EnglishName + "\n", frm1);
 
             var debugCounter = 0;
-
-            var iRequestCount = 0;
-            var sRequestXML = "";
+            
+            string sRequestXML = "";
             var doc = MKMInteract.RequestHelper.readStock();
 
             //logBox.AppendText(OutputFormat.PrettyXml(doc.OuterXml));
@@ -209,145 +210,257 @@ namespace MKMTool
                 }
 #endif
 
-                if (article["idArticle"].InnerText != null)
+                if (article["idArticle"].InnerText != null && article["price"].InnerText != null)
                 {
-                    if (article["price"].InnerText != null)
+                    var sUrl = "http://not.initilaized";
+
+                    try
                     {
+                        var sArticleID = article["idProduct"].InnerText;
 
-                        var sUrl = "http://not.initilaized";
+                        /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/products/" + sArticleID, "GET");
 
-                        try
+                        logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
+                        
+                        sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID +
+                                    "?idLanguage=" + article["language"]["idLanguage"].InnerText +
+                                    "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
+                                    + article["isFoil"].InnerText +
+                                    "&isSigned=" + article["isSigned"].InnerText +
+                                    "&isAltered=" + article["isAltered"].InnerText;
+
+                        //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID;
+                        //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID + "?start=0&maxResults=250";
+
+
+                        var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
+
+                        var node2 = doc2.GetElementsByTagName("article");
+                        
+                        int lastMatch = -1;
+                        List<double> prices = new List<double>();
+                        bool minNumberNotYetFound = true, outliersCulled = false;
+                        foreach (XmlNode offer in node2)
                         {
-
-                            var sArticleID = article["idProduct"].InnerText;
-
-                            /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/products/" + sArticleID, "GET");
-
-                            logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
-
-                            //TODO: Crashs/Catchs on non single cards product, should add some detection for non card products later
-
-                            sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID +
-                                       "?idLanguage=" + article["language"]["idLanguage"].InnerText +
-                                       "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
-                                       + article["isFoil"].InnerText +
-                                       "&isSigned=" + article["isSigned"].InnerText +
-                                       "&isAltered=" + article["isAltered"].InnerText;
-
-                            //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID;
-                            //string sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + sArticleID + "?start=0&maxResults=250";
-
-
-                            var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
-
-                            var node2 = doc2.GetElementsByTagName("article");
-
-                            var counter = 0;
-
-                            var aPrices = new float[4];
-                            
-                            foreach (XmlNode offer in node2)
+                            // according to the API documentation, "The 'condition' key is only returned for single cards. "
+                            // -> check if condition exists to see if this is a single card or something else
+                            if (offer["condition"] != null
+                                && offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
+                                && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
+                                && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
+                                )
                             {
-                                if (offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
-                                    && offer["condition"].InnerText == article["condition"].InnerText
-                                    && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
-                                    && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
-                                    )
+                                //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["product"]["enName"].InnerText + "\n", frm1);
+                                //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["price"].InnerText + " " + offer["price"].InnerText + "\n", frm1);
+
+                                if (offer["condition"].InnerText == article["condition"].InnerText)
+                                    lastMatch = prices.Count - 1;
+                                else if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
+                                    continue;
+                                
+                                var sXPrice = offer["price"].InnerText.Replace(".", ",");
+
+                                float price = Convert.ToSingle(sXPrice);
+
+                                if (minNumberNotYetFound)
                                 {
-                                    //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["product"]["enName"].InnerText + "\n", frm1);
-                                    //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["price"].InnerText + " " + offer["price"].InnerText + "\n", frm1);
-
-                                    var sXPrice = offer["price"].InnerText.Replace(".", ",");
-
-                                    aPrices[counter] = Convert.ToSingle(sXPrice);
-
-                                    counter++;
-
-                                    if (counter == 4)
-                                    {
-                                        var dSetPrice = (aPrices[0] + aPrices[1] + aPrices[2] + aPrices[3]) / 4;
-
-                                        if (dSetPrice < MKMHelpers.fAbsoluteMinPrice && article["product"]["rarity"].InnerText == "Rare")
-                                        {
-                                            dSetPrice = MKMHelpers.fAbsoluteMinPrice;
-                                        }
-
-                                        var sOldPrice = article["price"].InnerText.Replace(".", ",");
-                                        float dOldPrice = Convert.ToSingle(sOldPrice);
-                                        var sNewPrice = dSetPrice.ToString("0.00").Replace(",", ".");
-
-                                        if (dSetPrice > dOldPrice + MKMHelpers.fAbsoluteMinPrice || dSetPrice < dOldPrice - MKMHelpers.fAbsoluteMinPrice) // only update the price if it changed meaningfully
-                                        {                                            
-                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
-                                                "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
-
-                                            try
-                                            {
-                                                // if (sNewPrice != sOldPrice)
-                                                //{
-
-                                                iRequestCount++;
-
-                                                //frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "UPDATE\n", frm1);
-
-
-                                                var sArticleRequest =
-                                                    MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
-
-                                                sRequestXML += sArticleRequest;
-
-                                                iRequestCount++;
-                                                //}
-                                            }
-                                            catch (Exception eError)
-                                            {
-                                                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), eError.ToString(),
-                                                    frm1);
-                                            }
-                                        }
-                                        else if (MKMHelpers.bLogNonUpdates)
-                                        {
-                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
-                                                "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice + " - small difference, price unchanged" + Environment.NewLine,
-                                                frm1);
-                                        }
+                                    prices.Add(price);
+                                    if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
                                         break;
+                                    // we can now check for the outliers in the first part of the sequence
+                                    // If there are outliers on the right side (too expensive), we can directly end now - it will not get better
+                                    if (prices.Count == settings.priceMinSimilarItems)
+                                    {
+                                        // start from the median and go both ways to cut off significantly cheap items as well
+                                        int median = prices.Count / 2;
+                                        for (int i = median + 1; i < prices.Count; i++) // first the expensive ones to see if we can end immediately
+                                        {
+                                            // find the right limit
+                                            double maxAllowedDif = double.MaxValue;
+                                            foreach (var limit in settings.priceMaxDifferenceLimits)
+                                            {
+                                                if (limit.Key > prices[i - 1])
+                                                {
+                                                    maxAllowedDif = prices[i - 1] * limit.Value;
+                                                    break;
+                                                }
+                                            }
+                                            if (prices[i] - prices[i - 1] > maxAllowedDif)
+                                                prices.Clear();
+                                        }
+                                        if (prices.Count == 0)
+                                        {
+                                            lastMatch = 0; // mismatching prices.Count and lastMatch is later used to identify what message to print
+                                            break;
+                                        }
+                                        for (int i = median - 1; i >= 0; i--)
+                                        {
+                                            // find the right limit
+                                            double maxAllowedDif = double.MaxValue;
+                                            foreach (var limit in settings.priceMaxDifferenceLimits)
+                                            {
+                                                if (limit.Key > prices[i + 1])
+                                                {
+                                                    maxAllowedDif = prices[i + 1] * limit.Value;
+                                                    break;
+                                                }
+                                            }
+                                            if (prices[i + 1] - prices[i] > maxAllowedDif)
+                                            {
+                                                prices.RemoveRange(0, i + 1); // remove the first items until item i to get rid of all the outliers
+                                                break;
+                                            }
+                                        }
+                                        // even if some cheapest outliers were culled, consider MIN number of items found and from now on
+                                        // cull only from the top - this way is ensured we stay on the cheaper side,
+                                        // after all, there can't be too many outliers - if there are, they are not outliers anymore
+                                        minNumberNotYetFound = false; 
                                     }
                                 }
+                                else
+                                {
+                                    // check if it's not significantly more expensive than previous item
+                                    if (prices.Count > 1)
+                                    {
+                                        // find the right limit
+                                        double maxAllowedDif = double.MaxValue;
+                                        foreach (var limit in settings.priceMaxDifferenceLimits)
+                                        {
+                                            if (limit.Key > prices[prices.Count - 1])
+                                            {
+                                                maxAllowedDif = prices[prices.Count - 1] * limit.Value;
+                                                break;
+                                            }
+                                        }
+                                        if (price - prices[prices.Count - 1] > maxAllowedDif)
+                                        {
+                                            outliersCulled = true;
+                                            break;
+                                        }
+                                    }
+                                    prices.Add(price);
+                                }
+                                if (prices.Count >= settings.priceMaxSimilarItems)
+                                    break;
                             }
-                            if (counter < 4 && MKMHelpers.bLogNonUpdates)
-                            {
+                        }
+                        double priceEstimation = 0;
+                        if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && prices.Count > 0)
+                        {
+                            priceEstimation = prices[0] * settings.priceFactor;
+                            lastMatch = 0; // so that it is correctly counted that 1 item was used to estimate the price
+                        }
+                        else if (prices.Count < settings.priceMinSimilarItems
+                            // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
+                            || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems))
+                        {
+                            if (prices.Count == 0 && lastMatch > -1 && settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
                                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                                     sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
-                                    "Current Price: " + article["price"].InnerText + ", unchanged, only " + counter + " similar items found" + Environment.NewLine,
-                                    frm1);
+                                    "NOT UPDATED - variance of prices among cheapest similar items is too high" + Environment.NewLine, frm1);
+                            else if (settings.logLessThanMinimum)
+                                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                    sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                    "Current Price: " + article["price"].InnerText + ", unchanged, only " +
+                                    (lastMatch + 1) + " similar items found" + (outliersCulled ? " (but some expensive outliers were culled)" : "") + Environment.NewLine, frm1);
+                            continue;
+                        }
+                        else
+                        {
+                            // if any condition is allowed, use the whole sequence
+                            // if only matching is allowed, use whole sequence as well because it is only matching items
+                            if (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove)
+                                lastMatch = prices.Count - 1;
+                            if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
+                                priceEstimation = prices[lastMatch] * settings.priceFactor;
+                            else // estimation by average
+                            {
+                                for (int i = 0; i <= lastMatch; i++)
+                                    priceEstimation += prices[i]; // priceEstimation is initialized to 0 above
+                                priceEstimation /= (lastMatch + 1);
+                                // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
+                                if (settings.priceFactor > 0.5)
+                                    priceEstimation += (prices[lastMatch] - priceEstimation) * (settings.priceFactor - 0.5) * 2;
+                                else if (settings.priceFactor < 0.5) // linear interpolation between lowest price and average
+                                    priceEstimation = prices[0] + (priceEstimation - prices[0]) * (settings.priceFactor) * 2;
                             }
                         }
-                        catch (Exception eError)
+                        if (priceEstimation < settings.priceMinRarePrice && article["product"]["rarity"].InnerText == "Rare")
+                            priceEstimation = settings.priceMinRarePrice;
+
+                        // check the estimation is OK
+                        string sOldPrice = article["price"].InnerText.Replace(".", ",");
+                        double dOldPrice = Convert.ToDouble(sOldPrice);
+                        string sNewPrice = priceEstimation.ToString("0.00").Replace(",", ".");
+
+                        // only update the price if it changed meaningfully
+                        if (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice) 
                         {
+                            // check it is not above the max price change limits
+                            foreach (var limits in settings.priceMaxChangeLimits)
+                            {
+                                if (dOldPrice < limits.Key)
+                                {
+                                    if (Math.Abs(dOldPrice - priceEstimation) > dOldPrice * limits.Value)
+                                    {
+                                        priceEstimation = -1;
+                                        if (settings.logHighPriceVariance)
+                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                                "NOT UPDATED - change too large: Current Price: "
+                                                + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
+
+                                    }
+                                    break;
+                                }
+                            }
+                            if (priceEstimation > 0) // is < 0 if change was too large
+                            {
+                                if (settings.logUpdated)
+                                    frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                        sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                        "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
+                                        ", based on " + (lastMatch + 1) + " items" + Environment.NewLine, frm1);
+
+                                sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
+                            }
+                        }
+                        else if (settings.logSmallPriceChange)
+                        {
+                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                "NOT UPDATED - small difference: Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
+                                 ", based on " + (lastMatch + 1) + " items" + Environment.NewLine, frm1);
+                        }
+                    }
+                    catch (Exception eError)
+                    {
 
 #if (DEBUG)
-                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                "ERR at  : " + article["product"]["enName"].InnerText + "\n", frm1);
-                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                "ERR Msg : " + eError.Message + "\n", frm1);
-                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR URL : " + sUrl + "\n", frm1);
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                            "ERR at  : " + article["product"]["enName"].InnerText + "\n", frm1);
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                            "ERR Msg : " + eError.Message + "\n", frm1);
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR URL : " + sUrl + "\n", frm1);
 #endif
-                            using (var sw = File.AppendText(@".\\error_log.txt"))
-                            {
-                                sw.WriteLine("ERR at  : " + article["product"]["enName"].InnerText);
-                                sw.WriteLine("ERR Msg : " + eError.Message);
-                                sw.WriteLine("ERR URL : " + sUrl);
-                            }
-
+                        using (var sw = File.AppendText(@".\\error_log.txt"))
+                        {
+                            sw.WriteLine("ERR at  : " + article["product"]["enName"].InnerText);
+                            sw.WriteLine("ERR Msg : " + eError.Message);
+                            sw.WriteLine("ERR URL : " + sUrl);
                         }
+
                     }
                 }
             }
 
-            if (iRequestCount > 0)
+            if (settings.testMode)
+            {
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                    "Done. Prices NOT SENT to MKM - running in test mode finished." + Environment.NewLine,
+                    frm1);
+            }
+            else if (sRequestXML.Length > 0)
             {
                 sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
 
@@ -379,13 +492,8 @@ namespace MKMTool
                 }
 
                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                    debugCounter + "/" + iUpdated + " Articles updated successfully, " + iFailed + " failed\n", frm1);
-
-                String timeStamp = GetTimestamp(DateTime.Now);
-
-                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                    "Last Run finsihed: " + timeStamp + "\n", frm1);
-
+                    debugCounter + "/" + iUpdated + " Articles updated successfully, " + iFailed + " failed" + Environment.NewLine, frm1);
+                
                 if (iFailed > 1)
                 {
                     try
@@ -394,12 +502,21 @@ namespace MKMTool
                     }
                     catch (Exception eError)
                     {
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR Msg : " + eError.Message + "\n",
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR Msg : " + eError.Message + Environment.NewLine,
                             frm1);
                     }
-
                 }
             }
+            else
+            {
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                    "Done. No valid/meaningful price updates created." + Environment.NewLine, frm1);
+            }
+
+            String timeStamp = GetTimestamp(DateTime.Now);
+
+            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                "Last Run finsihed: " + timeStamp + Environment.NewLine, frm1);
         }
 
         private string GetTimestamp(DateTime now)
