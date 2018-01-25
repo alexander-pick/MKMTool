@@ -110,7 +110,11 @@ namespace MKMTool
         private async void updatePriceButton_Click(object sender, EventArgs e)
         {
             bot.setSettings(settingsWindow.GenerateBotSettings());
+            updatePriceButton.Enabled = false;
+            updatePriceButton.Text = "Updating...";
             await Task.Run(() => updatePriceRun());
+            updatePriceButton.Text = "Update Prices";
+            updatePriceButton.Enabled = true;
         }
 
         private void getProductListButton_Click(object sender, EventArgs e)
@@ -177,7 +181,9 @@ namespace MKMTool
             }
 
             bot.setSettings(settingsWindow.GenerateBotSettings());
+            updatePriceButton.Text = "Updating...";
             bot.updatePrices(this); //mainForm
+            updatePriceButton.Text = "Update Prices";
         }
 
         public void logBoxAppend(string text)
