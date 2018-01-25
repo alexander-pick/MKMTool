@@ -66,25 +66,18 @@ namespace MKMTool
             this.checkBoxLogMinItems = new System.Windows.Forms.CheckBox();
             this.checkBoxLogUpdated = new System.Windows.Forms.CheckBox();
             this.groupBoxConditionSettings = new System.Windows.Forms.GroupBox();
-            this.groupBoxCondConditional = new System.Windows.Forms.GroupBox();
-            this.radioButtonCondUseOR = new System.Windows.Forms.RadioButton();
-            this.radioButtonCondUseAND = new System.Windows.Forms.RadioButton();
-            this.labelCondBetterConSimilarPrice = new System.Windows.Forms.Label();
-            this.checkBoxCondBetterIfBelowMinimum = new System.Windows.Forms.CheckBox();
-            this.numericUpDownCondSimilarPrice = new System.Windows.Forms.NumericUpDown();
-            this.checkBoxCondSimilarPrice = new System.Windows.Forms.CheckBox();
-            this.checkBoxCondMatchesAbove = new System.Windows.Forms.CheckBox();
-            this.checkBoxCondAcceptBetterAlways = new System.Windows.Forms.CheckBox();
+            this.radioButtonCondMatchesAbove = new System.Windows.Forms.RadioButton();
+            this.radioButtonCondAcceptBetterAlways = new System.Windows.Forms.RadioButton();
             this.labelMatchExplanation = new System.Windows.Forms.Label();
-            this.checkBoxCondMatchOnly = new System.Windows.Forms.CheckBox();
+            this.radioButtonCondMatchOnly = new System.Windows.Forms.RadioButton();
             this.groupBoxPriceEstim = new System.Windows.Forms.GroupBox();
+            this.textBoxPriceEstMaxDiff = new System.Windows.Forms.TextBox();
             this.panelPriceEstForSliderLabel = new System.Windows.Forms.Panel();
             this.labelPriceEstSliderValue = new System.Windows.Forms.Label();
             this.trackBarPriceEstAvg = new System.Windows.Forms.TrackBar();
-            this.numericUpDownPriceEstMaxN = new System.Windows.Forms.NumericUpDown();
-            this.numericUpDownPriceEstMinN = new System.Windows.Forms.NumericUpDown();
-            this.labelPriceEstMaxN = new System.Windows.Forms.Label();
-            this.labelPriceEstMinN = new System.Windows.Forms.Label();
+            this.labelPriceEstMaximumPrice = new System.Windows.Forms.Label();
+            this.textBoxPriceEstMaxChange = new System.Windows.Forms.TextBox();
+            this.labelPriceEstAvgOutliers1 = new System.Windows.Forms.Label();
             this.labelPriceEstHighestPrice = new System.Windows.Forms.Label();
             this.numericUpDownPriceEstHighestPrice = new System.Windows.Forms.NumericUpDown();
             this.radioButtonPriceEstHighestPrice = new System.Windows.Forms.RadioButton();
@@ -92,42 +85,37 @@ namespace MKMTool
             this.numericUpDownPriceEstLowestPrice = new System.Windows.Forms.NumericUpDown();
             this.radioButtonPriceEstByLowestPrice = new System.Windows.Forms.RadioButton();
             this.radioButtonPriceEstPriceByAvg = new System.Windows.Forms.RadioButton();
-            this.textBoxPriceEstMaxChange = new System.Windows.Forms.TextBox();
-            this.labelPriceEstMaximumPrice = new System.Windows.Forms.Label();
+            this.numericUpDownPriceEstMaxN = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDownPriceEstMinN = new System.Windows.Forms.NumericUpDown();
             this.numericUpDownPriceEstMinPrice = new System.Windows.Forms.NumericUpDown();
+            this.labelPriceEstMaxN = new System.Windows.Forms.Label();
             this.labelPriceEstMinPrice = new System.Windows.Forms.Label();
+            this.labelPriceEstMinN = new System.Windows.Forms.Label();
             this.statusLabel = new System.Windows.Forms.Label();
-            this.labelPriceEstOutliers3 = new System.Windows.Forms.Label();
-            this.labelPriceEstOutliers2 = new System.Windows.Forms.Label();
-            this.numericUpDownPriceEstOutliersHigh = new System.Windows.Forms.NumericUpDown();
-            this.numericUpDownPriceEstOutliersLow = new System.Windows.Forms.NumericUpDown();
-            this.labelPriceEstAvgOutliers1 = new System.Windows.Forms.Label();
             this.checkBoxTestMode = new System.Windows.Forms.CheckBox();
+            this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
-            this.groupBoxCondConditional.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCondSimilarPrice)).BeginInit();
             this.groupBoxPriceEstim.SuspendLayout();
             this.panelPriceEstForSliderLabel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPriceEstAvg)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMaxN)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinN)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstHighestPrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstLowestPrice)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMaxN)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinN)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstOutliersHigh)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstOutliersLow)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBoxLogSettings
             // 
+            this.groupBoxLogSettings.Controls.Add(this.checkBoxLogHighVariance);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogLargeChange);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogSmallChange);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogMinItems);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogUpdated);
-            this.groupBoxLogSettings.Location = new System.Drawing.Point(13, 413);
+            this.groupBoxLogSettings.Location = new System.Drawing.Point(13, 331);
             this.groupBoxLogSettings.Name = "groupBoxLogSettings";
-            this.groupBoxLogSettings.Size = new System.Drawing.Size(727, 66);
+            this.groupBoxLogSettings.Size = new System.Drawing.Size(788, 99);
             this.groupBoxLogSettings.TabIndex = 14;
             this.groupBoxLogSettings.TabStop = false;
             this.groupBoxLogSettings.Text = "Log settings";
@@ -137,11 +125,11 @@ namespace MKMTool
             this.checkBoxLogLargeChange.AutoSize = true;
             this.checkBoxLogLargeChange.Checked = true;
             this.checkBoxLogLargeChange.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogLargeChange.Location = new System.Drawing.Point(264, 43);
+            this.checkBoxLogLargeChange.Location = new System.Drawing.Point(10, 66);
             this.checkBoxLogLargeChange.Name = "checkBoxLogLargeChange";
-            this.checkBoxLogLargeChange.Size = new System.Drawing.Size(248, 17);
+            this.checkBoxLogLargeChange.Size = new System.Drawing.Size(230, 17);
             this.checkBoxLogLargeChange.TabIndex = 3;
-            this.checkBoxLogLargeChange.Text = "Log non-updates due to too large price change";
+            this.checkBoxLogLargeChange.Text = "Log non-updates due to large price change";
             this.checkBoxLogLargeChange.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogSmallChange
@@ -151,9 +139,9 @@ namespace MKMTool
             this.checkBoxLogSmallChange.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxLogSmallChange.Location = new System.Drawing.Point(10, 43);
             this.checkBoxLogSmallChange.Name = "checkBoxLogSmallChange";
-            this.checkBoxLogSmallChange.Size = new System.Drawing.Size(231, 17);
+            this.checkBoxLogSmallChange.Size = new System.Drawing.Size(242, 17);
             this.checkBoxLogSmallChange.TabIndex = 2;
-            this.checkBoxLogSmallChange.Text = "Log non-updated due to small price change";
+            this.checkBoxLogSmallChange.Text = "Log non-updated due to minimal price change";
             this.checkBoxLogSmallChange.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogMinItems
@@ -161,7 +149,7 @@ namespace MKMTool
             this.checkBoxLogMinItems.AutoSize = true;
             this.checkBoxLogMinItems.Checked = true;
             this.checkBoxLogMinItems.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogMinItems.Location = new System.Drawing.Point(264, 19);
+            this.checkBoxLogMinItems.Location = new System.Drawing.Point(253, 43);
             this.checkBoxLogMinItems.Name = "checkBoxLogMinItems";
             this.checkBoxLogMinItems.Size = new System.Drawing.Size(307, 17);
             this.checkBoxLogMinItems.TabIndex = 1;
@@ -182,164 +170,67 @@ namespace MKMTool
             // 
             // groupBoxConditionSettings
             // 
-            this.groupBoxConditionSettings.Controls.Add(this.groupBoxCondConditional);
-            this.groupBoxConditionSettings.Controls.Add(this.checkBoxCondAcceptBetterAlways);
+            this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondMatchesAbove);
+            this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondAcceptBetterAlways);
             this.groupBoxConditionSettings.Controls.Add(this.labelMatchExplanation);
-            this.groupBoxConditionSettings.Controls.Add(this.checkBoxCondMatchOnly);
+            this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondMatchOnly);
             this.groupBoxConditionSettings.Location = new System.Drawing.Point(13, 253);
             this.groupBoxConditionSettings.Name = "groupBoxConditionSettings";
-            this.groupBoxConditionSettings.Size = new System.Drawing.Size(727, 154);
+            this.groupBoxConditionSettings.Size = new System.Drawing.Size(788, 72);
             this.groupBoxConditionSettings.TabIndex = 13;
             this.groupBoxConditionSettings.TabStop = false;
-            this.groupBoxConditionSettings.Text = "Accepted condition of similar items";
+            this.groupBoxConditionSettings.Text = "Accepted items in better condition as similar items";
             // 
-            // groupBoxCondConditional
+            // radioButtonCondMatchesAbove
             // 
-            this.groupBoxCondConditional.Controls.Add(this.radioButtonCondUseOR);
-            this.groupBoxCondConditional.Controls.Add(this.radioButtonCondUseAND);
-            this.groupBoxCondConditional.Controls.Add(this.labelCondBetterConSimilarPrice);
-            this.groupBoxCondConditional.Controls.Add(this.checkBoxCondBetterIfBelowMinimum);
-            this.groupBoxCondConditional.Controls.Add(this.numericUpDownCondSimilarPrice);
-            this.groupBoxCondConditional.Controls.Add(this.checkBoxCondSimilarPrice);
-            this.groupBoxCondConditional.Controls.Add(this.checkBoxCondMatchesAbove);
-            this.groupBoxCondConditional.Enabled = false;
-            this.groupBoxCondConditional.Location = new System.Drawing.Point(253, 19);
-            this.groupBoxCondConditional.Name = "groupBoxCondConditional";
-            this.groupBoxCondConditional.Size = new System.Drawing.Size(468, 115);
-            this.groupBoxCondConditional.TabIndex = 8;
-            this.groupBoxCondConditional.TabStop = false;
-            this.groupBoxCondConditional.Text = "Accept better items conditionally";
+            this.radioButtonCondMatchesAbove.AutoSize = true;
+            this.radioButtonCondMatchesAbove.Location = new System.Drawing.Point(253, 19);
+            this.radioButtonCondMatchesAbove.Name = "radioButtonCondMatchesAbove";
+            this.radioButtonCondMatchesAbove.Size = new System.Drawing.Size(327, 17);
+            this.radioButtonCondMatchesAbove.TabIndex = 7;
+            this.radioButtonCondMatchesAbove.Text = "Accept better only if there is at least one more expensive match*";
+            this.radioButtonCondMatchesAbove.UseVisualStyleBackColor = true;
             // 
-            // radioButtonCondUseOR
+            // radioButtonCondAcceptBetterAlways
             // 
-            this.radioButtonCondUseOR.AutoSize = true;
-            this.radioButtonCondUseOR.Checked = true;
-            this.radioButtonCondUseOR.Location = new System.Drawing.Point(226, 91);
-            this.radioButtonCondUseOR.Name = "radioButtonCondUseOR";
-            this.radioButtonCondUseOR.Size = new System.Drawing.Size(204, 17);
-            this.radioButtonCondUseOR.TabIndex = 13;
-            this.radioButtonCondUseOR.TabStop = true;
-            this.radioButtonCondUseOR.Text = "Any one checked condition is enough";
-            this.radioButtonCondUseOR.UseVisualStyleBackColor = true;
-            this.radioButtonCondUseOR.CheckedChanged += new System.EventHandler(this.radioButtonCondUseOR_CheckedChanged);
-            // 
-            // radioButtonCondUseAND
-            // 
-            this.radioButtonCondUseAND.AutoSize = true;
-            this.radioButtonCondUseAND.Location = new System.Drawing.Point(11, 91);
-            this.radioButtonCondUseAND.Name = "radioButtonCondUseAND";
-            this.radioButtonCondUseAND.Size = new System.Drawing.Size(209, 17);
-            this.radioButtonCondUseAND.TabIndex = 12;
-            this.radioButtonCondUseAND.Text = "All checked conditions must be fullfilled";
-            this.radioButtonCondUseAND.UseVisualStyleBackColor = true;
-            this.radioButtonCondUseAND.CheckedChanged += new System.EventHandler(this.radioButtonCondUseAND_CheckedChanged);
-            // 
-            // labelCondBetterConSimilarPrice
-            // 
-            this.labelCondBetterConSimilarPrice.AutoSize = true;
-            this.labelCondBetterConSimilarPrice.Location = new System.Drawing.Point(442, 46);
-            this.labelCondBetterConSimilarPrice.Name = "labelCondBetterConSimilarPrice";
-            this.labelCondBetterConSimilarPrice.Size = new System.Drawing.Size(15, 13);
-            this.labelCondBetterConSimilarPrice.TabIndex = 11;
-            this.labelCondBetterConSimilarPrice.Text = "%";
-            // 
-            // checkBoxCondBetterIfBelowMinimum
-            // 
-            this.checkBoxCondBetterIfBelowMinimum.AutoSize = true;
-            this.checkBoxCondBetterIfBelowMinimum.Location = new System.Drawing.Point(11, 68);
-            this.checkBoxCondBetterIfBelowMinimum.Name = "checkBoxCondBetterIfBelowMinimum";
-            this.checkBoxCondBetterIfBelowMinimum.Size = new System.Drawing.Size(324, 17);
-            this.checkBoxCondBetterIfBelowMinimum.TabIndex = 10;
-            this.checkBoxCondBetterIfBelowMinimum.Text = "Accept better condition only until minimum # of items is reached";
-            this.checkBoxCondBetterIfBelowMinimum.UseVisualStyleBackColor = true;
-            // 
-            // numericUpDownCondSimilarPrice
-            // 
-            this.numericUpDownCondSimilarPrice.DecimalPlaces = 2;
-            this.numericUpDownCondSimilarPrice.Enabled = false;
-            this.numericUpDownCondSimilarPrice.Location = new System.Drawing.Point(370, 44);
-            this.numericUpDownCondSimilarPrice.Maximum = new decimal(new int[] {
-            10000000,
-            0,
-            0,
-            0});
-            this.numericUpDownCondSimilarPrice.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericUpDownCondSimilarPrice.Name = "numericUpDownCondSimilarPrice";
-            this.numericUpDownCondSimilarPrice.Size = new System.Drawing.Size(70, 20);
-            this.numericUpDownCondSimilarPrice.TabIndex = 9;
-            this.numericUpDownCondSimilarPrice.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownCondSimilarPrice.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // checkBoxCondSimilarPrice
-            // 
-            this.checkBoxCondSimilarPrice.AutoSize = true;
-            this.checkBoxCondSimilarPrice.Location = new System.Drawing.Point(11, 45);
-            this.checkBoxCondSimilarPrice.Name = "checkBoxCondSimilarPrice";
-            this.checkBoxCondSimilarPrice.Size = new System.Drawing.Size(362, 17);
-            this.checkBoxCondSimilarPrice.TabIndex = 8;
-            this.checkBoxCondSimilarPrice.Text = "Accept better condition if the last cheaper match* is cheaper by at most";
-            this.checkBoxCondSimilarPrice.UseVisualStyleBackColor = true;
-            this.checkBoxCondSimilarPrice.CheckedChanged += new System.EventHandler(this.checkBoxCondSimilarPrice_CheckedChanged);
-            // 
-            // checkBoxCondMatchesAbove
-            // 
-            this.checkBoxCondMatchesAbove.AutoSize = true;
-            this.checkBoxCondMatchesAbove.Location = new System.Drawing.Point(11, 22);
-            this.checkBoxCondMatchesAbove.Name = "checkBoxCondMatchesAbove";
-            this.checkBoxCondMatchesAbove.Size = new System.Drawing.Size(352, 17);
-            this.checkBoxCondMatchesAbove.TabIndex = 7;
-            this.checkBoxCondMatchesAbove.Text = "Accept better condition if there is at least one more expensive match*";
-            this.checkBoxCondMatchesAbove.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxCondAcceptBetterAlways
-            // 
-            this.checkBoxCondAcceptBetterAlways.AutoSize = true;
-            this.checkBoxCondAcceptBetterAlways.Location = new System.Drawing.Point(10, 64);
-            this.checkBoxCondAcceptBetterAlways.Name = "checkBoxCondAcceptBetterAlways";
-            this.checkBoxCondAcceptBetterAlways.Size = new System.Drawing.Size(186, 17);
-            this.checkBoxCondAcceptBetterAlways.TabIndex = 7;
-            this.checkBoxCondAcceptBetterAlways.Text = "Accept better condition whenever";
-            this.checkBoxCondAcceptBetterAlways.UseVisualStyleBackColor = true;
-            this.checkBoxCondAcceptBetterAlways.CheckedChanged += new System.EventHandler(this.checkBoxCondAcceptBetterAlways_CheckedChanged);
+            this.radioButtonCondAcceptBetterAlways.AutoSize = true;
+            this.radioButtonCondAcceptBetterAlways.Location = new System.Drawing.Point(611, 19);
+            this.radioButtonCondAcceptBetterAlways.Name = "radioButtonCondAcceptBetterAlways";
+            this.radioButtonCondAcceptBetterAlways.Size = new System.Drawing.Size(139, 17);
+            this.radioButtonCondAcceptBetterAlways.TabIndex = 7;
+            this.radioButtonCondAcceptBetterAlways.Text = "Accept better whenever";
+            this.radioButtonCondAcceptBetterAlways.UseVisualStyleBackColor = true;
+            this.radioButtonCondAcceptBetterAlways.CheckedChanged += new System.EventHandler(this.checkBoxCondAcceptBetterAlways_CheckedChanged);
             // 
             // labelMatchExplanation
             // 
             this.labelMatchExplanation.AutoSize = true;
-            this.labelMatchExplanation.Location = new System.Drawing.Point(3, 137);
+            this.labelMatchExplanation.Location = new System.Drawing.Point(7, 50);
             this.labelMatchExplanation.Name = "labelMatchExplanation";
             this.labelMatchExplanation.Size = new System.Drawing.Size(343, 13);
             this.labelMatchExplanation.TabIndex = 2;
             this.labelMatchExplanation.Text = "*Match = item in exactly the same condition as the one being evaluated";
             // 
-            // checkBoxCondMatchOnly
+            // radioButtonCondMatchOnly
             // 
-            this.checkBoxCondMatchOnly.AutoSize = true;
-            this.checkBoxCondMatchOnly.Checked = true;
-            this.checkBoxCondMatchOnly.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCondMatchOnly.Location = new System.Drawing.Point(10, 41);
-            this.checkBoxCondMatchOnly.Name = "checkBoxCondMatchOnly";
-            this.checkBoxCondMatchOnly.Size = new System.Drawing.Size(129, 17);
-            this.checkBoxCondMatchOnly.TabIndex = 0;
-            this.checkBoxCondMatchOnly.Text = "Accept only matches*";
-            this.checkBoxCondMatchOnly.UseVisualStyleBackColor = true;
-            this.checkBoxCondMatchOnly.CheckedChanged += new System.EventHandler(this.checkBoxCondMatchOnly_CheckedChanged);
+            this.radioButtonCondMatchOnly.AutoSize = true;
+            this.radioButtonCondMatchOnly.Checked = true;
+            this.radioButtonCondMatchOnly.Location = new System.Drawing.Point(10, 19);
+            this.radioButtonCondMatchOnly.Name = "radioButtonCondMatchOnly";
+            this.radioButtonCondMatchOnly.Size = new System.Drawing.Size(128, 17);
+            this.radioButtonCondMatchOnly.TabIndex = 0;
+            this.radioButtonCondMatchOnly.TabStop = true;
+            this.radioButtonCondMatchOnly.Text = "Accept only matches*";
+            this.radioButtonCondMatchOnly.UseVisualStyleBackColor = true;
+            this.radioButtonCondMatchOnly.CheckedChanged += new System.EventHandler(this.checkBoxCondMatchOnly_CheckedChanged);
             // 
             // groupBoxPriceEstim
             // 
+            this.groupBoxPriceEstim.Controls.Add(this.textBoxPriceEstMaxDiff);
             this.groupBoxPriceEstim.Controls.Add(this.panelPriceEstForSliderLabel);
-            this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstOutliers3);
             this.groupBoxPriceEstim.Controls.Add(this.trackBarPriceEstAvg);
-            this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstOutliers2);
-            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstOutliersHigh);
-            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstOutliersLow);
+            this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMaximumPrice);
+            this.groupBoxPriceEstim.Controls.Add(this.textBoxPriceEstMaxChange);
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstAvgOutliers1);
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstHighestPrice);
             this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstHighestPrice);
@@ -348,9 +239,7 @@ namespace MKMTool
             this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstLowestPrice);
             this.groupBoxPriceEstim.Controls.Add(this.radioButtonPriceEstByLowestPrice);
             this.groupBoxPriceEstim.Controls.Add(this.radioButtonPriceEstPriceByAvg);
-            this.groupBoxPriceEstim.Controls.Add(this.textBoxPriceEstMaxChange);
             this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstMaxN);
-            this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMaximumPrice);
             this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstMinN);
             this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstMinPrice);
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMaxN);
@@ -359,17 +248,25 @@ namespace MKMTool
             this.groupBoxPriceEstim.Controls.Add(this.statusLabel);
             this.groupBoxPriceEstim.Location = new System.Drawing.Point(12, 12);
             this.groupBoxPriceEstim.Name = "groupBoxPriceEstim";
-            this.groupBoxPriceEstim.Size = new System.Drawing.Size(728, 235);
+            this.groupBoxPriceEstim.Size = new System.Drawing.Size(789, 235);
             this.groupBoxPriceEstim.TabIndex = 12;
             this.groupBoxPriceEstim.TabStop = false;
             this.groupBoxPriceEstim.Text = "Price estimation";
             // 
+            // textBoxPriceEstMaxDiff
+            // 
+            this.textBoxPriceEstMaxDiff.Location = new System.Drawing.Point(589, 66);
+            this.textBoxPriceEstMaxDiff.Name = "textBoxPriceEstMaxDiff";
+            this.textBoxPriceEstMaxDiff.Size = new System.Drawing.Size(191, 20);
+            this.textBoxPriceEstMaxDiff.TabIndex = 49;
+            this.textBoxPriceEstMaxDiff.Text = "1;300;10;20;20;15;50;8;500;3";
+            // 
             // panelPriceEstForSliderLabel
             // 
             this.panelPriceEstForSliderLabel.Controls.Add(this.labelPriceEstSliderValue);
-            this.panelPriceEstForSliderLabel.Location = new System.Drawing.Point(175, 152);
+            this.panelPriceEstForSliderLabel.Location = new System.Drawing.Point(254, 152);
             this.panelPriceEstForSliderLabel.Name = "panelPriceEstForSliderLabel";
-            this.panelPriceEstForSliderLabel.Size = new System.Drawing.Size(546, 23);
+            this.panelPriceEstForSliderLabel.Size = new System.Drawing.Size(526, 23);
             this.panelPriceEstForSliderLabel.TabIndex = 37;
             // 
             // labelPriceEstSliderValue
@@ -378,91 +275,52 @@ namespace MKMTool
             this.labelPriceEstSliderValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelPriceEstSliderValue.Location = new System.Drawing.Point(0, 0);
             this.labelPriceEstSliderValue.Name = "labelPriceEstSliderValue";
-            this.labelPriceEstSliderValue.Size = new System.Drawing.Size(546, 23);
+            this.labelPriceEstSliderValue.Size = new System.Drawing.Size(526, 23);
             this.labelPriceEstSliderValue.TabIndex = 24;
             this.labelPriceEstSliderValue.Text = "AVG";
             this.labelPriceEstSliderValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackBarPriceEstAvg
             // 
-            this.trackBarPriceEstAvg.Location = new System.Drawing.Point(177, 107);
+            this.trackBarPriceEstAvg.Location = new System.Drawing.Point(256, 107);
             this.trackBarPriceEstAvg.Maximum = 50;
             this.trackBarPriceEstAvg.Name = "trackBarPriceEstAvg";
-            this.trackBarPriceEstAvg.Size = new System.Drawing.Size(546, 45);
+            this.trackBarPriceEstAvg.Size = new System.Drawing.Size(526, 45);
             this.trackBarPriceEstAvg.TabIndex = 36;
             this.trackBarPriceEstAvg.Value = 25;
             this.trackBarPriceEstAvg.Scroll += new System.EventHandler(this.trackBarPriceEstAvg_Scroll);
             // 
-            // numericUpDownPriceEstMaxN
+            // labelPriceEstMaximumPrice
             // 
-            this.numericUpDownPriceEstMaxN.Location = new System.Drawing.Point(651, 47);
-            this.numericUpDownPriceEstMaxN.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstMaxN.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstMaxN.Name = "numericUpDownPriceEstMaxN";
-            this.numericUpDownPriceEstMaxN.Size = new System.Drawing.Size(70, 20);
-            this.numericUpDownPriceEstMaxN.TabIndex = 35;
-            this.numericUpDownPriceEstMaxN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownPriceEstMaxN.Value = new decimal(new int[] {
-            4,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstMaxN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMaxN_ValueChanged);
+            this.labelPriceEstMaximumPrice.AutoSize = true;
+            this.labelPriceEstMaximumPrice.Location = new System.Drawing.Point(6, 43);
+            this.labelPriceEstMaximumPrice.Name = "labelPriceEstMaximumPrice";
+            this.labelPriceEstMaximumPrice.Size = new System.Drawing.Size(518, 13);
+            this.labelPriceEstMaximumPrice.TabIndex = 17;
+            this.labelPriceEstMaximumPrice.Text = "Max price change (format: \"T1;C1;T2;C2;\" etc., Cx is max allowed change in % for " +
+    "items that cost Tx or less):";
             // 
-            // numericUpDownPriceEstMinN
+            // textBoxPriceEstMaxChange
             // 
-            this.numericUpDownPriceEstMinN.Location = new System.Drawing.Point(417, 47);
-            this.numericUpDownPriceEstMinN.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstMinN.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstMinN.Name = "numericUpDownPriceEstMinN";
-            this.numericUpDownPriceEstMinN.Size = new System.Drawing.Size(70, 20);
-            this.numericUpDownPriceEstMinN.TabIndex = 33;
-            this.numericUpDownPriceEstMinN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownPriceEstMinN.Value = new decimal(new int[] {
-            4,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstMinN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMinN_ValueChanged);
+            this.textBoxPriceEstMaxChange.Location = new System.Drawing.Point(589, 40);
+            this.textBoxPriceEstMaxChange.Name = "textBoxPriceEstMaxChange";
+            this.textBoxPriceEstMaxChange.Size = new System.Drawing.Size(191, 20);
+            this.textBoxPriceEstMaxChange.TabIndex = 18;
             // 
-            // labelPriceEstMaxN
+            // labelPriceEstAvgOutliers1
             // 
-            this.labelPriceEstMaxN.AutoSize = true;
-            this.labelPriceEstMaxN.Location = new System.Drawing.Point(511, 49);
-            this.labelPriceEstMaxN.Name = "labelPriceEstMaxN";
-            this.labelPriceEstMaxN.Size = new System.Drawing.Size(134, 13);
-            this.labelPriceEstMaxN.TabIndex = 32;
-            this.labelPriceEstMaxN.Text = "Maximum # of similar items:";
-            // 
-            // labelPriceEstMinN
-            // 
-            this.labelPriceEstMinN.AutoSize = true;
-            this.labelPriceEstMinN.Location = new System.Drawing.Point(271, 49);
-            this.labelPriceEstMinN.Name = "labelPriceEstMinN";
-            this.labelPriceEstMinN.Size = new System.Drawing.Size(131, 13);
-            this.labelPriceEstMinN.TabIndex = 31;
-            this.labelPriceEstMinN.Text = "Minimum # of similar items:";
+            this.labelPriceEstAvgOutliers1.AutoSize = true;
+            this.labelPriceEstAvgOutliers1.Location = new System.Drawing.Point(6, 69);
+            this.labelPriceEstAvgOutliers1.Name = "labelPriceEstAvgOutliers1";
+            this.labelPriceEstAvgOutliers1.Size = new System.Drawing.Size(579, 13);
+            this.labelPriceEstAvgOutliers1.TabIndex = 48;
+            this.labelPriceEstAvgOutliers1.Text = "Max differences between consecutive items (\"T1;C1;T2;C2;\" etc., Cx = max differen" +
+    "ce in % for items that cost Tx or less): ";
             // 
             // labelPriceEstHighestPrice
             // 
             this.labelPriceEstHighestPrice.AutoSize = true;
-            this.labelPriceEstHighestPrice.Location = new System.Drawing.Point(271, 210);
+            this.labelPriceEstHighestPrice.Location = new System.Drawing.Point(330, 210);
             this.labelPriceEstHighestPrice.Name = "labelPriceEstHighestPrice";
             this.labelPriceEstHighestPrice.Size = new System.Drawing.Size(325, 13);
             this.labelPriceEstHighestPrice.TabIndex = 32;
@@ -471,7 +329,7 @@ namespace MKMTool
             // numericUpDownPriceEstHighestPrice
             // 
             this.numericUpDownPriceEstHighestPrice.DecimalPlaces = 2;
-            this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(195, 208);
+            this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(254, 208);
             this.numericUpDownPriceEstHighestPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -502,16 +360,17 @@ namespace MKMTool
             // labelPriceEstLowestPrice
             // 
             this.labelPriceEstLowestPrice.AutoSize = true;
-            this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(271, 180);
+            this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(330, 180);
             this.labelPriceEstLowestPrice.Name = "labelPriceEstLowestPrice";
-            this.labelPriceEstLowestPrice.Size = new System.Drawing.Size(86, 13);
+            this.labelPriceEstLowestPrice.Size = new System.Drawing.Size(383, 13);
             this.labelPriceEstLowestPrice.TabIndex = 29;
-            this.labelPriceEstLowestPrice.Text = "% of lowest price";
+            this.labelPriceEstLowestPrice.Text = "% of lowest price (WARNING - this will not cut off outliers based on price jumps!" +
+    ")";
             // 
             // numericUpDownPriceEstLowestPrice
             // 
             this.numericUpDownPriceEstLowestPrice.DecimalPlaces = 2;
-            this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(195, 178);
+            this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(254, 178);
             this.numericUpDownPriceEstLowestPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -552,22 +411,53 @@ namespace MKMTool
             this.radioButtonPriceEstPriceByAvg.UseVisualStyleBackColor = true;
             this.radioButtonPriceEstPriceByAvg.CheckedChanged += new System.EventHandler(this.radioButtonPriceEstPriceByAvg_CheckedChanged);
             // 
-            // textBoxPriceEstMaxChange
+            // numericUpDownPriceEstMaxN
             // 
-            this.textBoxPriceEstMaxChange.Location = new System.Drawing.Point(530, 18);
-            this.textBoxPriceEstMaxChange.Name = "textBoxPriceEstMaxChange";
-            this.textBoxPriceEstMaxChange.Size = new System.Drawing.Size(191, 20);
-            this.textBoxPriceEstMaxChange.TabIndex = 18;
+            this.numericUpDownPriceEstMaxN.Location = new System.Drawing.Point(710, 14);
+            this.numericUpDownPriceEstMaxN.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMaxN.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMaxN.Name = "numericUpDownPriceEstMaxN";
+            this.numericUpDownPriceEstMaxN.Size = new System.Drawing.Size(70, 20);
+            this.numericUpDownPriceEstMaxN.TabIndex = 35;
+            this.numericUpDownPriceEstMaxN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownPriceEstMaxN.Value = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMaxN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMaxN_ValueChanged);
             // 
-            // labelPriceEstMaximumPrice
+            // numericUpDownPriceEstMinN
             // 
-            this.labelPriceEstMaximumPrice.AutoSize = true;
-            this.labelPriceEstMaximumPrice.Location = new System.Drawing.Point(6, 21);
-            this.labelPriceEstMaximumPrice.Name = "labelPriceEstMaximumPrice";
-            this.labelPriceEstMaximumPrice.Size = new System.Drawing.Size(518, 13);
-            this.labelPriceEstMaximumPrice.TabIndex = 17;
-            this.labelPriceEstMaximumPrice.Text = "Max price change (format: \"T1;C1;T2;C2;\" etc., Cx is max allowed change in % for " +
-    "items that cost Tx or less):";
+            this.numericUpDownPriceEstMinN.Location = new System.Drawing.Point(476, 14);
+            this.numericUpDownPriceEstMinN.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMinN.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMinN.Name = "numericUpDownPriceEstMinN";
+            this.numericUpDownPriceEstMinN.Size = new System.Drawing.Size(70, 20);
+            this.numericUpDownPriceEstMinN.TabIndex = 33;
+            this.numericUpDownPriceEstMinN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownPriceEstMinN.Value = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMinN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMinN_ValueChanged);
             // 
             // numericUpDownPriceEstMinPrice
             // 
@@ -577,7 +467,7 @@ namespace MKMTool
             0,
             0,
             131072});
-            this.numericUpDownPriceEstMinPrice.Location = new System.Drawing.Point(195, 47);
+            this.numericUpDownPriceEstMinPrice.Location = new System.Drawing.Point(254, 14);
             this.numericUpDownPriceEstMinPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -598,14 +488,32 @@ namespace MKMTool
             0,
             131072});
             // 
+            // labelPriceEstMaxN
+            // 
+            this.labelPriceEstMaxN.AutoSize = true;
+            this.labelPriceEstMaxN.Location = new System.Drawing.Point(570, 16);
+            this.labelPriceEstMaxN.Name = "labelPriceEstMaxN";
+            this.labelPriceEstMaxN.Size = new System.Drawing.Size(134, 13);
+            this.labelPriceEstMaxN.TabIndex = 32;
+            this.labelPriceEstMaxN.Text = "Maximum # of similar items:";
+            // 
             // labelPriceEstMinPrice
             // 
             this.labelPriceEstMinPrice.AutoSize = true;
-            this.labelPriceEstMinPrice.Location = new System.Drawing.Point(6, 49);
+            this.labelPriceEstMinPrice.Location = new System.Drawing.Point(6, 16);
             this.labelPriceEstMinPrice.Name = "labelPriceEstMinPrice";
             this.labelPriceEstMinPrice.Size = new System.Drawing.Size(147, 13);
             this.labelPriceEstMinPrice.TabIndex = 15;
             this.labelPriceEstMinPrice.Text = "Minimum price of rares [EUR]:";
+            // 
+            // labelPriceEstMinN
+            // 
+            this.labelPriceEstMinN.AutoSize = true;
+            this.labelPriceEstMinN.Location = new System.Drawing.Point(330, 16);
+            this.labelPriceEstMinN.Name = "labelPriceEstMinN";
+            this.labelPriceEstMinN.Size = new System.Drawing.Size(131, 13);
+            this.labelPriceEstMinN.TabIndex = 31;
+            this.labelPriceEstMinN.Text = "Minimum # of similar items:";
             // 
             // statusLabel
             // 
@@ -616,86 +524,33 @@ namespace MKMTool
             this.statusLabel.Size = new System.Drawing.Size(0, 13);
             this.statusLabel.TabIndex = 8;
             // 
-            // labelPriceEstOutliers3
-            // 
-            this.labelPriceEstOutliers3.AutoSize = true;
-            this.labelPriceEstOutliers3.Location = new System.Drawing.Point(493, 79);
-            this.labelPriceEstOutliers3.Name = "labelPriceEstOutliers3";
-            this.labelPriceEstOutliers3.Size = new System.Drawing.Size(160, 13);
-            this.labelPriceEstOutliers3.TabIndex = 54;
-            this.labelPriceEstOutliers3.Text = "% of median price of similar items";
-            // 
-            // labelPriceEstOutliers2
-            // 
-            this.labelPriceEstOutliers2.AutoSize = true;
-            this.labelPriceEstOutliers2.Location = new System.Drawing.Point(271, 79);
-            this.labelPriceEstOutliers2.Name = "labelPriceEstOutliers2";
-            this.labelPriceEstOutliers2.Size = new System.Drawing.Size(140, 13);
-            this.labelPriceEstOutliers2.TabIndex = 53;
-            this.labelPriceEstOutliers2.Text = "% and more expensive than ";
-            // 
-            // numericUpDownPriceEstOutliersHigh
-            // 
-            this.numericUpDownPriceEstOutliersHigh.DecimalPlaces = 2;
-            this.numericUpDownPriceEstOutliersHigh.Location = new System.Drawing.Point(417, 77);
-            this.numericUpDownPriceEstOutliersHigh.Maximum = new decimal(new int[] {
-            10000000,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstOutliersHigh.Name = "numericUpDownPriceEstOutliersHigh";
-            this.numericUpDownPriceEstOutliersHigh.Size = new System.Drawing.Size(70, 20);
-            this.numericUpDownPriceEstOutliersHigh.TabIndex = 52;
-            this.numericUpDownPriceEstOutliersHigh.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownPriceEstOutliersHigh.Value = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            // 
-            // numericUpDownPriceEstOutliersLow
-            // 
-            this.numericUpDownPriceEstOutliersLow.DecimalPlaces = 2;
-            this.numericUpDownPriceEstOutliersLow.Location = new System.Drawing.Point(195, 77);
-            this.numericUpDownPriceEstOutliersLow.Maximum = new decimal(new int[] {
-            10000000,
-            0,
-            0,
-            0});
-            this.numericUpDownPriceEstOutliersLow.Name = "numericUpDownPriceEstOutliersLow";
-            this.numericUpDownPriceEstOutliersLow.Size = new System.Drawing.Size(70, 20);
-            this.numericUpDownPriceEstOutliersLow.TabIndex = 51;
-            this.numericUpDownPriceEstOutliersLow.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.numericUpDownPriceEstOutliersLow.Value = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            // 
-            // labelPriceEstAvgOutliers1
-            // 
-            this.labelPriceEstAvgOutliers1.AutoSize = true;
-            this.labelPriceEstAvgOutliers1.Location = new System.Drawing.Point(6, 79);
-            this.labelPriceEstAvgOutliers1.Name = "labelPriceEstAvgOutliers1";
-            this.labelPriceEstAvgOutliers1.Size = new System.Drawing.Size(188, 13);
-            this.labelPriceEstAvgOutliers1.TabIndex = 48;
-            this.labelPriceEstAvgOutliers1.Text = "Remove outliers that are cheaper than";
-            // 
             // checkBoxTestMode
             // 
             this.checkBoxTestMode.AutoSize = true;
-            this.checkBoxTestMode.Location = new System.Drawing.Point(23, 486);
+            this.checkBoxTestMode.Location = new System.Drawing.Point(21, 445);
             this.checkBoxTestMode.Name = "checkBoxTestMode";
             this.checkBoxTestMode.Size = new System.Drawing.Size(248, 17);
             this.checkBoxTestMode.TabIndex = 15;
             this.checkBoxTestMode.Text = "Test mode - do not send price updates to MKM";
             this.checkBoxTestMode.UseVisualStyleBackColor = true;
             // 
+            // checkBoxLogHighVariance
+            // 
+            this.checkBoxLogHighVariance.AutoSize = true;
+            this.checkBoxLogHighVariance.Checked = true;
+            this.checkBoxLogHighVariance.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(253, 66);
+            this.checkBoxLogHighVariance.Name = "checkBoxLogHighVariance";
+            this.checkBoxLogHighVariance.Size = new System.Drawing.Size(315, 17);
+            this.checkBoxLogHighVariance.TabIndex = 4;
+            this.checkBoxLogHighVariance.Text = "Log non-updates due to high variance among cheapest items";
+            this.checkBoxLogHighVariance.UseVisualStyleBackColor = true;
+            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(752, 515);
+            this.ClientSize = new System.Drawing.Size(812, 474);
             this.Controls.Add(this.checkBoxTestMode);
             this.Controls.Add(this.groupBoxLogSettings);
             this.Controls.Add(this.groupBoxConditionSettings);
@@ -706,20 +561,15 @@ namespace MKMTool
             this.groupBoxLogSettings.PerformLayout();
             this.groupBoxConditionSettings.ResumeLayout(false);
             this.groupBoxConditionSettings.PerformLayout();
-            this.groupBoxCondConditional.ResumeLayout(false);
-            this.groupBoxCondConditional.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCondSimilarPrice)).EndInit();
             this.groupBoxPriceEstim.ResumeLayout(false);
             this.groupBoxPriceEstim.PerformLayout();
             this.panelPriceEstForSliderLabel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPriceEstAvg)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMaxN)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinN)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstHighestPrice)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstLowestPrice)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMaxN)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinN)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstOutliersHigh)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstOutliersLow)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -733,17 +583,10 @@ namespace MKMTool
         private System.Windows.Forms.CheckBox checkBoxLogMinItems;
         private System.Windows.Forms.CheckBox checkBoxLogUpdated;
         private System.Windows.Forms.GroupBox groupBoxConditionSettings;
-        private System.Windows.Forms.GroupBox groupBoxCondConditional;
-        private System.Windows.Forms.RadioButton radioButtonCondUseOR;
-        private System.Windows.Forms.RadioButton radioButtonCondUseAND;
-        private System.Windows.Forms.Label labelCondBetterConSimilarPrice;
-        private System.Windows.Forms.CheckBox checkBoxCondBetterIfBelowMinimum;
-        private System.Windows.Forms.NumericUpDown numericUpDownCondSimilarPrice;
-        private System.Windows.Forms.CheckBox checkBoxCondSimilarPrice;
-        private System.Windows.Forms.CheckBox checkBoxCondMatchesAbove;
-        private System.Windows.Forms.CheckBox checkBoxCondAcceptBetterAlways;
+        private System.Windows.Forms.RadioButton radioButtonCondMatchesAbove;
+        private System.Windows.Forms.RadioButton radioButtonCondAcceptBetterAlways;
         private System.Windows.Forms.Label labelMatchExplanation;
-        private System.Windows.Forms.CheckBox checkBoxCondMatchOnly;
+        private System.Windows.Forms.RadioButton radioButtonCondMatchOnly;
         private System.Windows.Forms.GroupBox groupBoxPriceEstim;
         private System.Windows.Forms.Panel panelPriceEstForSliderLabel;
         private System.Windows.Forms.Label labelPriceEstSliderValue;
@@ -764,11 +607,9 @@ namespace MKMTool
         private System.Windows.Forms.NumericUpDown numericUpDownPriceEstMinPrice;
         private System.Windows.Forms.Label labelPriceEstMinPrice;
         private System.Windows.Forms.Label statusLabel;
-        private System.Windows.Forms.Label labelPriceEstOutliers3;
-        private System.Windows.Forms.Label labelPriceEstOutliers2;
-        private System.Windows.Forms.NumericUpDown numericUpDownPriceEstOutliersHigh;
-        private System.Windows.Forms.NumericUpDown numericUpDownPriceEstOutliersLow;
         private System.Windows.Forms.Label labelPriceEstAvgOutliers1;
         private System.Windows.Forms.CheckBox checkBoxTestMode;
+        private System.Windows.Forms.TextBox textBoxPriceEstMaxDiff;
+        private System.Windows.Forms.CheckBox checkBoxLogHighVariance;
     }
 }

@@ -45,19 +45,22 @@ namespace MKMTool
 {
     public enum PriceSetMethod { ByAverage, ByPercentageOfLowestPrice, ByPercentageOfHighestPrice };
     public enum AcceptedCondition { OnlyMatching, // only items in matching condition will be considered similar
-        Conditional, // acceptance decided by additional constraints
+        SomeMatchesAbove, // accept better-condition items, but only if there is at least one more expensive matching-condition item
         Anything // items in any matching or better condition will be considered similar
     };
 
     /// <summary>
     /// Contains all customizable settings that are used by MKMBot
+    /// All numbers expressed as percentage must be saved as a double with 0 = 0%, 1 = 100%
     /// </summary>
     public struct MKMBotSettings
     {
         /// Price Estimation Settings
 
-        // each pair is a <max price of item; max change in % allowed for such item> - must be sorted - ascending - to function correctly!
+        // each pair is a <max price of item; max change in % allowed for such item>
         public SortedList<double, double> priceMaxChangeLimits;
+        // each pair is a <max price of item; max difference in % allowed for such the next item> to be considered as similar - used to cull outliers
+        public SortedList<double, double> priceMaxDifferenceLimits;
         public double priceMinRarePrice;
         public int priceMinSimilarItems, priceMaxSimilarItems;
         public PriceSetMethod priceSetPriceBy;
@@ -66,24 +69,16 @@ namespace MKMTool
         //      min price and average (0-0.5) or average and highest price (0.5-1)
         // if price computed as percentage of lowest or higest price, priceFactor is that percentage
         public double priceFactor;
-        public double priceOutlierLowLimit, priceOutlierUpLimit; // cut-off outliers that are more than x% away from median
 
 
         /// Card Condition Settings
         
         public AcceptedCondition condAcceptance;
-        // setting of conditions for the "Conditional" condAcceptance mode
-        // true to turn on condition, false to turn it off
-        public bool condAtLeastOneMatchAbove, condLastMatchSimilarPrice, condBetterOnlyBelowMinItems;
-        public double condSimilarPriceLimit; // used by the condLastMatchSimilarPrice
-        // if this is true, all conditions which are turned on must be passed to take the item into account
-        // if it is set to false, only any one is sufficient
-        public bool condRequireAllConditions;
 
 
         /// Log Settings
 
-        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logHighPriceChange;
+        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logHighPriceChange, logHighPriceVariance;
 
         /// Other Settings
 
@@ -119,26 +114,21 @@ namespace MKMTool
             MKMBotSettings s = new MKMBotSettings();
 
             s.priceMaxChangeLimits = new SortedList<double, double>(); // empty by default
+            s.priceMaxDifferenceLimits = new SortedList<double, double>(); // empty by default
 
             s.priceMinRarePrice = 0.05;
             s.priceMinSimilarItems = 4; // require exactly 4 items
             s.priceMaxSimilarItems = 4;
             s.priceSetPriceBy = PriceSetMethod.ByAverage;
             s.priceFactor = 0.5;
-            s.priceOutlierLowLimit = 10000; // by default virtually don't cut off any outliers
-            s.priceOutlierUpLimit = 10000;
 
             s.condAcceptance = AcceptedCondition.OnlyMatching;
-            s.condAtLeastOneMatchAbove = false;
-            s.condLastMatchSimilarPrice = false;
-            s.condBetterOnlyBelowMinItems = false;
-            s.condSimilarPriceLimit = 1;
-            s.condRequireAllConditions = false;
 
             s.logUpdated = true;
             s.logLessThanMinimum = true;
             s.logSmallPriceChange = true;
             s.logHighPriceChange = true;
+            s.logHighPriceVariance = true;
 
             s.testMode = false;
 

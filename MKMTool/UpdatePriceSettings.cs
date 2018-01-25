@@ -85,8 +85,16 @@ namespace MKMTool
             for (int i = 1; i < limits.Length; i += 2)
             {
                 if(double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
-                    s.priceMaxChangeLimits.Add(threshold, allowedChange);
-            }            
+                    s.priceMaxChangeLimits.Add(threshold, allowedChange / 100); // convert to percent
+            }
+
+            s.priceMaxDifferenceLimits = new SortedList<double, double>();
+            limits = textBoxPriceEstMaxDiff.Text.Split(';');
+            for (int i = 1; i < limits.Length; i += 2)
+            {
+                if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                    s.priceMaxDifferenceLimits.Add(threshold, allowedChange / 100); // convert to percent
+            }
 
             s.priceMinRarePrice = Decimal.ToDouble(numericUpDownPriceEstMinPrice.Value);
             s.priceMinSimilarItems = Decimal.ToInt32(numericUpDownPriceEstMinN.Value);
@@ -99,35 +107,28 @@ namespace MKMTool
             else if (radioButtonPriceEstByLowestPrice.Checked)
             {
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfLowestPrice;
-                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value);
+                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value) / 100;
             }
             else
             {
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfHighestPrice;
-                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value);
+                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value) / 100;
             }
-
-            s.priceOutlierLowLimit = Decimal.ToDouble(numericUpDownPriceEstOutliersLow.Value);
-            s.priceOutlierUpLimit = Decimal.ToDouble(numericUpDownPriceEstOutliersHigh.Value);
-
-            if (checkBoxCondMatchOnly.Checked)
+            
+            if (radioButtonCondMatchOnly.Checked)
                 s.condAcceptance = AcceptedCondition.OnlyMatching;
-            else if (checkBoxCondAcceptBetterAlways.Checked)
+            else if (radioButtonCondAcceptBetterAlways.Checked)
                 s.condAcceptance = AcceptedCondition.Anything;
             else
-            {
-                s.condAcceptance = AcceptedCondition.Conditional;
-                s.condAtLeastOneMatchAbove = checkBoxCondMatchesAbove.Checked;
-                s.condLastMatchSimilarPrice = checkBoxCondSimilarPrice.Checked;
-                s.condSimilarPriceLimit = Decimal.ToDouble(numericUpDownCondSimilarPrice.Value);
-                s.condBetterOnlyBelowMinItems = checkBoxCondBetterIfBelowMinimum.Checked;
-                s.condRequireAllConditions = radioButtonCondUseAND.Checked;
-            }
+                s.condAcceptance = AcceptedCondition.SomeMatchesAbove;
             
             s.logUpdated = checkBoxLogUpdated.Checked;
             s.logLessThanMinimum = checkBoxLogMinItems.Checked;
-            s.logSmallPriceChange =checkBoxLogSmallChange.Checked;
+            s.logSmallPriceChange = checkBoxLogSmallChange.Checked;
             s.logHighPriceChange = checkBoxLogLargeChange.Checked;
+            s.logHighPriceVariance = checkBoxLogHighVariance.Checked;
+
+            s.logHighPriceVariance = true;
             
             s.testMode = checkBoxTestMode.Checked;
 
@@ -150,7 +151,11 @@ namespace MKMTool
         {            
             textBoxPriceEstMaxChange.Text = "";
             foreach (var limitPair in settings.priceMaxChangeLimits)
-                textBoxPriceEstMaxChange.Text += "" + limitPair.Key + ";" + limitPair.Value;
+                textBoxPriceEstMaxChange.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2");
+
+            textBoxPriceEstMaxDiff.Text = "";
+            foreach (var limitPair in settings.priceMaxDifferenceLimits)
+                textBoxPriceEstMaxDiff.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2");
 
             numericUpDownPriceEstMinPrice.Value = new decimal(settings.priceMinRarePrice);
             numericUpDownPriceEstMinN.Value = new decimal(settings.priceMinSimilarItems);
@@ -167,90 +172,60 @@ namespace MKMTool
                 radioButtonPriceEstPriceByAvg.Checked = false;
                 radioButtonPriceEstByLowestPrice.Checked = true;
                 radioButtonPriceEstHighestPrice.Checked = false;
-                numericUpDownPriceEstLowestPrice.Value = new decimal(settings.priceFactor);
+                numericUpDownPriceEstLowestPrice.Value = new decimal(settings.priceFactor * 100);
             }
             else
             {
                 radioButtonPriceEstPriceByAvg.Checked = false;
                 radioButtonPriceEstByLowestPrice.Checked = false;
                 radioButtonPriceEstHighestPrice.Checked = true;
-                numericUpDownPriceEstHighestPrice.Value = new decimal(settings.priceFactor);
+                numericUpDownPriceEstHighestPrice.Value = new decimal(settings.priceFactor * 100);
             }
-            numericUpDownPriceEstOutliersLow.Value = new decimal(settings.priceOutlierLowLimit);
-            numericUpDownPriceEstOutliersHigh.Value = new decimal(settings.priceOutlierUpLimit);
-
 
             if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
             {
-                checkBoxCondMatchOnly.Checked = true;
-                checkBoxCondAcceptBetterAlways.Checked = false;
-                groupBoxCondConditional.Enabled = false;
+                radioButtonCondMatchOnly.Checked = true;
+                radioButtonCondAcceptBetterAlways.Checked = false;
+                radioButtonCondMatchesAbove.Checked = false;
             }
             else if (settings.condAcceptance == AcceptedCondition.Anything)
             {
-                checkBoxCondAcceptBetterAlways.Checked = true;
-                checkBoxCondMatchOnly.Checked = false;
-                groupBoxCondConditional.Enabled = false;
+                radioButtonCondMatchOnly.Checked = false;
+                radioButtonCondAcceptBetterAlways.Checked = true;
+                radioButtonCondMatchesAbove.Checked = false;
             }
             else
             {
-                checkBoxCondAcceptBetterAlways.Checked = false;
-                checkBoxCondMatchOnly.Checked = false;
-                groupBoxCondConditional.Enabled = true;
-                checkBoxCondMatchesAbove.Checked = settings.condAtLeastOneMatchAbove;
-                checkBoxCondSimilarPrice.Checked = settings.condLastMatchSimilarPrice;
-                numericUpDownCondSimilarPrice.Value = new decimal(settings.condSimilarPriceLimit);
-                checkBoxCondBetterIfBelowMinimum.Checked = settings.condBetterOnlyBelowMinItems;
-                radioButtonCondUseAND.Checked = settings.condRequireAllConditions;
-                radioButtonCondUseOR.Checked = !settings.condRequireAllConditions;
+                radioButtonCondAcceptBetterAlways.Checked = false;
+                radioButtonCondMatchOnly.Checked = false;
+                radioButtonCondMatchesAbove.Checked = true;
             }
 
             checkBoxLogUpdated.Checked = settings.logUpdated;
             checkBoxLogMinItems.Checked = settings.logLessThanMinimum;
             checkBoxLogSmallChange.Checked = settings.logSmallPriceChange;
             checkBoxLogLargeChange.Checked = settings.logHighPriceChange;
+            checkBoxLogHighVariance.Checked = settings.logHighPriceVariance;
 
             checkBoxTestMode.Checked = settings.testMode;
         }
-
-
-        private void checkBoxCondSimilarPrice_CheckedChanged(object sender, EventArgs e)
-        {
-            numericUpDownCondSimilarPrice.Enabled = checkBoxCondSimilarPrice.Checked;
-        }
-
-        private void radioButtonCondUseAND_CheckedChanged(object sender, EventArgs e)
-        {
-            radioButtonCondUseOR.Checked = !radioButtonCondUseAND.Checked;
-        }
-
-        private void radioButtonCondUseOR_CheckedChanged(object sender, EventArgs e)
-        {
-            radioButtonCondUseAND.Checked = !radioButtonCondUseOR.Checked;
-        }
-
+                
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
         {
-            if (checkBoxCondMatchOnly.Checked)
+            if (radioButtonCondMatchOnly.Checked)
             {
-                if (checkBoxCondAcceptBetterAlways.Checked)
-                    checkBoxCondAcceptBetterAlways.Checked = false;
-                groupBoxCondConditional.Enabled = false;
+                if (radioButtonCondAcceptBetterAlways.Checked)
+                    radioButtonCondAcceptBetterAlways.Checked = false;
             }
-            else if (!checkBoxCondAcceptBetterAlways.Checked)
-                groupBoxCondConditional.Enabled = true;
         }
 
         private void checkBoxCondAcceptBetterAlways_CheckedChanged(object sender, EventArgs e)
         {
-            if (checkBoxCondAcceptBetterAlways.Checked)
+            if (radioButtonCondAcceptBetterAlways.Checked)
             {
-                if (checkBoxCondMatchOnly.Checked)
-                    checkBoxCondMatchOnly.Checked = false;
-                groupBoxCondConditional.Enabled = false;
+                if (radioButtonCondMatchOnly.Checked)
+                    radioButtonCondMatchOnly.Checked = false;
             }
-            else if (!checkBoxCondMatchOnly.Checked)
-                groupBoxCondConditional.Enabled = true;
         }
 
         private void trackBarPriceEstAvg_Scroll(object sender, EventArgs e)
@@ -289,10 +264,15 @@ namespace MKMTool
                 numericUpDownPriceEstLowestPrice.Enabled = true;
                 radioButtonPriceEstHighestPrice.Checked = false;
                 radioButtonPriceEstPriceByAvg.Checked = false;
+                // if assigning by lowest price, no sequence of prices is collected, only the first lowest one is used
+                numericUpDownPriceEstMinN.Enabled = false;
+                numericUpDownPriceEstMaxN.Enabled = false;
             }
             else
             {
                 numericUpDownPriceEstLowestPrice.Enabled = false;
+                numericUpDownPriceEstMinN.Enabled = true;
+                numericUpDownPriceEstMaxN.Enabled = true;
             }
         }
 
