@@ -60,6 +60,7 @@ namespace MKMTool
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.groupBoxLogSettings = new System.Windows.Forms.GroupBox();
             this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
             this.checkBoxLogLargeChange = new System.Windows.Forms.CheckBox();
@@ -101,6 +102,8 @@ namespace MKMTool
             this.buttonPresetsStore = new System.Windows.Forms.Button();
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
+            this.toolTipMaxPriceChange = new System.Windows.Forms.ToolTip(this.components);
+            this.toolTipMaxDifference = new System.Windows.Forms.ToolTip(this.components);
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -276,11 +279,12 @@ namespace MKMTool
             // 
             // textBoxPriceEstMaxDiff
             // 
-            this.textBoxPriceEstMaxDiff.Location = new System.Drawing.Point(589, 66);
+            this.textBoxPriceEstMaxDiff.Location = new System.Drawing.Point(254, 66);
             this.textBoxPriceEstMaxDiff.Name = "textBoxPriceEstMaxDiff";
-            this.textBoxPriceEstMaxDiff.Size = new System.Drawing.Size(191, 20);
+            this.textBoxPriceEstMaxDiff.Size = new System.Drawing.Size(526, 20);
             this.textBoxPriceEstMaxDiff.TabIndex = 49;
-            this.textBoxPriceEstMaxDiff.Text = "1;300;10;20;20;15;50;8;500;3";
+            this.toolTipMaxDifference.SetToolTip(this.textBoxPriceEstMaxDiff, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx = max difference in % for items tha" +
+        "t cost Tx or less");
             // 
             // panelPriceEstForSliderLabel
             // 
@@ -316,27 +320,31 @@ namespace MKMTool
             this.labelPriceEstMaximumPrice.AutoSize = true;
             this.labelPriceEstMaximumPrice.Location = new System.Drawing.Point(6, 43);
             this.labelPriceEstMaximumPrice.Name = "labelPriceEstMaximumPrice";
-            this.labelPriceEstMaximumPrice.Size = new System.Drawing.Size(518, 13);
+            this.labelPriceEstMaximumPrice.Size = new System.Drawing.Size(95, 13);
             this.labelPriceEstMaximumPrice.TabIndex = 17;
-            this.labelPriceEstMaximumPrice.Text = "Max price change (format: \"T1;C1;T2;C2;\" etc., Cx is max allowed change in % for " +
-    "items that cost Tx or less):";
+            this.labelPriceEstMaximumPrice.Text = "Max price change:";
+            this.toolTipMaxPriceChange.SetToolTip(this.labelPriceEstMaximumPrice, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx is max allowed price change in % fo" +
+        "r items that cost (old price) Tx or less");
             // 
             // textBoxPriceEstMaxChange
             // 
-            this.textBoxPriceEstMaxChange.Location = new System.Drawing.Point(589, 40);
+            this.textBoxPriceEstMaxChange.Location = new System.Drawing.Point(254, 40);
             this.textBoxPriceEstMaxChange.Name = "textBoxPriceEstMaxChange";
-            this.textBoxPriceEstMaxChange.Size = new System.Drawing.Size(191, 20);
+            this.textBoxPriceEstMaxChange.Size = new System.Drawing.Size(526, 20);
             this.textBoxPriceEstMaxChange.TabIndex = 18;
+            this.toolTipMaxPriceChange.SetToolTip(this.textBoxPriceEstMaxChange, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx is max allowed price change in % fo" +
+        "r items that cost (old price) Tx or less\r\n");
             // 
             // labelPriceEstAvgOutliers1
             // 
             this.labelPriceEstAvgOutliers1.AutoSize = true;
             this.labelPriceEstAvgOutliers1.Location = new System.Drawing.Point(6, 69);
             this.labelPriceEstAvgOutliers1.Name = "labelPriceEstAvgOutliers1";
-            this.labelPriceEstAvgOutliers1.Size = new System.Drawing.Size(579, 13);
+            this.labelPriceEstAvgOutliers1.Size = new System.Drawing.Size(217, 13);
             this.labelPriceEstAvgOutliers1.TabIndex = 48;
-            this.labelPriceEstAvgOutliers1.Text = "Max differences between consecutive items (\"T1;C1;T2;C2;\" etc., Cx = max differen" +
-    "ce in % for items that cost Tx or less): ";
+            this.labelPriceEstAvgOutliers1.Text = "Max differences between consecutive items:";
+            this.toolTipMaxDifference.SetToolTip(this.labelPriceEstAvgOutliers1, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx = max difference in % for items tha" +
+        "t cost Tx or less");
             // 
             // labelPriceEstHighestPrice
             // 
@@ -532,7 +540,7 @@ namespace MKMTool
             // labelPriceEstMinN
             // 
             this.labelPriceEstMinN.AutoSize = true;
-            this.labelPriceEstMinN.Location = new System.Drawing.Point(330, 16);
+            this.labelPriceEstMinN.Location = new System.Drawing.Point(339, 16);
             this.labelPriceEstMinN.Name = "labelPriceEstMinN";
             this.labelPriceEstMinN.Size = new System.Drawing.Size(131, 13);
             this.labelPriceEstMinN.TabIndex = 31;
@@ -634,6 +642,14 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
+            // toolTipMaxPriceChange
+            // 
+            this.toolTipMaxPriceChange.ToolTipTitle = "Max price change";
+            // 
+            // toolTipMaxDifference
+            // 
+            this.toolTipMaxDifference.ToolTipTitle = "Max difference between consecutive items";
+            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -709,5 +725,7 @@ namespace MKMTool
         private System.Windows.Forms.Button buttonPresetsStore;
         private System.Windows.Forms.Button buttonPresetsLoad;
         private System.Windows.Forms.ComboBox comboBoxPresets;
+        private System.Windows.Forms.ToolTip toolTipMaxPriceChange;
+        private System.Windows.Forms.ToolTip toolTipMaxDifference;
     }
 }
