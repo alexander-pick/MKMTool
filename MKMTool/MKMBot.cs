@@ -50,10 +50,11 @@ namespace MKMTool
     };
 
     /// <summary>
-    /// Contains all customizable settings that are used by MKMBot
-    /// All numbers expressed as percentage must be saved as a double with 0 = 0%, 1 = 100%
+    /// Contains all customizable settings that are used by MKMBot.
+    /// All numbers expressed as percentage must be saved as a double with 0 = 0%, 1 = 100%.
+    /// Can be serialized into a xml, otherwise it is basically a struct -> all members are public
     /// </summary>
-    public struct MKMBotSettings
+    public class MKMBotSettings
     {
         /// Price Estimation Settings
 
@@ -83,6 +84,179 @@ namespace MKMTool
         /// Other Settings
 
         public bool testMode; // if set to true, price updates will be computed and logged, but not sent to MKM
+        public string description; // overal description of what is this setting expected to do, written in the GUI
+
+        public MKMBotSettings()
+        {
+            priceMaxChangeLimits = new SortedList<double, double>();
+            priceMaxDifferenceLimits = new SortedList<double, double>();
+        }
+
+        /// <summary>
+        /// Copies all settings from the specified reference settings.
+        /// </summary>
+        /// <param name="refSettings">The reference settings.</param>
+        public void Copy(MKMBotSettings refSettings)
+        {
+            priceMaxChangeLimits.Clear();
+            foreach (var limit in refSettings.priceMaxChangeLimits)
+                priceMaxChangeLimits.Add(limit.Key, limit.Value);
+
+            priceMaxDifferenceLimits.Clear();
+            foreach (var limit in refSettings.priceMaxDifferenceLimits)
+                priceMaxDifferenceLimits.Add(limit.Key, limit.Value);
+
+            priceMinRarePrice = refSettings.priceMinRarePrice;
+            priceMinSimilarItems = refSettings.priceMinSimilarItems;
+            priceMaxSimilarItems = refSettings.priceMaxSimilarItems;
+            priceSetPriceBy = refSettings.priceSetPriceBy;
+            priceFactor = refSettings.priceFactor;
+            condAcceptance = refSettings.condAcceptance;
+            logUpdated = refSettings.logUpdated;
+            logLessThanMinimum = refSettings.logLessThanMinimum;
+            logSmallPriceChange = refSettings.logSmallPriceChange;
+            logHighPriceChange = refSettings.logHighPriceChange;
+            logHighPriceVariance = refSettings.logHighPriceVariance;
+            testMode = refSettings.testMode;
+            description = refSettings.description;
+        }
+
+        /// <summary>
+        /// Fills this instance from data stored in XML.
+        /// </summary>
+        /// <param name="s">XML document representing an instance of MKMBotSettings. <seealso cref="Serialize()" /></param>
+        /// <returns>True if parsing was succesful, false if it was not (in that case, the structure will remain unchanged).</returns>
+        public bool Parse(XmlDocument s)
+        {
+            MKMBotSettings temp = new MKMBotSettings();
+            try
+            {
+                XmlNode root = s.GetElementsByTagName("MKMBotSettings").Item(0);
+
+                double threshold, allowedChange;
+                string[] limits;
+                foreach (XmlNode child in root.ChildNodes)
+                {
+                    switch (child.Name)
+                    {
+                        case "priceMaxChangeLimits":
+                            limits = child.InnerText.Split(';');
+                            for (int i = 1; i < limits.Length; i += 2)
+                            {
+                                if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                                    temp.priceMaxChangeLimits.Add(threshold, allowedChange);
+                                else
+                                    return false;
+                            }
+                            break;
+                        case "priceMaxDifferenceLimits":
+                            limits = child.InnerText.Split(';');
+                            for (int i = 1; i < limits.Length; i += 2)
+                            {
+                                if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                                    temp.priceMaxDifferenceLimits.Add(threshold, allowedChange);
+                                else
+                                    return false;
+                            }
+                            break;
+                    }
+                }
+                foreach (XmlNode att in root.Attributes)
+                {
+                    switch (att.Name)
+                    {
+                        case "priceMinRarePrice":
+                            temp.priceMinRarePrice = double.Parse(att.Value);
+                            break;
+                        case "priceMinSimilarItems":
+                            temp.priceMinSimilarItems = int.Parse(att.Value);
+                            break;
+                        case "priceMaxSimilarItems":
+                            temp.priceMaxSimilarItems = int.Parse(att.Value);
+                            break;
+                        case "priceSetPriceBy":
+                            temp.priceSetPriceBy = (PriceSetMethod)Enum.Parse(typeof(PriceSetMethod), att.Value);
+                            break;
+                        case "priceFactor":
+                            temp.priceFactor = double.Parse(att.Value);
+                            break;
+                        case "condAcceptance":
+                            temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
+                            break;
+                        case "logUpdated":
+                            temp.logUpdated = bool.Parse(att.Value);
+                            break;
+                        case "logLessThanMinimum":
+                            temp.logLessThanMinimum = bool.Parse(att.Value);
+                            break;
+                        case "logSmallPriceChange":
+                            temp.logSmallPriceChange = bool.Parse(att.Value);
+                            break;
+                        case "logHighPriceChange":
+                            temp.logHighPriceChange = bool.Parse(att.Value);
+                            break;
+                        case "logHighPriceVariance":
+                            temp.logHighPriceVariance = bool.Parse(att.Value);
+                            break;
+                        case "testMode":
+                            temp.testMode = bool.Parse(att.Value);
+                            break;
+                        case "description":
+                            temp.description = att.Value;
+                            break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            this.Copy(temp); // nothing failed, let's keep the settings
+            return true;
+        }
+
+        /// <summary>
+        /// Serializes this instance.
+        /// </summary>
+        /// <returns>A xml representation of this object.</returns>
+        public XmlDocument Serialize()
+        {
+            XmlDocument s = new XmlDocument();
+            s.CreateXmlDeclaration("1.0", System.Text.Encoding.UTF8.ToString(), "no");
+            XmlElement root = s.CreateElement("MKMBotSettings");
+
+            XmlElement child = s.CreateElement("priceMaxChangeLimits");
+            child.InnerText = "";
+            foreach (var limitPair in priceMaxChangeLimits)
+                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2") + ";";
+            root.AppendChild(child);
+
+            child = s.CreateElement("priceMaxDifferenceLimits");
+            child.InnerText = "";
+            foreach (var limitPair in priceMaxDifferenceLimits)
+                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2") + ";";
+            root.AppendChild(child);
+
+            root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2"));
+            root.SetAttribute("priceMinSimilarItems", priceMinSimilarItems.ToString());
+            root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString());
+            root.SetAttribute("priceSetPriceBy", priceSetPriceBy.ToString());
+            root.SetAttribute("priceFactor", priceFactor.ToString("f2"));
+
+            root.SetAttribute("condAcceptance", condAcceptance.ToString());
+
+            root.SetAttribute("logUpdated", logUpdated.ToString());
+            root.SetAttribute("logLessThanMinimum", logLessThanMinimum.ToString());
+            root.SetAttribute("logSmallPriceChange", logSmallPriceChange.ToString());
+            root.SetAttribute("logHighPriceChange", logHighPriceChange.ToString());
+            root.SetAttribute("logHighPriceVariance", logHighPriceVariance.ToString());
+
+            root.SetAttribute("testMode", testMode.ToString());
+            root.SetAttribute("description", description);
+
+            s.AppendChild(root);
+            return s;
+        }
     }
 
     internal class MKMBot
@@ -113,8 +287,8 @@ namespace MKMTool
         {
             MKMBotSettings s = new MKMBotSettings();
 
-            s.priceMaxChangeLimits = new SortedList<double, double>(); // empty by default
-            s.priceMaxDifferenceLimits = new SortedList<double, double>(); // empty by default
+            s.priceMaxChangeLimits.Clear(); // empty by default
+            s.priceMaxDifferenceLimits.Clear(); // empty by default
 
             s.priceMinRarePrice = 0.05;
             s.priceMinSimilarItems = 4; // require exactly 4 items

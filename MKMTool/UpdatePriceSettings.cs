@@ -39,6 +39,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
+using System.IO;
 
 namespace MKMTool
 {
@@ -48,10 +50,12 @@ namespace MKMTool
         // it will be equal to the lowest price, at 1 to the highest price. Remaining values are linear interpolation between either 
         // min price and average (0-0.5) or average and highest price (0.5-1)
         private double priceByAvg = 0.5;
+        private Dictionary<string, MKMBotSettings> presets;
         
         public UpdatePriceSettings()
         {
             InitializeComponent();
+            loadPresets();
         }
 
         /// <summary>
@@ -78,7 +82,6 @@ namespace MKMTool
         public bool GenerateBotSettings(out MKMBotSettings s)
         {
             s = new MKMBotSettings();
-            s.priceMaxChangeLimits = new SortedList<double, double>();
 
             string[] limits = textBoxPriceEstMaxChange.Text.Split(';');
             double threshold, allowedChange;
@@ -93,8 +96,7 @@ namespace MKMTool
                     return false;
                 }
             }
-
-            s.priceMaxDifferenceLimits = new SortedList<double, double>();
+            
             limits = textBoxPriceEstMaxDiff.Text.Split(';');
             for (int i = 1; i < limits.Length; i += 2)
             {
@@ -139,8 +141,6 @@ namespace MKMTool
             s.logSmallPriceChange = checkBoxLogSmallChange.Checked;
             s.logHighPriceChange = checkBoxLogLargeChange.Checked;
             s.logHighPriceVariance = checkBoxLogHighVariance.Checked;
-
-            s.logHighPriceVariance = true;
             
             s.testMode = checkBoxTestMode.Checked;
 
@@ -163,11 +163,11 @@ namespace MKMTool
         {            
             textBoxPriceEstMaxChange.Text = "";
             foreach (var limitPair in settings.priceMaxChangeLimits)
-                textBoxPriceEstMaxChange.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2");
+                textBoxPriceEstMaxChange.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2") + ";";
 
             textBoxPriceEstMaxDiff.Text = "";
             foreach (var limitPair in settings.priceMaxDifferenceLimits)
-                textBoxPriceEstMaxDiff.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2");
+                textBoxPriceEstMaxDiff.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2") + ";";
 
             numericUpDownPriceEstMinPrice.Value = new decimal(settings.priceMinRarePrice);
             numericUpDownPriceEstMinN.Value = new decimal(settings.priceMinSimilarItems);
@@ -240,7 +240,7 @@ namespace MKMTool
             }
         }
 
-        private void trackBarPriceEstAvg_Scroll(object sender, EventArgs e)
+        private void trackBarPriceEstAvg_ValueChanged(object sender, EventArgs e)
         {
             priceByAvg = (double)trackBarPriceEstAvg.Value / (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum);
             if (priceByAvg == 1)
@@ -314,6 +314,110 @@ namespace MKMTool
             // make sure maximum items is not lower than minimum
             if (numericUpDownPriceEstMaxN.Value < numericUpDownPriceEstMinN.Value)
                 numericUpDownPriceEstMinN.Value = numericUpDownPriceEstMaxN.Value;
+        }
+
+        /// <summary>
+        /// Loads all setting presets stored as .xml files in /Presets/ folder
+        /// and populates the combobox with their names.
+        /// </summary>
+        private void loadPresets()
+        {
+            DirectoryInfo d = new DirectoryInfo(@".//Presets");
+            FileInfo[] Files = d.GetFiles("*.xml");
+            presets = new Dictionary<string, MKMBotSettings>();
+            foreach (FileInfo file in Files)
+            {
+                MKMBotSettings s = new MKMBotSettings();
+                try
+                {
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(file.FullName);
+                    if (s.Parse(doc))
+                    {
+                        string name = file.Name.Substring(0, file.Name.Length - 4); // cut off the ".xml"
+                        presets[name] = s;
+                        comboBoxPresets.Items.Add(name);
+                    }
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+            comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add("Choose Preset...");
+        }
+
+        private void comboBoxPresets_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxPresets.SelectedIndex >= 0)
+            {
+                string chosen = comboBoxPresets.SelectedItem.ToString();
+                if (presets.ContainsKey(chosen)) // does not in case the chosen object is the dummy "Choose Preset..."
+                {
+                    labelPresetsDescr.Text = presets[chosen].description;
+                    buttonPresetsDelete.Enabled = true;
+                    buttonPresetsLoad.Enabled = true;
+                }
+            }
+            else
+            {
+                buttonPresetsDelete.Enabled = false;
+                buttonPresetsLoad.Enabled = false;
+                comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add("Choose Preset...");
+                labelPresetsDescr.Text = "";
+            }
+        }
+
+        private void comboBoxPresets_DropDown(object sender, EventArgs e)
+        {
+            if (comboBoxPresets.Items.Contains("Choose Preset..."))
+                comboBoxPresets.Items.Remove("Choose Preset...");
+        }
+
+        private void buttonPresetsLoad_Click(object sender, EventArgs e)
+        {
+            UpdateSettingsGUI(presets[comboBoxPresets.SelectedItem.ToString()]);
+        }
+
+        private void buttonPresetsStore_Click(object sender, EventArgs e)
+        {
+            MKMBotSettings settings;
+            if (GenerateBotSettings(out settings))
+            {
+                SettingPresetStore s = new SettingPresetStore(settings);
+                if (s.ShowDialog() == DialogResult.OK)
+                {
+                    presets[s.GetChosenName()] = settings;
+                    if (comboBoxPresets.Items.Contains(s.GetChosenName())) // it already contains it in case of rewriting a preset
+                        labelPresetsDescr.Text = settings.description; // so just rewrite the description
+                    else
+                        comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add(s.GetChosenName());
+                }
+            }
+        }
+
+        private void buttonPresetsDelete_Click(object sender, EventArgs e)
+        {
+            string name = comboBoxPresets.SelectedItem.ToString();
+            if (MessageBox.Show("Are you sure you want to delete preset '" + name + "'? This cannot be undone.",
+                "Delete preset", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                try
+                {
+                    FileInfo f = new FileInfo(@".//Presets//" + name + ".xml");
+                    if (f.Exists) // better check, could have been deleted manually during the run
+                        f.Delete();
+                    presets.Remove(name);
+                    comboBoxPresets.Items.RemoveAt(comboBoxPresets.SelectedIndex);
+                    comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add("Choose Preset...");
+                    labelPresetsDescr.Text = "";
+                }
+                catch (Exception exc)
+                {
+                    MessageBox.Show("Deleting preset faile: " + Environment.NewLine + Environment.NewLine + exc.Message,
+                        "Deleting preset failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
     }
 }

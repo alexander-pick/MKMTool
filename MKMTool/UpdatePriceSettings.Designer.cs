@@ -61,6 +61,7 @@ namespace MKMTool
         private void InitializeComponent()
         {
             this.groupBoxLogSettings = new System.Windows.Forms.GroupBox();
+            this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
             this.checkBoxLogLargeChange = new System.Windows.Forms.CheckBox();
             this.checkBoxLogSmallChange = new System.Windows.Forms.CheckBox();
             this.checkBoxLogMinItems = new System.Windows.Forms.CheckBox();
@@ -93,7 +94,13 @@ namespace MKMTool
             this.labelPriceEstMinN = new System.Windows.Forms.Label();
             this.statusLabel = new System.Windows.Forms.Label();
             this.checkBoxTestMode = new System.Windows.Forms.CheckBox();
-            this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
+            this.groupBoxPresets = new System.Windows.Forms.GroupBox();
+            this.panelPresetsDescr = new System.Windows.Forms.Panel();
+            this.labelPresetsDescr = new System.Windows.Forms.Label();
+            this.buttonPresetsDelete = new System.Windows.Forms.Button();
+            this.buttonPresetsStore = new System.Windows.Forms.Button();
+            this.buttonPresetsLoad = new System.Windows.Forms.Button();
+            this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -104,6 +111,8 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMaxN)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinN)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).BeginInit();
+            this.groupBoxPresets.SuspendLayout();
+            this.panelPresetsDescr.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxLogSettings
@@ -119,6 +128,18 @@ namespace MKMTool
             this.groupBoxLogSettings.TabIndex = 14;
             this.groupBoxLogSettings.TabStop = false;
             this.groupBoxLogSettings.Text = "Log settings";
+            // 
+            // checkBoxLogHighVariance
+            // 
+            this.checkBoxLogHighVariance.AutoSize = true;
+            this.checkBoxLogHighVariance.Checked = true;
+            this.checkBoxLogHighVariance.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(253, 66);
+            this.checkBoxLogHighVariance.Name = "checkBoxLogHighVariance";
+            this.checkBoxLogHighVariance.Size = new System.Drawing.Size(315, 17);
+            this.checkBoxLogHighVariance.TabIndex = 4;
+            this.checkBoxLogHighVariance.Text = "Log non-updates due to high variance among cheapest items";
+            this.checkBoxLogHighVariance.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogLargeChange
             // 
@@ -288,7 +309,7 @@ namespace MKMTool
             this.trackBarPriceEstAvg.Size = new System.Drawing.Size(526, 45);
             this.trackBarPriceEstAvg.TabIndex = 36;
             this.trackBarPriceEstAvg.Value = 25;
-            this.trackBarPriceEstAvg.Scroll += new System.EventHandler(this.trackBarPriceEstAvg_Scroll);
+            this.trackBarPriceEstAvg.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvg_ValueChanged);
             // 
             // labelPriceEstMaximumPrice
             // 
@@ -329,6 +350,7 @@ namespace MKMTool
             // numericUpDownPriceEstHighestPrice
             // 
             this.numericUpDownPriceEstHighestPrice.DecimalPlaces = 2;
+            this.numericUpDownPriceEstHighestPrice.Enabled = false;
             this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(254, 208);
             this.numericUpDownPriceEstHighestPrice.Maximum = new decimal(new int[] {
             10000,
@@ -370,6 +392,7 @@ namespace MKMTool
             // numericUpDownPriceEstLowestPrice
             // 
             this.numericUpDownPriceEstLowestPrice.DecimalPlaces = 2;
+            this.numericUpDownPriceEstLowestPrice.Enabled = false;
             this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(254, 178);
             this.numericUpDownPriceEstLowestPrice.Maximum = new decimal(new int[] {
             10000,
@@ -527,30 +550,96 @@ namespace MKMTool
             // checkBoxTestMode
             // 
             this.checkBoxTestMode.AutoSize = true;
-            this.checkBoxTestMode.Location = new System.Drawing.Point(21, 445);
+            this.checkBoxTestMode.Location = new System.Drawing.Point(21, 534);
             this.checkBoxTestMode.Name = "checkBoxTestMode";
             this.checkBoxTestMode.Size = new System.Drawing.Size(248, 17);
             this.checkBoxTestMode.TabIndex = 15;
             this.checkBoxTestMode.Text = "Test mode - do not send price updates to MKM";
             this.checkBoxTestMode.UseVisualStyleBackColor = true;
             // 
-            // checkBoxLogHighVariance
+            // groupBoxPresets
             // 
-            this.checkBoxLogHighVariance.AutoSize = true;
-            this.checkBoxLogHighVariance.Checked = true;
-            this.checkBoxLogHighVariance.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(253, 66);
-            this.checkBoxLogHighVariance.Name = "checkBoxLogHighVariance";
-            this.checkBoxLogHighVariance.Size = new System.Drawing.Size(315, 17);
-            this.checkBoxLogHighVariance.TabIndex = 4;
-            this.checkBoxLogHighVariance.Text = "Log non-updates due to high variance among cheapest items";
-            this.checkBoxLogHighVariance.UseVisualStyleBackColor = true;
+            this.groupBoxPresets.Controls.Add(this.panelPresetsDescr);
+            this.groupBoxPresets.Controls.Add(this.buttonPresetsDelete);
+            this.groupBoxPresets.Controls.Add(this.buttonPresetsStore);
+            this.groupBoxPresets.Controls.Add(this.buttonPresetsLoad);
+            this.groupBoxPresets.Controls.Add(this.comboBoxPresets);
+            this.groupBoxPresets.Location = new System.Drawing.Point(13, 436);
+            this.groupBoxPresets.Name = "groupBoxPresets";
+            this.groupBoxPresets.Size = new System.Drawing.Size(787, 92);
+            this.groupBoxPresets.TabIndex = 16;
+            this.groupBoxPresets.TabStop = false;
+            this.groupBoxPresets.Text = "Presets";
+            // 
+            // panelPresetsDescr
+            // 
+            this.panelPresetsDescr.Controls.Add(this.labelPresetsDescr);
+            this.panelPresetsDescr.Location = new System.Drawing.Point(375, 19);
+            this.panelPresetsDescr.Name = "panelPresetsDescr";
+            this.panelPresetsDescr.Size = new System.Drawing.Size(403, 60);
+            this.panelPresetsDescr.TabIndex = 4;
+            // 
+            // labelPresetsDescr
+            // 
+            this.labelPresetsDescr.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelPresetsDescr.Location = new System.Drawing.Point(0, 0);
+            this.labelPresetsDescr.Name = "labelPresetsDescr";
+            this.labelPresetsDescr.Size = new System.Drawing.Size(403, 60);
+            this.labelPresetsDescr.TabIndex = 0;
+            // 
+            // buttonPresetsDelete
+            // 
+            this.buttonPresetsDelete.Enabled = false;
+            this.buttonPresetsDelete.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonPresetsDelete.Location = new System.Drawing.Point(248, 49);
+            this.buttonPresetsDelete.Name = "buttonPresetsDelete";
+            this.buttonPresetsDelete.Size = new System.Drawing.Size(113, 34);
+            this.buttonPresetsDelete.TabIndex = 3;
+            this.buttonPresetsDelete.Text = "Delete Preset";
+            this.buttonPresetsDelete.UseVisualStyleBackColor = true;
+            this.buttonPresetsDelete.Click += new System.EventHandler(this.buttonPresetsDelete_Click);
+            // 
+            // buttonPresetsStore
+            // 
+            this.buttonPresetsStore.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonPresetsStore.Location = new System.Drawing.Point(129, 49);
+            this.buttonPresetsStore.Name = "buttonPresetsStore";
+            this.buttonPresetsStore.Size = new System.Drawing.Size(113, 34);
+            this.buttonPresetsStore.TabIndex = 2;
+            this.buttonPresetsStore.Text = "Store Preset...";
+            this.buttonPresetsStore.UseVisualStyleBackColor = true;
+            this.buttonPresetsStore.Click += new System.EventHandler(this.buttonPresetsStore_Click);
+            // 
+            // buttonPresetsLoad
+            // 
+            this.buttonPresetsLoad.Enabled = false;
+            this.buttonPresetsLoad.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonPresetsLoad.Location = new System.Drawing.Point(10, 49);
+            this.buttonPresetsLoad.Name = "buttonPresetsLoad";
+            this.buttonPresetsLoad.Size = new System.Drawing.Size(113, 34);
+            this.buttonPresetsLoad.TabIndex = 1;
+            this.buttonPresetsLoad.Text = "Load Preset";
+            this.buttonPresetsLoad.UseVisualStyleBackColor = true;
+            this.buttonPresetsLoad.Click += new System.EventHandler(this.buttonPresetsLoad_Click);
+            // 
+            // comboBoxPresets
+            // 
+            this.comboBoxPresets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPresets.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBoxPresets.FormattingEnabled = true;
+            this.comboBoxPresets.Location = new System.Drawing.Point(10, 19);
+            this.comboBoxPresets.Name = "comboBoxPresets";
+            this.comboBoxPresets.Size = new System.Drawing.Size(351, 24);
+            this.comboBoxPresets.TabIndex = 0;
+            this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
+            this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(812, 474);
+            this.ClientSize = new System.Drawing.Size(812, 559);
+            this.Controls.Add(this.groupBoxPresets);
             this.Controls.Add(this.checkBoxTestMode);
             this.Controls.Add(this.groupBoxLogSettings);
             this.Controls.Add(this.groupBoxConditionSettings);
@@ -570,6 +659,8 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMaxN)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinN)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).EndInit();
+            this.groupBoxPresets.ResumeLayout(false);
+            this.panelPresetsDescr.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -611,5 +702,12 @@ namespace MKMTool
         private System.Windows.Forms.CheckBox checkBoxTestMode;
         private System.Windows.Forms.TextBox textBoxPriceEstMaxDiff;
         private System.Windows.Forms.CheckBox checkBoxLogHighVariance;
+        private System.Windows.Forms.GroupBox groupBoxPresets;
+        private System.Windows.Forms.Panel panelPresetsDescr;
+        private System.Windows.Forms.Label labelPresetsDescr;
+        private System.Windows.Forms.Button buttonPresetsDelete;
+        private System.Windows.Forms.Button buttonPresetsStore;
+        private System.Windows.Forms.Button buttonPresetsLoad;
+        private System.Windows.Forms.ComboBox comboBoxPresets;
     }
 }
