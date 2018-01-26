@@ -73,11 +73,11 @@ namespace MKMTool
         /// <summary>
         /// Gathers data from the gui and creates their appropriate representation as the MKMBotSettings object.
         /// </summary>
-        /// <returns>Settings for all parameters of the MKMBot as chosen by the user in the GUI.</returns>
-        public MKMBotSettings GenerateBotSettings()
+        /// <param name="s">The settings object after the method succesfully executes.</param>
+        /// <returns>True if all settings were read, false in case of parsing error.</returns>
+        public bool GenerateBotSettings(out MKMBotSettings s)
         {
-            MKMBotSettings s = new MKMBotSettings();
-
+            s = new MKMBotSettings();
             s.priceMaxChangeLimits = new SortedList<double, double>();
 
             string[] limits = textBoxPriceEstMaxChange.Text.Split(';');
@@ -86,6 +86,12 @@ namespace MKMTool
             {
                 if(double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
                     s.priceMaxChangeLimits.Add(threshold, allowedChange / 100); // convert to percent
+                else
+                {
+                    MessageBox.Show("The max price change limit pair " + limits[i - 1] + ";" + limits[i]
+                        + " could not be parsed as a number.", "Incorrect format of max price change format", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
             }
 
             s.priceMaxDifferenceLimits = new SortedList<double, double>();
@@ -94,6 +100,12 @@ namespace MKMTool
             {
                 if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
                     s.priceMaxDifferenceLimits.Add(threshold, allowedChange / 100); // convert to percent
+                else
+                {
+                    MessageBox.Show("The max difference limit pair " + limits[i - 1] + ";" + limits[i]
+                        + " could not be parsed as a number.", "Incorrect format max difference between items", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
             }
 
             s.priceMinRarePrice = Decimal.ToDouble(numericUpDownPriceEstMinPrice.Value);
@@ -132,7 +144,7 @@ namespace MKMTool
             
             s.testMode = checkBoxTestMode.Checked;
 
-            return s;
+            return true;
         }
 
         /// <summary>
