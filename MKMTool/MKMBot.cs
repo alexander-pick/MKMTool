@@ -145,6 +145,23 @@ namespace MKMTool
             frm1.logBox.AppendText(text);
         }
 
+
+        /// <summary>
+        /// Gets the maximum allowed price difference between the specified price and its neighbour.
+        /// </summary>
+        /// <param name="refPrice">The reference price.</param>
+        /// <returns>Maximal allowed difference according to the <c>settings.priceMaxDifferenceLimits</c>.</returns>
+        private double getMaxPriceDifference(double refPrice)
+        {
+            // find the right limit
+            foreach (var limit in settings.priceMaxDifferenceLimits)
+            {
+                if (limit.Key > refPrice)
+                    return refPrice * limit.Value;
+            }
+            return double.MaxValue;
+        }
+
         public DataTable buildProperWantsList(string sListId)
         {
             try
@@ -182,6 +199,12 @@ namespace MKMTool
 
         public void updatePrices(MainView frm1)
         {
+            if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
+            {
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                    "Setting price according to lowest price is very risky - specify limits for maximal price change first!" + Environment.NewLine, frm1);
+                return;
+            }
             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                 "Updating Prices..." + Environment.NewLine, frm1);
             // should fix weird float errors on foregin systems.
@@ -275,17 +298,7 @@ namespace MKMTool
                                         int median = prices.Count / 2;
                                         for (int i = median + 1; i < prices.Count; i++) // first the expensive ones to see if we can end immediately
                                         {
-                                            // find the right limit
-                                            double maxAllowedDif = double.MaxValue;
-                                            foreach (var limit in settings.priceMaxDifferenceLimits)
-                                            {
-                                                if (limit.Key > prices[i - 1])
-                                                {
-                                                    maxAllowedDif = prices[i - 1] * limit.Value;
-                                                    break;
-                                                }
-                                            }
-                                            if (prices[i] - prices[i - 1] > maxAllowedDif)
+                                            if (prices[i] - prices[i - 1] > getMaxPriceDifference(prices[i-1]))
                                                 prices.Clear();
                                         }
                                         if (prices.Count == 0)
@@ -295,17 +308,7 @@ namespace MKMTool
                                         }
                                         for (int i = median - 1; i >= 0; i--)
                                         {
-                                            // find the right limit
-                                            double maxAllowedDif = double.MaxValue;
-                                            foreach (var limit in settings.priceMaxDifferenceLimits)
-                                            {
-                                                if (limit.Key > prices[i + 1])
-                                                {
-                                                    maxAllowedDif = prices[i + 1] * limit.Value;
-                                                    break;
-                                                }
-                                            }
-                                            if (prices[i + 1] - prices[i] > maxAllowedDif)
+                                            if (prices[i + 1] - prices[i] > getMaxPriceDifference(prices[i+1]))
                                             {
                                                 prices.RemoveRange(0, i + 1); // remove the first items until item i to get rid of all the outliers
                                                 break;
@@ -322,17 +325,7 @@ namespace MKMTool
                                     // check if it's not significantly more expensive than previous item
                                     if (prices.Count > 1)
                                     {
-                                        // find the right limit
-                                        double maxAllowedDif = double.MaxValue;
-                                        foreach (var limit in settings.priceMaxDifferenceLimits)
-                                        {
-                                            if (limit.Key > prices[prices.Count - 1])
-                                            {
-                                                maxAllowedDif = prices[prices.Count - 1] * limit.Value;
-                                                break;
-                                            }
-                                        }
-                                        if (price - prices[prices.Count - 1] > maxAllowedDif)
+                                        if (price - prices[prices.Count - 1] > getMaxPriceDifference(prices[prices.Count - 1]))
                                         {
                                             outliersCulled = true;
                                             break;
