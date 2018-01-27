@@ -61,6 +61,7 @@ namespace MKMTool
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdatePriceSettings));
             this.groupBoxLogSettings = new System.Windows.Forms.GroupBox();
             this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
             this.checkBoxLogLargeChange = new System.Windows.Forms.CheckBox();
@@ -660,6 +661,7 @@ namespace MKMTool
             this.Controls.Add(this.groupBoxLogSettings);
             this.Controls.Add(this.groupBoxConditionSettings);
             this.Controls.Add(this.groupBoxPriceEstim);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "UpdatePriceSettings";
             this.Text = "Settings of Update Price";
             this.groupBoxLogSettings.ResumeLayout(false);

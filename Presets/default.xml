@@ -1,0 +1,6 @@
+<MKMBotSettings priceMinRarePrice="0.05" priceMinSimilarItems="4" priceMaxSimilarItems="4" priceSetPriceBy="ByAverage" priceFactor="0.50" condAcceptance="OnlyMatching" logUpdated="True" logLessThanMinimum="True" logSmallPriceChange="True" logHighPriceChange="True" logHighPriceVariance="True" testMode="False" description="Original algorithm used in early versions of MKMTool.&#xD;&#xA;Computes new price as the average of four cheapest items in matching condition.&#xD;&#xA;Does not prevent large changes of price and has no way of handling &quot;outliers&quot; among the similar items.">
+  <priceMaxChangeLimits>
+  </priceMaxChangeLimits>
+  <priceMaxDifferenceLimits>
+  </priceMaxDifferenceLimits>
+</MKMBotSettings>
