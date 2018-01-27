@@ -393,10 +393,10 @@ namespace MKMTool
             this.labelPriceEstLowestPrice.AutoSize = true;
             this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(330, 180);
             this.labelPriceEstLowestPrice.Name = "labelPriceEstLowestPrice";
-            this.labelPriceEstLowestPrice.Size = new System.Drawing.Size(383, 13);
+            this.labelPriceEstLowestPrice.Size = new System.Drawing.Size(408, 13);
             this.labelPriceEstLowestPrice.TabIndex = 29;
-            this.labelPriceEstLowestPrice.Text = "% of lowest price (WARNING - this will not cut off outliers based on price jumps!" +
-    ")";
+            this.labelPriceEstLowestPrice.Text = "% of lowest price (WARNING - this will not cut off outliers based on price differ" +
+    "ences!)";
             // 
             // numericUpDownPriceEstLowestPrice
             // 
@@ -559,7 +559,7 @@ namespace MKMTool
             // checkBoxTestMode
             // 
             this.checkBoxTestMode.AutoSize = true;
-            this.checkBoxTestMode.Location = new System.Drawing.Point(21, 534);
+            this.checkBoxTestMode.Location = new System.Drawing.Point(21, 541);
             this.checkBoxTestMode.Name = "checkBoxTestMode";
             this.checkBoxTestMode.Size = new System.Drawing.Size(248, 17);
             this.checkBoxTestMode.TabIndex = 15;
@@ -575,7 +575,7 @@ namespace MKMTool
             this.groupBoxPresets.Controls.Add(this.comboBoxPresets);
             this.groupBoxPresets.Location = new System.Drawing.Point(13, 436);
             this.groupBoxPresets.Name = "groupBoxPresets";
-            this.groupBoxPresets.Size = new System.Drawing.Size(787, 92);
+            this.groupBoxPresets.Size = new System.Drawing.Size(787, 99);
             this.groupBoxPresets.TabIndex = 16;
             this.groupBoxPresets.TabStop = false;
             this.groupBoxPresets.Text = "Presets";
@@ -585,7 +585,7 @@ namespace MKMTool
             this.panelPresetsDescr.Controls.Add(this.labelPresetsDescr);
             this.panelPresetsDescr.Location = new System.Drawing.Point(375, 19);
             this.panelPresetsDescr.Name = "panelPresetsDescr";
-            this.panelPresetsDescr.Size = new System.Drawing.Size(403, 60);
+            this.panelPresetsDescr.Size = new System.Drawing.Size(403, 74);
             this.panelPresetsDescr.TabIndex = 4;
             // 
             // labelPresetsDescr
@@ -593,14 +593,14 @@ namespace MKMTool
             this.labelPresetsDescr.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelPresetsDescr.Location = new System.Drawing.Point(0, 0);
             this.labelPresetsDescr.Name = "labelPresetsDescr";
-            this.labelPresetsDescr.Size = new System.Drawing.Size(403, 60);
-            this.labelPresetsDescr.TabIndex = 0;
+            this.labelPresetsDescr.Size = new System.Drawing.Size(403, 74);
+            this.labelPresetsDescr.TabIndex = 1;
             // 
             // buttonPresetsDelete
             // 
             this.buttonPresetsDelete.Enabled = false;
             this.buttonPresetsDelete.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonPresetsDelete.Location = new System.Drawing.Point(248, 49);
+            this.buttonPresetsDelete.Location = new System.Drawing.Point(248, 59);
             this.buttonPresetsDelete.Name = "buttonPresetsDelete";
             this.buttonPresetsDelete.Size = new System.Drawing.Size(113, 34);
             this.buttonPresetsDelete.TabIndex = 3;
@@ -611,7 +611,7 @@ namespace MKMTool
             // buttonPresetsStore
             // 
             this.buttonPresetsStore.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonPresetsStore.Location = new System.Drawing.Point(129, 49);
+            this.buttonPresetsStore.Location = new System.Drawing.Point(129, 59);
             this.buttonPresetsStore.Name = "buttonPresetsStore";
             this.buttonPresetsStore.Size = new System.Drawing.Size(113, 34);
             this.buttonPresetsStore.TabIndex = 2;
@@ -623,7 +623,7 @@ namespace MKMTool
             // 
             this.buttonPresetsLoad.Enabled = false;
             this.buttonPresetsLoad.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonPresetsLoad.Location = new System.Drawing.Point(10, 49);
+            this.buttonPresetsLoad.Location = new System.Drawing.Point(10, 59);
             this.buttonPresetsLoad.Name = "buttonPresetsLoad";
             this.buttonPresetsLoad.Size = new System.Drawing.Size(113, 34);
             this.buttonPresetsLoad.TabIndex = 1;
@@ -655,7 +655,7 @@ namespace MKMTool
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(812, 559);
+            this.ClientSize = new System.Drawing.Size(812, 570);
             this.Controls.Add(this.groupBoxPresets);
             this.Controls.Add(this.checkBoxTestMode);
             this.Controls.Add(this.groupBoxLogSettings);
@@ -722,12 +722,12 @@ namespace MKMTool
         private System.Windows.Forms.CheckBox checkBoxLogHighVariance;
         private System.Windows.Forms.GroupBox groupBoxPresets;
         private System.Windows.Forms.Panel panelPresetsDescr;
-        private System.Windows.Forms.Label labelPresetsDescr;
         private System.Windows.Forms.Button buttonPresetsDelete;
         private System.Windows.Forms.Button buttonPresetsStore;
         private System.Windows.Forms.Button buttonPresetsLoad;
         private System.Windows.Forms.ComboBox comboBoxPresets;
         private System.Windows.Forms.ToolTip toolTipMaxPriceChange;
         private System.Windows.Forms.ToolTip toolTipMaxDifference;
+        private System.Windows.Forms.Label labelPresetsDescr;
     }
 }

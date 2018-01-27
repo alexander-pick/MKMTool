@@ -51,6 +51,13 @@ namespace MKMTool
         {
             InitializeComponent();
             loadPresets();
+            // load the last previously used preset
+            string lastPreset = Properties.Settings.Default.LastSettingsPreset;
+            if (comboBoxPresets.Items.Contains(lastPreset))
+            {
+                comboBoxPresets.SelectedIndex = comboBoxPresets.Items.IndexOf(lastPreset);
+                UpdateSettingsGUI(presets[lastPreset]);
+            }
         }
 
         /// <summary>
@@ -373,7 +380,10 @@ namespace MKMTool
 
         private void buttonPresetsLoad_Click(object sender, EventArgs e)
         {
-            UpdateSettingsGUI(presets[comboBoxPresets.SelectedItem.ToString()]);
+            string name = comboBoxPresets.SelectedItem.ToString();
+            UpdateSettingsGUI(presets[name]);
+            Properties.Settings.Default.LastSettingsPreset = name;
+            Properties.Settings.Default.Save();
         }
 
         private void buttonPresetsStore_Click(object sender, EventArgs e)
@@ -384,11 +394,14 @@ namespace MKMTool
                 SettingPresetStore s = new SettingPresetStore(settings);
                 if (s.ShowDialog() == DialogResult.OK)
                 {
-                    presets[s.GetChosenName()] = settings;
-                    if (comboBoxPresets.Items.Contains(s.GetChosenName())) // it already contains it in case of rewriting a preset
+                    string name = s.GetChosenName();
+                    presets[name] = settings;
+                    if (comboBoxPresets.Items.Contains(name)) // it already contains it in case of rewriting a preset
                         labelPresetsDescr.Text = settings.description; // so just rewrite the description
                     else
-                        comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add(s.GetChosenName());
+                        comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add(name);
+                    Properties.Settings.Default.LastSettingsPreset = name;
+                    Properties.Settings.Default.Save();
                 }
             }
         }
