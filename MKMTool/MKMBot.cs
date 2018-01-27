@@ -561,44 +561,34 @@ namespace MKMTool
                         // check the estimation is OK
                         string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
 
-                        // only update the price if it changed meaningfully
-                        if (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice) 
+                        // check it is not above the max price change limits
+                        foreach (var limits in settings.priceMaxChangeLimits)
                         {
-                            // check it is not above the max price change limits
-                            foreach (var limits in settings.priceMaxChangeLimits)
+                            if (dOldPrice < limits.Key)
                             {
-                                if (dOldPrice < limits.Key)
+                                if (Math.Abs(dOldPrice - priceEstimation) > dOldPrice * limits.Value)
                                 {
-                                    if (Math.Abs(dOldPrice - priceEstimation) > dOldPrice * limits.Value)
-                                    {
-                                        priceEstimation = -1;
-                                        if (settings.logHighPriceVariance)
-                                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
-                                                "NOT UPDATED - change too large: Current Price: "
-                                                + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
+                                    priceEstimation = -1;
+                                    if (settings.logHighPriceVariance)
+                                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                                            sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                            "NOT UPDATED - change too large: Current Price: "
+                                            + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
 
-                                    }
-                                    break;
                                 }
+                                break;
                             }
-                            if (priceEstimation > 0) // is < 0 if change was too large
-                            {
-                                if (settings.logUpdated)
+                        }
+                        if (priceEstimation > 0) // is < 0 if change was too large
+                        {
+                            if (settings.logUpdated && (settings.logSmallPriceChange ||
+                                (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
                                     frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                                         sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
                                         "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
                                         ", based on " + (lastMatch + 1) + " items" + Environment.NewLine, frm1);
 
-                                sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
-                            }
-                        }
-                        else if (settings.logSmallPriceChange)
-                        {
-                            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
-                                "NOT UPDATED - small difference: Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
-                                 ", based on " + (lastMatch + 1) + " items" + Environment.NewLine, frm1);
+                            sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
                         }
                     }
                     catch (Exception eError)

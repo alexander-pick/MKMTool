@@ -138,7 +138,7 @@ namespace MKMTool
             this.checkBoxLogHighVariance.AutoSize = true;
             this.checkBoxLogHighVariance.Checked = true;
             this.checkBoxLogHighVariance.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(253, 66);
+            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(10, 66);
             this.checkBoxLogHighVariance.Name = "checkBoxLogHighVariance";
             this.checkBoxLogHighVariance.Size = new System.Drawing.Size(315, 17);
             this.checkBoxLogHighVariance.TabIndex = 4;
@@ -150,7 +150,7 @@ namespace MKMTool
             this.checkBoxLogLargeChange.AutoSize = true;
             this.checkBoxLogLargeChange.Checked = true;
             this.checkBoxLogLargeChange.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogLargeChange.Location = new System.Drawing.Point(10, 66);
+            this.checkBoxLogLargeChange.Location = new System.Drawing.Point(10, 43);
             this.checkBoxLogLargeChange.Name = "checkBoxLogLargeChange";
             this.checkBoxLogLargeChange.Size = new System.Drawing.Size(230, 17);
             this.checkBoxLogLargeChange.TabIndex = 3;
@@ -162,11 +162,11 @@ namespace MKMTool
             this.checkBoxLogSmallChange.AutoSize = true;
             this.checkBoxLogSmallChange.Checked = true;
             this.checkBoxLogSmallChange.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogSmallChange.Location = new System.Drawing.Point(10, 43);
+            this.checkBoxLogSmallChange.Location = new System.Drawing.Point(253, 19);
             this.checkBoxLogSmallChange.Name = "checkBoxLogSmallChange";
-            this.checkBoxLogSmallChange.Size = new System.Drawing.Size(242, 17);
+            this.checkBoxLogSmallChange.Size = new System.Drawing.Size(225, 17);
             this.checkBoxLogSmallChange.TabIndex = 2;
-            this.checkBoxLogSmallChange.Text = "Log non-updated due to minimal price change";
+            this.checkBoxLogSmallChange.Text = "Log updates even with small price change";
             this.checkBoxLogSmallChange.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogMinItems
@@ -188,9 +188,9 @@ namespace MKMTool
             this.checkBoxLogUpdated.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxLogUpdated.Location = new System.Drawing.Point(10, 19);
             this.checkBoxLogUpdated.Name = "checkBoxLogUpdated";
-            this.checkBoxLogUpdated.Size = new System.Drawing.Size(85, 17);
+            this.checkBoxLogUpdated.Size = new System.Drawing.Size(222, 17);
             this.checkBoxLogUpdated.TabIndex = 0;
-            this.checkBoxLogUpdated.Text = "Log updates";
+            this.checkBoxLogUpdated.Text = "Log updates with significant price change";
             this.checkBoxLogUpdated.UseVisualStyleBackColor = true;
             // 
             // groupBoxConditionSettings
