@@ -559,7 +559,7 @@ namespace MKMTool
             // checkBoxTestMode
             // 
             this.checkBoxTestMode.AutoSize = true;
-            this.checkBoxTestMode.Location = new System.Drawing.Point(21, 541);
+            this.checkBoxTestMode.Location = new System.Drawing.Point(23, 541);
             this.checkBoxTestMode.Name = "checkBoxTestMode";
             this.checkBoxTestMode.Size = new System.Drawing.Size(248, 17);
             this.checkBoxTestMode.TabIndex = 15;

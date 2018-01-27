@@ -238,7 +238,7 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.Name = "MainView";
-            this.Text = "MKMTool 0.5b - Alexander Pick 2017 - Licensed under GPL v3 ";
+            this.Text = "MKMTool 0.6 - Alexander Pick 2017 - Licensed under GPL v3 ";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
