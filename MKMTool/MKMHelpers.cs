@@ -46,19 +46,12 @@ namespace MKMTool
 {
     public static class MKMHelpers
     {
-        // treashold price - bulk cards tend to be 0.02 but I hate shipping them at this price, 
-        // some people will order 100+ cards for 2 cts making this incredibly tiresome
-        public const float fAbsoluteMinPrice = 0.05F;
 
         // My origin country (to find domnestic deals)
         public static string sMyOwnCountry = "D";
 
         // My userId (to disregard items listed by myself when setting a new price)
         public static string sMyId = "0";
-
-        // if a price is not updated for a given item, the log will list the item and tell the reason (not enough similar items, no meaningful price change...) if this is set to true
-        // when set to false, it will not be listed in the update log at all 
-        public static bool bLogNonUpdates = false; // TODO - make changable from GUI
 
         private static DataTable dt = new DataTable();
 
