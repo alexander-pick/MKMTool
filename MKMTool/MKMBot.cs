@@ -525,11 +525,13 @@ namespace MKMTool
                         {
                             if (prices.Count == 0 && lastMatch > -1 && settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
                                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                    sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                    sArticleID + ">>> " + article["product"]["enName"].InnerText + 
+                                    " (" + article["product"]["expansion"].InnerText +  ", " + article["language"]["languageName"].InnerText + ")"  + Environment.NewLine +
                                     "NOT UPDATED - variance of prices among cheapest similar items is too high" + Environment.NewLine, frm1);
                             else if (settings.logLessThanMinimum)
                                 frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                    sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                    sArticleID + ">>> " + article["product"]["enName"].InnerText +
+                                    " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                                     "Current Price: " + article["price"].InnerText + ", unchanged, only " +
                                     (lastMatch + 1) + " similar items found" + (outliersCulled ? " (but some expensive outliers were culled)" : "") + Environment.NewLine, frm1);
                             continue;
@@ -571,7 +573,8 @@ namespace MKMTool
                                     priceEstimation = -1;
                                     if (settings.logHighPriceVariance)
                                         frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                            sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                            sArticleID + ">>> " + article["product"]["enName"].InnerText +
+                                            " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                                             "NOT UPDATED - change too large: Current Price: "
                                             + sOldPrice + ", Calcualted Price:" + sNewPrice + Environment.NewLine, frm1);
 
@@ -584,7 +587,8 @@ namespace MKMTool
                             if (settings.logUpdated && (settings.logSmallPriceChange ||
                                 (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
                                     frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                        sArticleID + ">>> " + article["product"]["enName"].InnerText + Environment.NewLine +
+                                        sArticleID + ">>> " + article["product"]["enName"].InnerText +
+                                        " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                                         "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
                                         ", based on " + (lastMatch + 1) + " items" + Environment.NewLine, frm1);
 
