@@ -554,7 +554,8 @@ namespace MKMTool
                                     priceEstimation = prices[0] + (priceEstimation - prices[0]) * (settings.priceFactor) * 2;
                             }
                         }
-                        if (priceEstimation < settings.priceMinRarePrice && article["product"]["rarity"].InnerText == "Rare")
+                        if (priceEstimation < settings.priceMinRarePrice && 
+                            (article["product"]["rarity"].InnerText == "Rare" || article["product"]["rarity"].InnerText == "Mythic"))
                             priceEstimation = settings.priceMinRarePrice;
 
                         // check the estimation is OK
