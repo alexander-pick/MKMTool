@@ -32,15 +32,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.IO;
+using System.Globalization;
 
 namespace MKMTool
 {
@@ -87,7 +82,8 @@ namespace MKMTool
             double threshold, allowedChange;
             for (int i = 1; i < limits.Length; i += 2)
             {
-                if(double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                if(double.TryParse(limits[i - 1], NumberStyles.Float, CultureInfo.CurrentCulture, out threshold) 
+                    && double.TryParse(limits[i], NumberStyles.Float, CultureInfo.CurrentCulture, out allowedChange))
                     s.priceMaxChangeLimits.Add(threshold, allowedChange / 100); // convert to percent
                 else
                 {
@@ -100,12 +96,13 @@ namespace MKMTool
             limits = textBoxPriceEstMaxDiff.Text.Split(';');
             for (int i = 1; i < limits.Length; i += 2)
             {
-                if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                if (double.TryParse(limits[i - 1], NumberStyles.Float, CultureInfo.CurrentCulture, out threshold)
+                    && double.TryParse(limits[i], NumberStyles.Float, CultureInfo.CurrentCulture, out allowedChange))
                     s.priceMaxDifferenceLimits.Add(threshold, allowedChange / 100); // convert to percent
                 else
                 {
                     MessageBox.Show("The max difference limit pair " + limits[i - 1] + ";" + limits[i]
-                        + " could not be parsed as a number.", "Incorrect format max difference between items", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        + " could not be parsed as a number.", "Incorrect format of max difference between items", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
             }

@@ -33,10 +33,8 @@
 
 using System;
 using System.Data;
-using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Collections.Generic;
@@ -143,7 +141,8 @@ namespace MKMTool
                             limits = child.InnerText.Split(';');
                             for (int i = 1; i < limits.Length; i += 2)
                             {
-                                if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                                if (double.TryParse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture, out threshold)
+                                    && double.TryParse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture, out allowedChange))
                                     temp.priceMaxChangeLimits.Add(threshold, allowedChange);
                                 else
                                     return false;
@@ -153,7 +152,8 @@ namespace MKMTool
                             limits = child.InnerText.Split(';');
                             for (int i = 1; i < limits.Length; i += 2)
                             {
-                                if (double.TryParse(limits[i - 1], out threshold) && double.TryParse(limits[i], out allowedChange))
+                                if (double.TryParse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture, out threshold)
+                                    && double.TryParse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture, out allowedChange))
                                     temp.priceMaxDifferenceLimits.Add(threshold, allowedChange);
                                 else
                                     return false;
@@ -166,19 +166,19 @@ namespace MKMTool
                     switch (att.Name)
                     {
                         case "priceMinRarePrice":
-                            temp.priceMinRarePrice = double.Parse(att.Value);
+                            temp.priceMinRarePrice = double.Parse(att.Value, CultureInfo.InvariantCulture);
                             break;
                         case "priceMinSimilarItems":
-                            temp.priceMinSimilarItems = int.Parse(att.Value);
+                            temp.priceMinSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
                             break;
                         case "priceMaxSimilarItems":
-                            temp.priceMaxSimilarItems = int.Parse(att.Value);
+                            temp.priceMaxSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
                             break;
                         case "priceSetPriceBy":
                             temp.priceSetPriceBy = (PriceSetMethod)Enum.Parse(typeof(PriceSetMethod), att.Value);
                             break;
                         case "priceFactor":
-                            temp.priceFactor = double.Parse(att.Value);
+                            temp.priceFactor = double.Parse(att.Value, CultureInfo.InvariantCulture);
                             break;
                         case "condAcceptance":
                             temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
@@ -228,20 +228,20 @@ namespace MKMTool
             XmlElement child = s.CreateElement("priceMaxChangeLimits");
             child.InnerText = "";
             foreach (var limitPair in priceMaxChangeLimits)
-                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2") + ";";
+                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
             root.AppendChild(child);
 
             child = s.CreateElement("priceMaxDifferenceLimits");
             child.InnerText = "";
             foreach (var limitPair in priceMaxDifferenceLimits)
-                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2") + ";";
+                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
             root.AppendChild(child);
 
-            root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2"));
-            root.SetAttribute("priceMinSimilarItems", priceMinSimilarItems.ToString());
-            root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString());
+            root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2", CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMinSimilarItems", priceMinSimilarItems.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceSetPriceBy", priceSetPriceBy.ToString());
-            root.SetAttribute("priceFactor", priceFactor.ToString("f2"));
+            root.SetAttribute("priceFactor", priceFactor.ToString("f2", CultureInfo.InvariantCulture));
 
             root.SetAttribute("condAcceptance", condAcceptance.ToString());
 
@@ -381,8 +381,12 @@ namespace MKMTool
             }
             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                 "Updating Prices..." + Environment.NewLine, frm1);
+
             // should fix weird float errors on foregin systems.
-            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+
+            // TJ - this does not look like a good idea to me. MKM is sending data formated in a locale where '.' is used as decimal separator
+            // it makes no sense to force switch to german locale here and then later start replacing all '.' by ','
+            //System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
 
             //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), Application.CurrentCulture.EnglishName + "\n", frm1);
 
@@ -438,6 +442,8 @@ namespace MKMTool
                         int lastMatch = -1;
                         List<double> prices = new List<double>();
                         bool minNumberNotYetFound = true, outliersCulled = false;
+                        string sOldPrice = article["price"].InnerText;
+                        double dOldPrice = Convert.ToDouble(sOldPrice, CultureInfo.InvariantCulture);
                         foreach (XmlNode offer in node2)
                         {
                             if (offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
@@ -453,9 +459,7 @@ namespace MKMTool
                                 else if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
                                     continue;
                                 
-                                var sXPrice = offer["price"].InnerText.Replace(".", ",");
-
-                                float price = Convert.ToSingle(sXPrice);
+                                float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
 
                                 if (minNumberNotYetFound)
                                 {
@@ -554,9 +558,7 @@ namespace MKMTool
                             priceEstimation = settings.priceMinRarePrice;
 
                         // check the estimation is OK
-                        string sOldPrice = article["price"].InnerText.Replace(".", ",");
-                        double dOldPrice = Convert.ToDouble(sOldPrice);
-                        string sNewPrice = priceEstimation.ToString("0.00").Replace(",", ".");
+                        string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
 
                         // only update the price if it changed meaningfully
                         if (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice) 
