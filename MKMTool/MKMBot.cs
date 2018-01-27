@@ -406,8 +406,9 @@ namespace MKMTool
                     break;
                 }
 #endif
-
-                if (article["idArticle"].InnerText != null && article["price"].InnerText != null)
+                // according to the API documentation, "The 'condition' key is only returned for single cards. "
+                // -> check if condition exists to see if this is a single card or something else
+                if (article["condition"] != null && article["idArticle"].InnerText != null && article["price"].InnerText != null)
                 {
                     var sUrl = "http://not.initilaized";
 
@@ -439,10 +440,7 @@ namespace MKMTool
                         bool minNumberNotYetFound = true, outliersCulled = false;
                         foreach (XmlNode offer in node2)
                         {
-                            // according to the API documentation, "The 'condition' key is only returned for single cards. "
-                            // -> check if condition exists to see if this is a single card or something else
-                            if (offer["condition"] != null
-                                && offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
+                            if (offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry
                                 && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
                                 && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                                 )
