@@ -22,5 +22,17 @@ namespace MKMTool.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastSettingsPreset {
+            get {
+                return ((string)(this["LastSettingsPreset"]));
+            }
+            set {
+                this["LastSettingsPreset"] = value;
+            }
+        }
     }
 }

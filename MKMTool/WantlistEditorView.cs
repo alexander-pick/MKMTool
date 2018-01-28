@@ -52,10 +52,8 @@ namespace MKMTool
         public WantlistEditorView()
         {
             InitializeComponent();
-
-            var bot = new MKMBot();
-
-            var doc = bot.getExpansions("1"); // Only MTG at present
+            
+            var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
 
             var node = doc.GetElementsByTagName("expansion");
 
@@ -112,9 +110,7 @@ namespace MKMTool
         {
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.getWantsLists();
+                var doc = MKMInteract.RequestHelper.getWantsLists();
 
                 var node = doc.GetElementsByTagName("wantslist");
 

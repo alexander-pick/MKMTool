@@ -52,6 +52,9 @@ namespace MKMTool
 
         private static readonly Timer timer = new Timer();
 
+        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
+        private MKMBot bot = new MKMBot();
+        
         public MainView()
         {
             InitializeComponent();
@@ -71,19 +74,16 @@ namespace MKMTool
                 }
 
                 MKMHelpers.GetProductList();
-
-                var bot = new MKMBot();
-
-                var doc2 = bot.getAccount();
+                                
+                var doc2 = MKMInteract.RequestHelper.getAccount();
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
-
+                MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
             }
             catch (Exception eError)
             {
                 MessageBox.Show(eError.Message);
             }
-
         }
 
         private void loginButton_Click(object sender, EventArgs e)
@@ -102,23 +102,30 @@ namespace MKMTool
             sv1.ShowDialog();
         }
 
-        private async void updatePriceRun()
+        private void updatePriceRun()
         {
-            var bot = new MKMBot();
-
             bot.updatePrices(this);
         }
 
         private async void updatePriceButton_Click(object sender, EventArgs e)
         {
-            await Task.Run(() => updatePriceRun());
+            MKMBotSettings s;
+            if (settingsWindow.GenerateBotSettings(out s))
+            {
+                bot.setSettings(s);
+                updatePriceButton.Enabled = false;
+                updatePriceButton.Text = "Updating...";
+                await Task.Run(() => updatePriceRun());
+                updatePriceButton.Text = "Update Prices";
+                updatePriceButton.Enabled = true;
+            }
+            else
+                logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
         }
 
         private void getProductListButton_Click(object sender, EventArgs e)
         {
-            var bot = new MKMBot();
-
-            bot.getProductList(this);
+            MKMHelpers.GetProductList();
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)
@@ -138,7 +145,7 @@ namespace MKMTool
                 runtimeIntervall.Enabled = false;
 
                 logBox.AppendText("Timing MKM Update job every " + Convert.ToInt32(runtimeIntervall.Text) +
-                                  " minutes.\n");
+                                  " minutes." + Environment.NewLine);
 
                 timer.Interval = Convert.ToInt32(runtimeIntervall.Text) * 1000 * 60;
 
@@ -150,7 +157,7 @@ namespace MKMTool
             {
                 runtimeIntervall.Enabled = true;
 
-                logBox.AppendText("Stopping MKM Update job.\n");
+                logBox.AppendText("Stopping MKM Update job." + Environment.NewLine);
 
                 timer.Stop();
 
@@ -172,16 +179,23 @@ namespace MKMTool
 
             try
             {
-                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job...\n");
+                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job..." + Environment.NewLine);
             }
             catch (Exception eError)
             {
                 MessageBox.Show(eError.ToString());
             }
 
-            var bot = new MKMBot();
-
-            bot.updatePrices(this); //mainForm
+            MKMBotSettings s;
+            if (settingsWindow.GenerateBotSettings(out s))
+            {
+                bot.setSettings(s);
+                updatePriceButton.Text = "Updating...";
+                bot.updatePrices(this); //mainForm
+                updatePriceButton.Text = "Update Prices";
+            }
+            else
+                logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
         }
 
         public void logBoxAppend(string text)
@@ -209,13 +223,26 @@ namespace MKMTool
 
         private void downloadBuysToExcel_Click(object sender, EventArgs e)
         {
-            logBox.AppendText("Downloading Buys data.\n");
+            MKMBotSettings s;
+            if (settingsWindow.GenerateBotSettings(out s))
+            {
+                logBox.AppendText("Downloading Buys data." + Environment.NewLine);
+                bot.setSettings(s);
 
-            var bot = new MKMBot();
+                string sFilename = bot.getBuys(this, "8"); //mainForm
 
-            string sFilename = bot.getBuys(this, "8"); //mainForm
+                Process.Start(sFilename);
+            }
+            else
+                logBox.AppendText("Bud data download abandoned, incorrect setting parameters." + Environment.NewLine);
+        }
 
-            Process.Start(sFilename);
+        private void buttonSettings_Click(object sender, EventArgs e)
+        {
+            if (settingsWindow.Visible)
+                settingsWindow.Hide();
+            else
+                settingsWindow.Show(this);
         }
     }
 }

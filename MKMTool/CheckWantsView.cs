@@ -52,10 +52,8 @@ namespace MKMTool
             InitializeComponent();
 
             initWantLists();
-
-            var bot = new MKMBot();
-
-            var doc = bot.getExpansions("1"); // Only MTG at present
+                        
+            var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
 
             var node = doc.GetElementsByTagName("expansion");
 
@@ -107,9 +105,7 @@ namespace MKMTool
         {
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.getWantsLists();
+                var doc = MKMInteract.RequestHelper.getWantsLists();
 
                 var node = doc.GetElementsByTagName("wantslist");
 
@@ -146,10 +142,8 @@ namespace MKMTool
 
             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                 "Starting to check your Wantslist ID:" + sListId + " ...\n");
-
-            var bot = new MKMBot();
-
-            var doc = bot.getWantsListByID(sListId);
+            
+            var doc = MKMInteract.RequestHelper.getWantsListByID(sListId);
 
             var node = doc.GetElementsByTagName("item");
 
@@ -174,9 +168,7 @@ namespace MKMTool
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var bot = new MKMBot();
-
-            bot.emptyCart();
+            MKMInteract.RequestHelper.emptyCart();
 
             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Shoping Cart emptied.\n");
         }

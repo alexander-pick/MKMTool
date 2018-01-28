@@ -46,12 +46,12 @@ namespace MKMTool
 {
     public static class MKMHelpers
     {
-        // treashold price - bulk cards tend to be 0.02 but I hate shipping them at this price, 
-        // some people will order 100+ cards for 2 cts making this incredibly tiresome
-        public const float fAbsoluteMinPrice = 0.05F;
 
         // My origin country (to find domnestic deals)
         public static string sMyOwnCountry = "D";
+
+        // My userId (to disregard items listed by myself when setting a new price)
+        public static string sMyId = "0";
 
         private static DataTable dt = new DataTable();
 
@@ -428,9 +428,7 @@ namespace MKMTool
         {
             try
             {
-                var bot = new MKMBot();
-
-                var doc = bot.getExpansions("1"); // Only MTG at present
+                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
 
                 var node = doc.GetElementsByTagName("expansion");
 

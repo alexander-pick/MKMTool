@@ -1,0 +1,4 @@
+<MKMBotSettings priceMinRarePrice="0.10" priceMinSimilarItems="4" priceMaxSimilarItems="15" priceSetPriceBy="ByAverage" priceFactor="0.20" condAcceptance="SomeMatchesAbove" logUpdated="True" logLessThanMinimum="False" logSmallPriceChange="False" logHighPriceChange="True" logHighPriceVariance="True" testMode="False" description="Sets price significantly below average, but will not upload large price changes (+-1 - 5 eur, scaling up with increasing price of the card).&#xD;&#xA;Items must not vary too much (+-1 - 3 eur) to be considered similar.&#xD;&#xA;Good for frequent updates (at least once per week), less frequent updates will likely leave a lot of not updated items.">
+  <priceMaxChangeLimits>1;2.00;5;0.25;10;0.15;50;0.10;100;0.05;999999;0.03;</priceMaxChangeLimits>
+  <priceMaxDifferenceLimits>1;3.00;2;0.50;3;0.25;6;0.20;10;0.15;20;0.08;100;0.05;999999;0.03;</priceMaxDifferenceLimits>
+</MKMBotSettings>
