@@ -53,8 +53,9 @@ namespace MKMTool
         private static readonly Timer timer = new Timer();
 
         private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
-        private MKMBot bot = new MKMBot();
-        
+
+        private MKMBot bot;
+
         public MainView()
         {
             InitializeComponent();
@@ -79,6 +80,8 @@ namespace MKMTool
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
                 MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
+
+                bot = new MKMBot();
             }
             catch (Exception eError)
             {
