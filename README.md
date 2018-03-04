@@ -4,6 +4,8 @@
 
 x.3.2018
 + Mint condition is treated as Near Mint when looking for similar items
++ Added an option to search for similar items worldwide (ignoring your country) if there aren't enough similar items in your country
++ Fixed a bug causing in some cases the last added item to not be considered as matching condition even when it was
 
 27.01.2018 (by Tomas Janak)
 + Added customizable settings for Update Price (see documentation below)
@@ -84,6 +86,7 @@ The following figure shows the settings window. Each of the parameters will now 
 + **Minimum price of rares:** This is the minimum price that will ever be assigned to your rares (and mythics) no matter what price is computed.
 + **Minimum # of similar items:** if by the end the sequence of similar items is smaller than this number, no price update will be performed.
 + **Maximum # of similar items:** once the sequence of similar items has this many items, the algorithm will stop adding new ones and will move on to computing the price. Since the sequence is built from cheapest to most expensive items, the larger this number is, the higher the computed price will potentially be as more expensive items will be included. However, it also limits the possibility of the price being too low due to some outliers.
++ **Ignore seller's country:** when checked and the minimum # of similar items is not found among seller's from your country, the items are processed again, this time ignoring the country of the seller. This is done only if there is not enough similar items without any culling - if the minimum is not reached because of culling, this will not be done. This option ensures that your prices are updated even for items that nobody in your country sells - typically rare cards like foreign foils etc.
 + **Max price change:** this allows you to set limits to how much can MKMTool change the prices of your cards. If the computed price is too much lower or higher than current price, it will not be sent to MKM. To account for different limits for different prices, this parameter is set as a sequence of pairs of numbers "T1;C1;T2;C2;T3;C3" etc. The first number in each pair, Tx, is a price threshold in €, the second number, Cx, is maximal allowed change in % of current price. For example, on the screenshot above you can see the following sequence: "1;200;5;25;10;15;50;10;100;5;999999;3;".
     
 	This means: cards cheaper than 1€ can change by at most 200%, cards cheaper than 5€ by 25%, below 10€ by 15% etc. Let's say you have listed a card A for 0.5€ and card B for 11€. MKMTool will compute new price for card A as 1.4€. This is a 180% change, but that is ok, the price for this level can change by 200%, so anything between 0€ and 1.50€ for card A is good. For price B, it computes 9.35€, i.e. a 15% decrease. Original price is 11€, hence it belongs to the "50;10" pair, i.e. max allowed change 10%. This would be violated, so card B will remain at 11€.
