@@ -415,7 +415,8 @@ namespace MKMTool
                 if (article["condition"] != null && article["idArticle"].InnerText != null && article["price"].InnerText != null)
                 {
                     var sUrl = "http://not.initilaized";
-
+                    if (article["condition"].InnerText == "MT") // treat mint cards as near mint for pricing purposes
+                        article["condition"].InnerText = "NM";
                     try
                     {
                         var sArticleID = article["idProduct"].InnerText;
@@ -582,7 +583,9 @@ namespace MKMTool
                                 break;
                             }
                         }
-                        if (priceEstimation > 0) // is < 0 if change was too large
+                        if (priceEstimation > 0 // is < 0 if change was too large
+                            && Math.Abs(priceEstimation - dOldPrice) != Double.Epsilon // don't update if it did not change - clearer log
+                            )
                         {
                             if (settings.logUpdated && (settings.logSmallPriceChange ||
                                 (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))

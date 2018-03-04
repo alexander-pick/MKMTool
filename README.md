@@ -1,11 +1,13 @@
-# Welcome to MKMTool 0.6
+# Welcome to MKMTool 0.6.1
 
 ## Last changes
+
+x.3.2018
++ Mint condition is treated as Near Mint when looking for similar items
 
 27.01.2018 (by Tomas Janak)
 + Added customizable settings for Update Price (see documentation below)
 + Price update no longer uses your own items when calculating the price
-+ Prices are not updated if their would change only little (limit is customizable)
 + Richer log options
 
 11.07.2017
