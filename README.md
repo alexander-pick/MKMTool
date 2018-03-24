@@ -6,6 +6,7 @@ x.3.2018
 + Mint condition is treated as Near Mint when looking for similar items
 + Added an option to search for similar items worldwide (ignoring your country) if there aren't enough similar items in your country
 + Fixed a bug causing in some cases the last added item to not be considered as matching condition even when it was
++ Comments are no longer removed from the article upon update
 
 27.01.2018 (by Tomas Janak)
 + Added customizable settings for Update Price (see documentation below)

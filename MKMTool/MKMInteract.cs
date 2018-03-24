@@ -102,7 +102,7 @@ namespace MKMTool
                                  "<idArticle>" + xNode["idArticle"].InnerText + "</idArticle>" +
                                  "<price>" + sNewPrice + "</price>" +
                                  "<idLanguage>" + xNode["language"]["idLanguage"].InnerText + "</idLanguage>" +
-                                 "<comments></comments>" +
+                                 "<comments>" + xNode["comments"].InnerText + " </comments>" +
                                  "<count>" + xNode["count"].InnerText + "</count>" +
                                  "<condition>" + xNode["condition"].InnerText + "</condition>" +
                                  "</article>";
