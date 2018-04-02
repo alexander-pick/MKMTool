@@ -2,11 +2,12 @@
 
 ## Last changes
 
-x.3.2018
+9.2.2019 (by Tomas Janak)
 + Mint condition is treated as Near Mint when looking for similar items
 + Added an option to search for similar items worldwide (ignoring your country) if there aren't enough similar items in your country
 + Fixed a bug causing in some cases the last added item to not be considered as matching condition even when it was
 + Comments are no longer removed from the article upon update
++ Added a "check for cheap deals from user" option
 
 27.01.2018 (by Tomas Janak)
 + Added customizable settings for Update Price (see documentation below)
@@ -124,9 +125,11 @@ You must feel comfortable with the formula or change it to your demands, be awar
 
 ![screenshot](http://www.alexander-pick.com/github/tool2.PNG)
 
-For the fun of it – with this feature you can find cheap deals with X percent cheaper than other vendors and cheaper than the Trend if selected.- The algo calcs + 1 Eur fixed for shipping to score you a good deal with resale value. It’s also possible to check for cheap deals of cards on your wants list, use this if you are only looking for specific cards. Beware, this feature is API call heavy.
+For the fun of it – with this feature you can find cheap deals with X percent cheaper than other vendors and cheaper than the Trend if selected. The algo calcs + 1 Eur fixed for shipping to score you a good deal with resale value. It’s also possible to check for cheap deals of cards on your wants list, use this if you are only looking for specific cards. Beware, this feature is API call heavy.
 
 If cards are found they are directly added to your cart on MKM, just log in and check your cart.
+
+You can also specify to look for cheap deals from a given user - check the "User" checkbox and then fill in the username. The same algorithm will be used, but only on stock of that user.
 
 ### Check Display Value
 
