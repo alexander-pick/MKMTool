@@ -429,8 +429,12 @@ namespace MKMTool
                 if (article["condition"] != null && article["idArticle"].InnerText != null && article["price"].InnerText != null)
                 {
                     var sUrl = "http://not.initilaized";
+                    bool changeMT = false;
                     if (article["condition"].InnerText == "MT") // treat mint cards as near mint for pricing purposes
+                    {
                         article["condition"].InnerText = "NM";
+                        changeMT = true;
+                    }
                     try
                     {
                         var sArticleID = article["idProduct"].InnerText;
@@ -577,6 +581,8 @@ namespace MKMTool
                                         ", based on " + (lastMatch + 1) + " items" +
                                         (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
 
+                            if (changeMT)
+                                article["condition"].InnerText = "MT";
                             sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
                         }
                     }
