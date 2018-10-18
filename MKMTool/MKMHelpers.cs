@@ -347,7 +347,7 @@ namespace MKMTool
         {
             if (!File.Exists(@".\\mkminventory.csv"))
             {
-                var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
+                var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
 
                 var node = doc.GetElementsByTagName("response");
 

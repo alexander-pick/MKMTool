@@ -58,15 +58,35 @@ namespace MKMTool
 
             try
             {
-                var doc = MKMInteract.RequestHelper.readStock();
+                int start = 1;
+                var articles = new DataTable();
+                Boolean first = true;
+                while(true) {
+                    var doc = MKMInteract.RequestHelper.readStock(start);
+                    var xmlReader = new XmlNodeReader(doc);
+                    var ds = new DataSet();
+                    ds.ReadXml(xmlReader);
+                    var articleTable = ds.Tables[0];
+                    var elementCount = articleTable.Rows.Count;
+                    if (first)
+                    {
+                        articles = articleTable;
+                        first = false;
+                    } else {
+                        foreach (DataRow dr in articleTable.Rows)
+                        {
+                            dr["article_Id"] = articles.Rows.Count;
+                            articles.ImportRow(dr);
+                        }
+                    }
+                    if (elementCount != 100)
+                    {
+                        break;
+                    }
+                    start += elementCount;
+                }
 
-                var xmlReader = new XmlNodeReader(doc);
-
-                var ds = new DataSet();
-
-                ds.ReadXml(xmlReader);
-
-                var dj = MKMHelpers.JoinDataTables(ds.Tables[0], dt,
+                var dj = MKMHelpers.JoinDataTables(articles, dt,
                     (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
 
                 dj = MKMHelpers.JoinDataTables(dj, eS,
@@ -85,7 +105,6 @@ namespace MKMTool
                 dj.Columns[dj.Columns.IndexOf("Name")].SetOrdinal(0);
 
                 stockGridView.DataSource = dj;
-                //dataGridView1.DataSource = dt;
             }
             catch (Exception eError)
             {
