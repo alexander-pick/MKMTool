@@ -289,8 +289,6 @@ namespace MKMTool
 
                     for (i = 0; i < table.Columns.Count; i++)
                     {
-                        var usesColumnDefault = true;
-
                         sql.AppendFormat(" \"{0}\"", table.Columns[i].ColumnName);
 
                         iQm = iQm + "@" + rgx.Replace(table.Columns[i].ColumnName, "");
@@ -337,8 +335,6 @@ namespace MKMTool
 
             for (var i = 0; i < table.Columns.Count; i++)
             {
-                var usesColumnDefault = true;
-
                 sql.AppendFormat(" \"{0}\"", table.Columns[i].ColumnName);
 
                 switch (table.Columns[i].DataType.ToString().ToUpper())
@@ -383,7 +379,7 @@ namespace MKMTool
         {
             if (!File.Exists(@".\\mkminventory.csv"))
             {
-                var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
+                var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
 
                 var node = doc.GetElementsByTagName("response");
 

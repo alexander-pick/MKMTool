@@ -209,7 +209,7 @@ namespace MKMTool
                 double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
                 while (true)
                 { 
-                    String sUrl = "https://www.mkmapi.eu/ws/v2.0/users/" + textBoxUser.Text + "/articles?start=" + start + "&maxResults=1000";
+                    String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + textBoxUser.Text + "/articles?start=" + start + "&maxResults=1000";
 
                     try
                     {
@@ -291,7 +291,7 @@ namespace MKMTool
         private void checkArticle(string idProduct, string idLanguage, string minCondition, string isFoil,
             string isSigned, string isAltered, string isPlayset, string matchingArticle)
         {
-            var sUrl = "https://www.mkmapi.eu/ws/v2.0/articles/" + idProduct +
+            var sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + idProduct +
                        "?minCondition=" + minCondition +
                        "&start=0&maxResults=50";
 
@@ -407,7 +407,7 @@ namespace MKMTool
                                 //check Trend Price
                                 var doc3 =
                                     MKMInteract.RequestHelper.makeRequest(
-                                        "https://www.mkmapi.eu/ws/v2.0/products/" + idProduct, "GET");
+                                        "https://api.cardmarket.com/ws/v2.0/products/" + idProduct, "GET");
 
                                 fTrendprice =
                                     Convert.ToDouble(doc3.GetElementsByTagName("TREND")[0].InnerText.Replace(".", ","));
@@ -437,7 +437,7 @@ namespace MKMTool
 
                                     sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
 
-                                    MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/shoppingcart",
+                                    MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/shoppingcart",
                                         "PUT", sRequestXML);
                                 }
                                 catch (Exception eError)

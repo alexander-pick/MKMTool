@@ -169,7 +169,7 @@ namespace MKMTool
 
                         var doc2 =
                             MKMInteract.RequestHelper.makeRequest(
-                                "https://www.mkmapi.eu/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
+                                "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
 
                         var fCardPrice =
                             (float)
@@ -191,7 +191,7 @@ namespace MKMTool
 
                         var doc2 =
                             MKMInteract.RequestHelper.makeRequest(
-                                "https://www.mkmapi.eu/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
+                                "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
 
                         var fCardPrice =
                             (float)
@@ -212,7 +212,7 @@ namespace MKMTool
 
                         var doc2 =
                             MKMInteract.RequestHelper.makeRequest(
-                                "https://www.mkmapi.eu/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
+                                "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
 
                         var fCardPrice =
                             (float)

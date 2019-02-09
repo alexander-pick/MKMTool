@@ -3,6 +3,7 @@
 ## Last changes
 
 9.2.2019 (by Tomas Janak)
++ Fixed "Bad Request 400" error when working with more than 100 items (partially by Ramiro Aparicio) after API changes announced on 6.2.2019
 + Mint condition is treated as Near Mint when looking for similar items
 + Added an option to search for similar items worldwide (ignoring your country) if there aren't enough similar items in your country
 + Fixed a bug causing in some cases the last added item to not be considered as matching condition even when it was
@@ -15,7 +16,7 @@
 + Richer log options
 
 11.07.2017
-+ Fixed weird ug which caused wrong price calculation on foregin systems
++ Fixed weird bug which caused wrong price calculation on foreign systems
 + Fixed crash if articles other than singles are listed on the account
 
 24.04.2017
@@ -26,7 +27,7 @@
 + changed the default minutes for the bot
 
 23.02.2017
-+ country is no longer hardcoded and now determained at startup from your account details
++ country is no longer hard-coded and now determined at startup from your account details
 + code was cleaned up
 
 22.02.2017

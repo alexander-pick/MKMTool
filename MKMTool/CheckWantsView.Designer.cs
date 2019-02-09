@@ -398,7 +398,6 @@
         private System.Windows.Forms.ComboBox editionBox;
         private System.Windows.Forms.Button checkEditionButton;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.CheckBox signedBox;

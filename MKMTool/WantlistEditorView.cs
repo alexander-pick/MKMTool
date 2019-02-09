@@ -288,7 +288,7 @@ namespace MKMTool
                 {
                     var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
-                    MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sListId, "PUT",
+                    MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sListId, "PUT",
                         sRequestXML);
 
                     //MessageBox.Show("Item " + idProduct + " added successfully!");
@@ -325,7 +325,7 @@ namespace MKMTool
 
                 var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
-                MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sListId, "PUT",
+                MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sListId, "PUT",
                     sRequestXML);
 
                 wantsListBoxReload();
