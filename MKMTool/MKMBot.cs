@@ -396,7 +396,7 @@ namespace MKMTool
             frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                 "Updating Prices..." + Environment.NewLine, frm1);
 
-            // should fix weird float errors on foregin systems.
+            // should fix weird float errors on foreign systems.
 
             // TJ - this does not look like a good idea to me. MKM is sending data formated in a locale where '.' is used as decimal separator
             // it makes no sense to force switch to german locale here and then later start replacing all '.' by ','
@@ -413,10 +413,30 @@ namespace MKMTool
 
             var node = doc.GetElementsByTagName("article");
 
+            // load file with lowest prices
+            Dictionary<string, List<XmlNode>> myStock = new Dictionary<string, List<XmlNode>>();
+            try
+            {
+                XmlDocument st = new XmlDocument();
+                st.Load(@".//myStock.xml");
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
+                    "Found list of minimal prices..." + Environment.NewLine, frm1);
+                foreach (XmlNode n in st["stock"].ChildNodes)
+                {
+                    string nameLower = n.Attributes["name"].InnerText.ToLower();
+                    if (!myStock.ContainsKey(nameLower))
+                        myStock.Add(nameLower, new List<XmlNode>());
+                    myStock[nameLower].Add(n);
+                }
+            }
+            catch(Exception )
+            {
+                myStock = null;
+            }
+
             foreach (XmlNode article in node)
             {
                 debugCounter++;
-
 #if (DEBUG)
                 if (debugCounter > 3)
                 {
@@ -541,6 +561,21 @@ namespace MKMTool
                                     priceEstimation = prices[0] + (priceEstimation - prices[0]) * (settings.priceFactor) * 2;
                             }
                         }
+                        // increase the estimate based on how many of those articles do we have in stock
+                        int count = Convert.ToInt32(article["count"].InnerText, CultureInfo.InvariantCulture);
+                        if (article["isPlayset"].InnerText == "true")
+                            count *= 4;
+                        double markup = 0;
+                        if (count == 2)
+                            markup = priceEstimation * 0.05; // + 5% if we have two
+                        else if (count == 3)
+                            markup = priceEstimation * 0.08; // + 8% if we have three
+                        else if (count > 3)
+                            markup = priceEstimation * 0.12; // + 12% if we have four or more
+                        if (markup > 3) // cap the mark-up at 3 euro
+                            markup = 3;
+                        priceEstimation += markup;
+
                         if (priceEstimation < settings.priceMinRarePrice && 
                             (article["product"]["rarity"].InnerText == "Rare" || article["product"]["rarity"].InnerText == "Mythic"))
                             priceEstimation = settings.priceMinRarePrice;
@@ -561,7 +596,7 @@ namespace MKMTool
                                             sArticleID + ">>> " + article["product"]["enName"].InnerText +
                                             " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                                             "NOT UPDATED - change too large: Current Price: "
-                                            + sOldPrice + ", Calcualted Price:" + sNewPrice +
+                                            + sOldPrice + ", Calculated Price:" + sNewPrice +
                                             (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
 
                                 }
@@ -572,12 +607,36 @@ namespace MKMTool
                             && Math.Abs(priceEstimation - dOldPrice) != Double.Epsilon // don't update if it did not change - clearer log
                             )
                         {
+                            // check against minimum price from local stock database
+                            if (myStock != null && myStock.ContainsKey(article["product"]["enName"].InnerText.ToLower()))
+                            {
+                                List<XmlNode> listArticles = myStock[article["product"]["enName"].InnerText.ToLower()];
+                                foreach (XmlNode n in listArticles)
+                                {
+                                    if (n.Attributes["set"].InnerText.ToLower() == article["product"]["expansion"].InnerText.ToLower()
+                                        && n.Attributes["language"].InnerText == article["language"]["languageName"].InnerText
+                                        && n.Attributes["condition"].InnerText == article["condition"].InnerText
+                                        && n.Attributes["isFoil"].InnerText == article["isFoil"].InnerText
+                                        && n.Attributes["isPlayset"].InnerText == article["isPlayset"].InnerText
+                                        )
+                                    {
+                                        string minPrice = n.Attributes["minPrice"].InnerText;
+                                        double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
+                                        if (priceEstimation < dminPrice)
+                                        {
+                                            priceEstimation = dminPrice;
+                                            sNewPrice = minPrice;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
                             if (settings.logUpdated && (settings.logSmallPriceChange ||
                                 (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
                                     frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
                                         sArticleID + ">>> " + article["product"]["enName"].InnerText +
                                         " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                                        "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
+                                        "Current Price: " + sOldPrice + ", Calculated Price:" + sNewPrice +
                                         ", based on " + (lastMatch + 1) + " items" +
                                         (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
 
