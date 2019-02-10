@@ -102,7 +102,7 @@ namespace MKMTool
                                  "<idArticle>" + xNode["idArticle"].InnerText + "</idArticle>" +
                                  "<price>" + sNewPrice + "</price>" +
                                  "<idLanguage>" + xNode["language"]["idLanguage"].InnerText + "</idLanguage>" +
-                                 "<comments></comments>" +
+                                 "<comments>" + xNode["comments"].InnerText + " </comments>" +
                                  "<count>" + xNode["count"].InnerText + "</count>" +
                                  "<condition>" + xNode["condition"].InnerText + "</condition>" +
                                  "</article>";
@@ -143,37 +143,37 @@ namespace MKMTool
 
             public static XmlDocument getAccount()
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/account", "GET");
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/account", "GET");
             }
 
             public static XmlDocument getWantsLists()
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist", "GET");
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist", "GET");
             }
 
             public static XmlDocument getWantsListByID(string sID)
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/wantslist/" + sID, "GET");
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sID, "GET");
             }
 
-            public static XmlDocument readStock()
+            public static XmlDocument readStock(int start = 1)
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/stock", "GET");
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/stock/" + start, "GET");
             }
 
             public static XmlDocument emptyCart()
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/shoppingcart", "DELETE");
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/shoppingcart", "DELETE");
             }
 
             public static XmlDocument getExpansionsSingles(string ExpansionID)
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/expansions/" + ExpansionID + "/singles", "GET"); ;
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/expansions/" + ExpansionID + "/singles", "GET"); ;
             }
 
             public static XmlDocument getExpansions(string sGameID)
             {
-                return makeRequest("https://www.mkmapi.eu/ws/v2.0/games/" + sGameID + "/expansions", "GET");
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/games/" + sGameID + "/expansions", "GET");
             }
         }
     }

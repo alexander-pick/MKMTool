@@ -55,6 +55,42 @@ namespace MKMTool
 
         private static DataTable dt = new DataTable();
 
+        /// <summary>
+        /// Converts the condition from string to int as.
+        /// </summary>
+        /// <param name="cond">The condition as two letter code.</param>
+        /// <returns>5 for MT or NM, 4 for EX, 3 for GD, 2 for LP, 1 for PL, 0 for PO.</returns>
+        private static int convertCondition(String cond)
+        {
+            if (cond == "EX")
+                return 4;
+            else if (cond == "GD")
+                return 3;
+            else if (cond == "LP")
+                return 2;
+            else if (cond == "PL")
+                return 1;
+            else if (cond == "PO")
+                return 0;
+            return 5;
+        }
+
+        /// <summary>
+        /// Determines whether the specified condition is better than the reference condition.
+        /// Mint and Near Mint are considered to be the same.
+        /// According to API: (MT for Mint > NM for Near Mint > EX for Exellent > GD for Good > LP for Light Played > PL for Played > PO for Poor) 
+        /// </summary>
+        /// <param name="itemCond">Card condition.</param>
+        /// <param name="reference">The reference condition.</param>
+        /// <returns>
+        ///   <c>true</c> if <c>itemCond</c> is in better or same conditions than the <c>reference</c>; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsBetterOrSameCondition(String itemCond, String reference)
+        {
+            return convertCondition(itemCond) >= convertCondition(reference);
+
+        }
+
         public static Dictionary<string, string> dLanguages = new Dictionary<string, string>
         {
             {
@@ -253,8 +289,6 @@ namespace MKMTool
 
                     for (i = 0; i < table.Columns.Count; i++)
                     {
-                        var usesColumnDefault = true;
-
                         sql.AppendFormat(" \"{0}\"", table.Columns[i].ColumnName);
 
                         iQm = iQm + "@" + rgx.Replace(table.Columns[i].ColumnName, "");
@@ -301,8 +335,6 @@ namespace MKMTool
 
             for (var i = 0; i < table.Columns.Count; i++)
             {
-                var usesColumnDefault = true;
-
                 sql.AppendFormat(" \"{0}\"", table.Columns[i].ColumnName);
 
                 switch (table.Columns[i].DataType.ToString().ToUpper())
@@ -347,7 +379,7 @@ namespace MKMTool
         {
             if (!File.Exists(@".\\mkminventory.csv"))
             {
-                var doc = MKMInteract.RequestHelper.makeRequest("https://www.mkmapi.eu/ws/v2.0/productlist", "GET");
+                var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
 
                 var node = doc.GetElementsByTagName("response");
 

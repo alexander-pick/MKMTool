@@ -147,6 +147,7 @@ namespace MKMTool
             s.logHighPriceVariance = checkBoxLogHighVariance.Checked;
             
             s.testMode = checkBoxTestMode.Checked;
+            s.searchWorldwide = checkBoxPriceEstWorldwide.Checked;
 
             return true;
         }
@@ -224,6 +225,7 @@ namespace MKMTool
             checkBoxLogHighVariance.Checked = settings.logHighPriceVariance;
 
             checkBoxTestMode.Checked = settings.testMode;
+            checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
