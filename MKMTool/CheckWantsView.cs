@@ -158,8 +158,15 @@ namespace MKMTool
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "checking:" + sProductID + " ...\n");
-                
-                checkArticle(sProductID, article["idLanguage"].InnerText, article["minCondition"].InnerText,
+
+                // a wantlist item can have more idLanguage entries, one for each wanted language
+                System.Collections.Generic.List<string> selectedLanguages = new System.Collections.Generic.List<string>();
+                foreach (XmlNode langNodes in article.ChildNodes)
+                {
+                    if (langNodes.Name == "idLanguage")
+                        selectedLanguages.Add(langNodes.InnerText);
+                }
+                checkArticle(sProductID, selectedLanguages, article["minCondition"].InnerText,
                     article["isFoil"].InnerText, article["isSigned"].InnerText, article["isAltered"].InnerText,
                     // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
                     int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
@@ -204,6 +211,8 @@ namespace MKMTool
             if (playsetBox.Checked)
                 isPlayset = "true";
 
+            System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>();
+            selectedLanguage.Add((langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
 
             if (checkBoxUser.Checked)
             {
@@ -223,14 +232,13 @@ namespace MKMTool
                         var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
 
                         var node2 = doc2.GetElementsByTagName("article");
-                        String language = (langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
                         foreach (XmlNode article in node2)
                         {
                             if ( // do as much filtering here as possible to reduce the number of API calls
                                 MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, conditionCombo.Text) &&
                                 (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
                                 (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
-                                (language == "" || article["language"]["idLanguage"].InnerText == language) &&
+                                (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
                                 (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
                                 (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
                                 (maxAllowedPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
@@ -240,7 +248,7 @@ namespace MKMTool
                                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                                     "Checking: " + article["idProduct"].InnerText + "\n");
                                 checkArticle(article["idProduct"].InnerText,
-                                    language, minCondition, isFoil, isSigned,
+                                    selectedLanguage, minCondition, isFoil, isSigned,
                                     isAltered, isPlayset, article["idArticle"].InnerText);
 
                                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
@@ -282,8 +290,7 @@ namespace MKMTool
                 {
                     frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                         "Checking: " + oRecord["idProduct"] + "\n");
-                    checkArticle(oRecord["idProduct"].ToString(),
-                        (langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString(), minCondition, isFoil, isSigned,
+                    checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
                         isAltered, isPlayset, "");
 
                     frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
@@ -295,7 +302,8 @@ namespace MKMTool
         }
 
         // idArticle - if not empty, article will be added to shopping cart only if it is matching the specified idArticle. used for searching for cheap deals by user
-        private void checkArticle(string idProduct, string idLanguage, string minCondition, string isFoil,
+        // idLanguages - list of languages to check for. if all are OK, pass in either an empty list or a list with exactly one entry which is an empty string
+        private void checkArticle(string idProduct, System.Collections.Generic.List<string> idLanguages, string minCondition, string isFoil,
             string isSigned, string isAltered, string isPlayset, string matchingArticle)
         {
             var sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + idProduct +
@@ -322,13 +330,9 @@ namespace MKMTool
                 sUrl += "&isPlayset=" + isPlayset;
             }
 
-            if (idLanguage == "")
+            if (idLanguages.Count == 1 && idLanguages[0] != "") // if there is exactly one language specified, fetch only articles in that one language, otherwise get all
             {
-                idLanguage = "0";
-            }
-            else
-            {
-                sUrl += "&idLanguage=" + idLanguage;
+                sUrl += "&idLanguage=" + idLanguages[0];
             }
 
 
@@ -359,6 +363,23 @@ namespace MKMTool
 
                     if (offer["seller"]["address"]["country"].InnerText != MKMHelpers.sMyOwnCountry && domnesticCheck.Checked)
                         continue;
+
+                    bool languageOk = true;
+                    if (idLanguages.Count > 1) // only some languages were specified, filter
+                    {
+                        languageOk = false;
+                        foreach (string lang in idLanguages)
+                        {
+                            if (lang == offer["language"]["idLanguage"].InnerText)
+                            {
+                                languageOk = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!languageOk)
+                        continue;
+
                     // save cheapest price found anywhere
                     aPrices[counter] = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
                     if (noBestPrice)
