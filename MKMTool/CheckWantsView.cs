@@ -199,7 +199,7 @@ namespace MKMTool
                 isPlayset = "true";
 
 
-            if (checkBoxUser.Enabled)
+            if (checkBoxUser.Checked)
             {
                 if (domnesticCheck.Checked)
                     frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
@@ -254,6 +254,7 @@ namespace MKMTool
                             sw.WriteLine("ERR Msg : " + eError.Message);
                             sw.WriteLine("ERR URL : " + sUrl);
                         }
+                        break;
                     }
                     start += 1000;
                 }
@@ -312,7 +313,7 @@ namespace MKMTool
 
             if (isPlayset != "")
             {
-                sUrl += "&isPlayset=" + isAltered;
+                sUrl += "&isPlayset=" + isPlayset;
             }
 
             if (idLanguage == "")
@@ -352,7 +353,7 @@ namespace MKMTool
 
                     if (offer["seller"]["address"]["country"].InnerText != MKMHelpers.sMyOwnCountry && domnesticCheck.Checked)
                         continue;
-                    // save chepest price found anywhere
+                    // save cheapest price found anywhere
                     aPrices[counter] = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
                     if (noBestPrice)
                     {
