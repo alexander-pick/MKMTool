@@ -150,14 +150,20 @@ namespace MKMTool
 
             foreach (XmlNode article in node)
             {
-                var sProductID = article["product"]["idProduct"].InnerText;
+                string sProductID;
+                if (article["product"] != null)
+                    sProductID = article["product"]["idProduct"].InnerText;
+                else
+                    sProductID = article["metaproduct"]["idMetaproduct"].InnerText; // apparently even normal cards can be metaproducts...whatever that means
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "checking:" + sProductID + " ...\n");
                 
-                checkArticle(sProductID, article["language"]["idLanguage"].InnerText, article["minCondition"].InnerText,
+                checkArticle(sProductID, article["idLanguage"].InnerText, article["minCondition"].InnerText,
                     article["isFoil"].InnerText, article["isSigned"].InnerText, article["isAltered"].InnerText,
-                    article["isPlayset"].InnerText, "");
+                    // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
+                    int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
+                    "");
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
             }
