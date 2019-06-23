@@ -49,6 +49,7 @@ namespace MKMTool
     public partial class MainView : Form
     {
         public delegate void logboxAppendCallback(string text);
+        public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
 
         private static readonly Timer timer = new Timer();
 
@@ -288,6 +289,18 @@ namespace MKMTool
                 timer.Interval = res * 1000 * 60;
             else
                 runtimeIntervall.Text = "" + (int)(timer.Interval / 60000);
+        }
+
+        /// <summary>
+        /// Updates the label on the bottom of the main window that shows the user how many requests they did / how many they are allowed to do.
+        /// </summary>
+        /// <param name="requestsPerformed">The requests performed since last reset (0:00 CET).</param>
+        /// <param name="requestsLimit">The requests limit (based on the account type).</param>
+        public void updateRequestCount(int requestsPerformed, int requestsLimit)
+        {
+            labelRequestCounter.Text = "API Requests made/allowed: " + requestsPerformed + "/" + requestsLimit;
+            if (requestsLimit - requestsPerformed < 50)
+                labelRequestCounter.ForeColor = System.Drawing.Color.Red;
         }
     }
 }

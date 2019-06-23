@@ -45,6 +45,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.downloadBuysToExcel = new System.Windows.Forms.Button();
             this.buttonSettings = new System.Windows.Forms.Button();
+            this.labelRequestCounter = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -214,11 +215,22 @@
             this.buttonSettings.UseVisualStyleBackColor = true;
             this.buttonSettings.Click += new System.EventHandler(this.buttonSettings_Click);
             // 
+            // labelRequestCounter
+            // 
+            this.labelRequestCounter.AutoSize = true;
+            this.labelRequestCounter.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.labelRequestCounter.Location = new System.Drawing.Point(178, 350);
+            this.labelRequestCounter.Name = "labelRequestCounter";
+            this.labelRequestCounter.Size = new System.Drawing.Size(243, 13);
+            this.labelRequestCounter.TabIndex = 20;
+            this.labelRequestCounter.Text = "API Requests made/allowed: ??????? / ???????";
+            // 
             // MainView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(744, 379);
+            this.Controls.Add(this.labelRequestCounter);
             this.Controls.Add(this.buttonSettings);
             this.Controls.Add(this.downloadBuysToExcel);
             this.Controls.Add(this.checkDisplayPriceButton);
@@ -265,6 +277,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button downloadBuysToExcel;
         private System.Windows.Forms.Button buttonSettings;
+        private System.Windows.Forms.Label labelRequestCounter;
     }
 }
 

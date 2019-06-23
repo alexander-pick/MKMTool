@@ -85,7 +85,8 @@ namespace MKMTool
                 int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));
                 if (requestCount >= requestLimit)
                     denyAdditionalRequests = true;
-
+                MainView.Instance().Invoke(new MainView.updateRequestCountCallback(MainView.Instance().updateRequestCount), requestCount, requestLimit);
+    
                 return doc;
             }
 
