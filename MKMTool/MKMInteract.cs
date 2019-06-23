@@ -39,7 +39,8 @@ namespace MKMTool
     {
         public class RequestHelper
         {
-            public static bool denyAdditionalRequests = false; // this switches to true once requests limit is reached for the day
+            private static bool denyAdditionalRequests = false; // this switches to true once requests limit is reached for the day
+            private static System.DateTime denyTime; // to know when denyAdditionalRequests was switched, if we pass to another day, reset it 
 
             /// <summary>
             /// Makes a request from MKM's API. 
@@ -57,7 +58,14 @@ namespace MKMTool
                 // because MKM tends to revoke the user's app token if it gets too many requests above the limit
                 // the 429 code is the same MKM uses for this error
                 if (denyAdditionalRequests)
-                    throw new HttpListenerException(429, "Too many requests. Wait for 0:00 CET for request counter to reset.");
+                {
+                    // MKM resets the counter at 0:00 CET. CET is two hours ahead of UCT, so if it is after 22:00 of the same day
+                    // the denial was triggered, that means the 0:00 CET has passed and we can reset the deny
+                    if (System.DateTime.UtcNow.Date == denyTime.Date && System.DateTime.UtcNow.Hour < 22)
+                        throw new HttpListenerException(429, "Too many requests. Wait for 0:00 CET for request counter to reset.");
+                    else
+                        denyAdditionalRequests = false;
+                }
                 var request = WebRequest.CreateHttp(url);
                 request.Method = method;
 
@@ -84,7 +92,10 @@ namespace MKMTool
                 int requestCount = int.Parse(response.Headers.Get("X-Request-Limit-Count"));
                 int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));
                 if (requestCount >= requestLimit)
+                {
                     denyAdditionalRequests = true;
+                    denyTime = System.DateTime.UtcNow;
+                }
                 MainView.Instance().Invoke(new MainView.updateRequestCountCallback(MainView.Instance().updateRequestCount), requestCount, requestLimit);
     
                 return doc;

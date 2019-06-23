@@ -6,6 +6,8 @@ x.x.2019 (by Tomas Janak)
 + Error logging is now more systematic, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
 + Added the option to use different price factor for the average price when worldwide search is used for price update (there is a separate slider for it now)
 + The main window can now be enlarged
++ The number of API calls you sent to MKM is now displayed on the bottom of the window along the maximum number of calls you are allowed. When the limit is reached, MKMTool will no longer send any requests to MKM until you restart MKMTool or new day has passed (MKM resets the counter on 0:00 CET). The number of calls comes directly from MKM (they send it with each call), so it is 100% reliable. When you have only 50 calls remaining, the text will turn red to warn you.
+
 9.2.2019 (by Tomas Janak)
 + Fixed "Bad Request 400" error when working with more than 100 items (partially by Ramiro Aparicio) after API changes announced on 6.2.2019
 + Mint condition is treated as Near Mint when looking for similar items
