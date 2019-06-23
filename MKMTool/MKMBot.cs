@@ -77,6 +77,9 @@ namespace MKMTool
         public double priceFactor;
         public double priceFactorWorldwide; // the same, but for worldwide search
 
+        public double markup2, markup3, markup4; // in percent, markup to use when we have 2, 3 or more copies of the given card
+        public double markupCap; // in euro, max amount of money allowed to be added on top of the estimated price by the markup
+
         /// Card Condition Settings
         
         public AcceptedCondition condAcceptance;
@@ -127,6 +130,10 @@ namespace MKMTool
             testMode = refSettings.testMode;
             description = refSettings.description;
             searchWorldwide = refSettings.searchWorldwide;
+            markup2 = refSettings.markup2;
+            markup3 = refSettings.markup3;
+            markup4 = refSettings.markup4;
+            markupCap = refSettings.markupCap;
         }
 
         /// <summary>
@@ -218,6 +225,18 @@ namespace MKMTool
                     case "description":
                         temp.description = att.Value;
                         break;
+                    case "markup2":
+                        temp.markup2 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "markup3":
+                        temp.markup3 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "markup4":
+                        temp.markup4 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "markupCap":
+                        temp.markupCap = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
                 }
             }
             if (temp.priceFactorWorldwide == -1)
@@ -266,6 +285,11 @@ namespace MKMTool
             root.SetAttribute("testMode", testMode.ToString());
             root.SetAttribute("searchWorldwide", searchWorldwide.ToString());
             root.SetAttribute("description", description);
+
+            root.SetAttribute("markup2", markup2.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("markup3", markup3.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("markup4", markup4.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("markupCap", markupCap.ToString(CultureInfo.InvariantCulture));
 
             s.AppendChild(root);
             return s;
@@ -318,6 +342,9 @@ namespace MKMTool
 
             s.testMode = false;
             s.searchWorldwide = false;
+
+            s.markup2 = s.markup3 = s.markup4 = 0;
+            s.markupCap = 0;
 
             return s;
         }
@@ -670,20 +697,19 @@ namespace MKMTool
                         priceEstimation = prices[0] + (priceEstimation - prices[0]) * (priceFactor) * 2;
                 }
             }
-                    // increase the estimate based on how many of those articles do we have in stock
-                    int count = Convert.ToInt32(article["count"].InnerText, CultureInfo.InvariantCulture);
-                    if (article["isPlayset"].InnerText == "true")
-                        count *= 4;
-                    double markup = 0;
-                    if (count == 2)
-                        markup = priceEstimation * 0.05; // + 5% if we have two
-                    else if (count == 3)
-                        markup = priceEstimation * 0.08; // + 8% if we have three
-                    else if (count > 3)
-                        markup = priceEstimation * 0.12; // + 12% if we have four or more
-                    if (markup > 3) // cap the mark-up at 3 euro
-                        markup = 3;
-                    priceEstimation += markup;
+
+            // increase the estimate based on how many of those articles do we have in stock
+            int count = Convert.ToInt32(article["count"].InnerText, CultureInfo.InvariantCulture);
+            double markupValue = 0;
+            if (count == 2)
+                markupValue = priceEstimation * settings.markup2;
+            else if (count == 3)
+                markupValue = priceEstimation * settings.markup3;
+            else if (count > 3)
+                markupValue = priceEstimation * settings.markup4;
+            if (markupValue > settings.markupCap)
+                markupValue = settings.markupCap;
+            priceEstimation += markupValue;
 
             if (priceEstimation < settings.priceMinRarePrice
                 && (article["product"]["rarity"].InnerText == "Rare" || article["product"]["rarity"].InnerText == "Mythic"))

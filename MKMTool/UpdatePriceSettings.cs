@@ -150,6 +150,11 @@ namespace MKMTool
             s.testMode = checkBoxTestMode.Checked;
             s.searchWorldwide = checkBoxPriceEstWorldwide.Checked;
 
+            s.markup2 = Decimal.ToDouble(numericUpDownMultCopies2.Value) / 100;
+            s.markup3 = Decimal.ToDouble(numericUpDownMultCopies3.Value) / 100;
+            s.markup4 = Decimal.ToDouble(numericUpDownMultCopies4.Value) / 100;
+            s.markupCap = Decimal.ToDouble(numericUpDownMultCopiesCap.Value);
+
             return true;
         }
 
@@ -230,6 +235,11 @@ namespace MKMTool
             checkBoxTestMode.Checked = settings.testMode;
             checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
             trackBarPriceEstAvgWorld.Enabled = settings.searchWorldwide;
+
+            numericUpDownMultCopies2.Value = new decimal(settings.markup2 * 100);
+            numericUpDownMultCopies3.Value = new decimal(settings.markup3 * 100);
+            numericUpDownMultCopies4.Value = new decimal(settings.markup4 * 100);
+            numericUpDownMultCopiesCap.Value = new decimal(settings.markupCap);
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)

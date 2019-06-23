@@ -108,6 +108,15 @@ namespace MKMTool
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.labelMultiples = new System.Windows.Forms.Label();
+            this.numericUpDownMultCopies2 = new System.Windows.Forms.NumericUpDown();
+            this.labelMultiplesTwo = new System.Windows.Forms.Label();
+            this.labelMultCopiesThree = new System.Windows.Forms.Label();
+            this.numericUpDownMultCopies3 = new System.Windows.Forms.NumericUpDown();
+            this.label1 = new System.Windows.Forms.Label();
+            this.numericUpDownMultCopies4 = new System.Windows.Forms.NumericUpDown();
+            this.labelMultCopiesCap = new System.Windows.Forms.Label();
+            this.numericUpDownMultCopiesCap = new System.Windows.Forms.NumericUpDown();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -122,6 +131,10 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).BeginInit();
             this.groupBoxPresets.SuspendLayout();
             this.panelPresetsDescr.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopies2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopies3)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopies4)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopiesCap)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBoxLogSettings
@@ -256,6 +269,15 @@ namespace MKMTool
             // 
             // groupBoxPriceEstim
             // 
+            this.groupBoxPriceEstim.Controls.Add(this.labelMultCopiesCap);
+            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownMultCopiesCap);
+            this.groupBoxPriceEstim.Controls.Add(this.label1);
+            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownMultCopies4);
+            this.groupBoxPriceEstim.Controls.Add(this.labelMultCopiesThree);
+            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownMultCopies3);
+            this.groupBoxPriceEstim.Controls.Add(this.labelMultiplesTwo);
+            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownMultCopies2);
+            this.groupBoxPriceEstim.Controls.Add(this.labelMultiples);
             this.groupBoxPriceEstim.Controls.Add(this.panelPriceEstWorldForSliderLabel);
             this.groupBoxPriceEstim.Controls.Add(this.panelPriceEstForSliderLabel);
             this.groupBoxPriceEstim.Controls.Add(this.trackBarPriceEstAvgWorld);
@@ -279,9 +301,9 @@ namespace MKMTool
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMinPrice);
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMinN);
             this.groupBoxPriceEstim.Controls.Add(this.statusLabel);
-            this.groupBoxPriceEstim.Location = new System.Drawing.Point(12, 12);
+            this.groupBoxPriceEstim.Location = new System.Drawing.Point(12, 3);
             this.groupBoxPriceEstim.Name = "groupBoxPriceEstim";
-            this.groupBoxPriceEstim.Size = new System.Drawing.Size(789, 299);
+            this.groupBoxPriceEstim.Size = new System.Drawing.Size(789, 308);
             this.groupBoxPriceEstim.TabIndex = 12;
             this.groupBoxPriceEstim.TabStop = false;
             this.groupBoxPriceEstim.Text = "Price estimation";
@@ -289,7 +311,7 @@ namespace MKMTool
             // panelPriceEstWorldForSliderLabel
             // 
             this.panelPriceEstWorldForSliderLabel.Controls.Add(this.labelPriceEstSliderValueWorld);
-            this.panelPriceEstWorldForSliderLabel.Location = new System.Drawing.Point(256, 211);
+            this.panelPriceEstWorldForSliderLabel.Location = new System.Drawing.Point(256, 219);
             this.panelPriceEstWorldForSliderLabel.Name = "panelPriceEstWorldForSliderLabel";
             this.panelPriceEstWorldForSliderLabel.Size = new System.Drawing.Size(522, 29);
             this.panelPriceEstWorldForSliderLabel.TabIndex = 53;
@@ -326,7 +348,7 @@ namespace MKMTool
             // 
             // trackBarPriceEstAvgWorld
             // 
-            this.trackBarPriceEstAvgWorld.Location = new System.Drawing.Point(248, 182);
+            this.trackBarPriceEstAvgWorld.Location = new System.Drawing.Point(248, 190);
             this.trackBarPriceEstAvgWorld.Maximum = 50;
             this.trackBarPriceEstAvgWorld.Name = "trackBarPriceEstAvgWorld";
             this.trackBarPriceEstAvgWorld.Size = new System.Drawing.Size(534, 45);
@@ -337,7 +359,7 @@ namespace MKMTool
             // checkBoxPriceEstWorldwide
             // 
             this.checkBoxPriceEstWorldwide.AutoSize = true;
-            this.checkBoxPriceEstWorldwide.Location = new System.Drawing.Point(10, 182);
+            this.checkBoxPriceEstWorldwide.Location = new System.Drawing.Point(10, 192);
             this.checkBoxPriceEstWorldwide.Name = "checkBoxPriceEstWorldwide";
             this.checkBoxPriceEstWorldwide.Size = new System.Drawing.Size(226, 17);
             this.checkBoxPriceEstWorldwide.TabIndex = 50;
@@ -349,7 +371,7 @@ namespace MKMTool
             // 
             // textBoxPriceEstMaxDiff
             // 
-            this.textBoxPriceEstMaxDiff.Location = new System.Drawing.Point(256, 86);
+            this.textBoxPriceEstMaxDiff.Location = new System.Drawing.Point(256, 96);
             this.textBoxPriceEstMaxDiff.Name = "textBoxPriceEstMaxDiff";
             this.textBoxPriceEstMaxDiff.Size = new System.Drawing.Size(526, 20);
             this.textBoxPriceEstMaxDiff.TabIndex = 49;
@@ -358,7 +380,7 @@ namespace MKMTool
             // 
             // trackBarPriceEstAvg
             // 
-            this.trackBarPriceEstAvg.Location = new System.Drawing.Point(248, 112);
+            this.trackBarPriceEstAvg.Location = new System.Drawing.Point(248, 122);
             this.trackBarPriceEstAvg.Maximum = 50;
             this.trackBarPriceEstAvg.Name = "trackBarPriceEstAvg";
             this.trackBarPriceEstAvg.Size = new System.Drawing.Size(535, 45);
@@ -369,7 +391,7 @@ namespace MKMTool
             // labelPriceEstMaximumPrice
             // 
             this.labelPriceEstMaximumPrice.AutoSize = true;
-            this.labelPriceEstMaximumPrice.Location = new System.Drawing.Point(8, 63);
+            this.labelPriceEstMaximumPrice.Location = new System.Drawing.Point(8, 73);
             this.labelPriceEstMaximumPrice.Name = "labelPriceEstMaximumPrice";
             this.labelPriceEstMaximumPrice.Size = new System.Drawing.Size(95, 13);
             this.labelPriceEstMaximumPrice.TabIndex = 17;
@@ -379,7 +401,7 @@ namespace MKMTool
             // 
             // textBoxPriceEstMaxChange
             // 
-            this.textBoxPriceEstMaxChange.Location = new System.Drawing.Point(256, 60);
+            this.textBoxPriceEstMaxChange.Location = new System.Drawing.Point(256, 70);
             this.textBoxPriceEstMaxChange.Name = "textBoxPriceEstMaxChange";
             this.textBoxPriceEstMaxChange.Size = new System.Drawing.Size(526, 20);
             this.textBoxPriceEstMaxChange.TabIndex = 18;
@@ -389,7 +411,7 @@ namespace MKMTool
             // labelPriceEstAvgOutliers1
             // 
             this.labelPriceEstAvgOutliers1.AutoSize = true;
-            this.labelPriceEstAvgOutliers1.Location = new System.Drawing.Point(8, 89);
+            this.labelPriceEstAvgOutliers1.Location = new System.Drawing.Point(8, 99);
             this.labelPriceEstAvgOutliers1.Name = "labelPriceEstAvgOutliers1";
             this.labelPriceEstAvgOutliers1.Size = new System.Drawing.Size(217, 13);
             this.labelPriceEstAvgOutliers1.TabIndex = 48;
@@ -400,7 +422,7 @@ namespace MKMTool
             // labelPriceEstHighestPrice
             // 
             this.labelPriceEstHighestPrice.AutoSize = true;
-            this.labelPriceEstHighestPrice.Location = new System.Drawing.Point(331, 273);
+            this.labelPriceEstHighestPrice.Location = new System.Drawing.Point(331, 283);
             this.labelPriceEstHighestPrice.Name = "labelPriceEstHighestPrice";
             this.labelPriceEstHighestPrice.Size = new System.Drawing.Size(325, 13);
             this.labelPriceEstHighestPrice.TabIndex = 32;
@@ -410,7 +432,7 @@ namespace MKMTool
             // 
             this.numericUpDownPriceEstHighestPrice.DecimalPlaces = 2;
             this.numericUpDownPriceEstHighestPrice.Enabled = false;
-            this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(255, 271);
+            this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(255, 281);
             this.numericUpDownPriceEstHighestPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -429,7 +451,7 @@ namespace MKMTool
             // radioButtonPriceEstHighestPrice
             // 
             this.radioButtonPriceEstHighestPrice.AutoSize = true;
-            this.radioButtonPriceEstHighestPrice.Location = new System.Drawing.Point(10, 271);
+            this.radioButtonPriceEstHighestPrice.Location = new System.Drawing.Point(10, 281);
             this.radioButtonPriceEstHighestPrice.Name = "radioButtonPriceEstHighestPrice";
             this.radioButtonPriceEstHighestPrice.Size = new System.Drawing.Size(180, 17);
             this.radioButtonPriceEstHighestPrice.TabIndex = 30;
@@ -441,7 +463,7 @@ namespace MKMTool
             // labelPriceEstLowestPrice
             // 
             this.labelPriceEstLowestPrice.AutoSize = true;
-            this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(331, 243);
+            this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(331, 253);
             this.labelPriceEstLowestPrice.Name = "labelPriceEstLowestPrice";
             this.labelPriceEstLowestPrice.Size = new System.Drawing.Size(408, 13);
             this.labelPriceEstLowestPrice.TabIndex = 29;
@@ -452,7 +474,7 @@ namespace MKMTool
             // 
             this.numericUpDownPriceEstLowestPrice.DecimalPlaces = 2;
             this.numericUpDownPriceEstLowestPrice.Enabled = false;
-            this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(255, 241);
+            this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(255, 251);
             this.numericUpDownPriceEstLowestPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -471,7 +493,7 @@ namespace MKMTool
             // radioButtonPriceEstByLowestPrice
             // 
             this.radioButtonPriceEstByLowestPrice.AutoSize = true;
-            this.radioButtonPriceEstByLowestPrice.Location = new System.Drawing.Point(10, 241);
+            this.radioButtonPriceEstByLowestPrice.Location = new System.Drawing.Point(10, 251);
             this.radioButtonPriceEstByLowestPrice.Name = "radioButtonPriceEstByLowestPrice";
             this.radioButtonPriceEstByLowestPrice.Size = new System.Drawing.Size(176, 17);
             this.radioButtonPriceEstByLowestPrice.TabIndex = 26;
@@ -484,7 +506,7 @@ namespace MKMTool
             // 
             this.radioButtonPriceEstPriceByAvg.AutoSize = true;
             this.radioButtonPriceEstPriceByAvg.Checked = true;
-            this.radioButtonPriceEstPriceByAvg.Location = new System.Drawing.Point(10, 114);
+            this.radioButtonPriceEstPriceByAvg.Location = new System.Drawing.Point(10, 124);
             this.radioButtonPriceEstPriceByAvg.Name = "radioButtonPriceEstPriceByAvg";
             this.radioButtonPriceEstPriceByAvg.Size = new System.Drawing.Size(159, 17);
             this.radioButtonPriceEstPriceByAvg.TabIndex = 25;
@@ -495,7 +517,7 @@ namespace MKMTool
             // 
             // numericUpDownPriceEstMaxN
             // 
-            this.numericUpDownPriceEstMaxN.Location = new System.Drawing.Point(710, 14);
+            this.numericUpDownPriceEstMaxN.Location = new System.Drawing.Point(710, 19);
             this.numericUpDownPriceEstMaxN.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -519,7 +541,7 @@ namespace MKMTool
             // 
             // numericUpDownPriceEstMinN
             // 
-            this.numericUpDownPriceEstMinN.Location = new System.Drawing.Point(476, 14);
+            this.numericUpDownPriceEstMinN.Location = new System.Drawing.Point(476, 19);
             this.numericUpDownPriceEstMinN.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -549,7 +571,7 @@ namespace MKMTool
             0,
             0,
             131072});
-            this.numericUpDownPriceEstMinPrice.Location = new System.Drawing.Point(254, 14);
+            this.numericUpDownPriceEstMinPrice.Location = new System.Drawing.Point(255, 19);
             this.numericUpDownPriceEstMinPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -573,7 +595,7 @@ namespace MKMTool
             // labelPriceEstMaxN
             // 
             this.labelPriceEstMaxN.AutoSize = true;
-            this.labelPriceEstMaxN.Location = new System.Drawing.Point(570, 16);
+            this.labelPriceEstMaxN.Location = new System.Drawing.Point(570, 21);
             this.labelPriceEstMaxN.Name = "labelPriceEstMaxN";
             this.labelPriceEstMaxN.Size = new System.Drawing.Size(134, 13);
             this.labelPriceEstMaxN.TabIndex = 32;
@@ -582,7 +604,7 @@ namespace MKMTool
             // labelPriceEstMinPrice
             // 
             this.labelPriceEstMinPrice.AutoSize = true;
-            this.labelPriceEstMinPrice.Location = new System.Drawing.Point(8, 16);
+            this.labelPriceEstMinPrice.Location = new System.Drawing.Point(8, 21);
             this.labelPriceEstMinPrice.Name = "labelPriceEstMinPrice";
             this.labelPriceEstMinPrice.Size = new System.Drawing.Size(147, 13);
             this.labelPriceEstMinPrice.TabIndex = 15;
@@ -591,7 +613,7 @@ namespace MKMTool
             // labelPriceEstMinN
             // 
             this.labelPriceEstMinN.AutoSize = true;
-            this.labelPriceEstMinN.Location = new System.Drawing.Point(339, 16);
+            this.labelPriceEstMinN.Location = new System.Drawing.Point(339, 21);
             this.labelPriceEstMinN.Name = "labelPriceEstMinN";
             this.labelPriceEstMinN.Size = new System.Drawing.Size(131, 13);
             this.labelPriceEstMinN.TabIndex = 31;
@@ -693,6 +715,99 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
+            // labelMultiples
+            // 
+            this.labelMultiples.AutoSize = true;
+            this.labelMultiples.Location = new System.Drawing.Point(8, 48);
+            this.labelMultiples.Name = "labelMultiples";
+            this.labelMultiples.Size = new System.Drawing.Size(193, 13);
+            this.labelMultiples.TabIndex = 54;
+            this.labelMultiples.Text = "Markup for having multiple copies (in %)";
+            this.toolTip1.SetToolTip(this.labelMultiples, "If you have multiple copies of a given card, its estimated price will be increase" +
+        "d by the specified percentage of the estimate for 2, 3 and 4 or more copies, up " +
+        "to the specified cap");
+            // 
+            // numericUpDownMultCopies2
+            // 
+            this.numericUpDownMultCopies2.DecimalPlaces = 1;
+            this.numericUpDownMultCopies2.Location = new System.Drawing.Point(309, 46);
+            this.numericUpDownMultCopies2.Name = "numericUpDownMultCopies2";
+            this.numericUpDownMultCopies2.Size = new System.Drawing.Size(50, 20);
+            this.numericUpDownMultCopies2.TabIndex = 55;
+            // 
+            // labelMultiplesTwo
+            // 
+            this.labelMultiplesTwo.AutoSize = true;
+            this.labelMultiplesTwo.Location = new System.Drawing.Point(253, 48);
+            this.labelMultiplesTwo.Name = "labelMultiplesTwo";
+            this.labelMultiplesTwo.Size = new System.Drawing.Size(50, 13);
+            this.labelMultiplesTwo.TabIndex = 56;
+            this.labelMultiplesTwo.Text = "2 copies:";
+            // 
+            // labelMultCopiesThree
+            // 
+            this.labelMultCopiesThree.AutoSize = true;
+            this.labelMultCopiesThree.Location = new System.Drawing.Point(370, 48);
+            this.labelMultCopiesThree.Name = "labelMultCopiesThree";
+            this.labelMultCopiesThree.Size = new System.Drawing.Size(50, 13);
+            this.labelMultCopiesThree.TabIndex = 58;
+            this.labelMultCopiesThree.Text = "3 copies:";
+            // 
+            // numericUpDownMultCopies3
+            // 
+            this.numericUpDownMultCopies3.DecimalPlaces = 1;
+            this.numericUpDownMultCopies3.Location = new System.Drawing.Point(426, 46);
+            this.numericUpDownMultCopies3.Name = "numericUpDownMultCopies3";
+            this.numericUpDownMultCopies3.Size = new System.Drawing.Size(50, 20);
+            this.numericUpDownMultCopies3.TabIndex = 57;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(493, 48);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(54, 13);
+            this.label1.TabIndex = 60;
+            this.label1.Text = "4 or more:";
+            this.toolTip1.SetToolTip(this.label1, "Warning: playsets are not affected by this markup (but they are also priced only " +
+        "based on other playsets on sale)");
+            // 
+            // numericUpDownMultCopies4
+            // 
+            this.numericUpDownMultCopies4.DecimalPlaces = 1;
+            this.numericUpDownMultCopies4.Location = new System.Drawing.Point(553, 46);
+            this.numericUpDownMultCopies4.Name = "numericUpDownMultCopies4";
+            this.numericUpDownMultCopies4.Size = new System.Drawing.Size(50, 20);
+            this.numericUpDownMultCopies4.TabIndex = 59;
+            this.toolTip1.SetToolTip(this.numericUpDownMultCopies4, "Warning: playsets are not affected by this markup (but they are also priced only " +
+        "based on other playsets on sale)");
+            // 
+            // labelMultCopiesCap
+            // 
+            this.labelMultCopiesCap.AutoSize = true;
+            this.labelMultCopiesCap.Location = new System.Drawing.Point(611, 48);
+            this.labelMultCopiesCap.Name = "labelMultCopiesCap";
+            this.labelMultCopiesCap.Size = new System.Drawing.Size(93, 13);
+            this.labelMultCopiesCap.TabIndex = 62;
+            this.labelMultCopiesCap.Text = "Markup cap (in €):";
+            this.toolTip1.SetToolTip(this.labelMultCopiesCap, "If the estimated price would increased by more than the specified cap by the adde" +
+        "d markup, it is increased only by the cap value");
+            // 
+            // numericUpDownMultCopiesCap
+            // 
+            this.numericUpDownMultCopiesCap.DecimalPlaces = 2;
+            this.numericUpDownMultCopiesCap.Location = new System.Drawing.Point(710, 45);
+            this.numericUpDownMultCopiesCap.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.numericUpDownMultCopiesCap.Name = "numericUpDownMultCopiesCap";
+            this.numericUpDownMultCopiesCap.Size = new System.Drawing.Size(70, 20);
+            this.numericUpDownMultCopiesCap.TabIndex = 61;
+            this.toolTip1.SetToolTip(this.numericUpDownMultCopiesCap, "If the estimated price would increased by more than the specified cap by the adde" +
+        "d markup, it is increased only by the cap value");
+            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -723,6 +838,10 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).EndInit();
             this.groupBoxPresets.ResumeLayout(false);
             this.panelPresetsDescr.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopies2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopies3)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopies4)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMultCopiesCap)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -776,5 +895,14 @@ namespace MKMTool
         private System.Windows.Forms.Label labelPriceEstSliderValue;
         private System.Windows.Forms.TrackBar trackBarPriceEstAvgWorld;
         private System.Windows.Forms.Label labelPriceEstSliderValueWorld;
+        private System.Windows.Forms.Label labelMultCopiesCap;
+        private System.Windows.Forms.NumericUpDown numericUpDownMultCopiesCap;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.NumericUpDown numericUpDownMultCopies4;
+        private System.Windows.Forms.Label labelMultCopiesThree;
+        private System.Windows.Forms.NumericUpDown numericUpDownMultCopies3;
+        private System.Windows.Forms.Label labelMultiplesTwo;
+        private System.Windows.Forms.NumericUpDown numericUpDownMultCopies2;
+        private System.Windows.Forms.Label labelMultiples;
     }
 }

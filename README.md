@@ -2,11 +2,12 @@
 
 ## Last changes
 
-x.x.2019 (by Tomas Janak)
+version 0.7.0, x.x.2019 (by Tomas Janak)
 + Error logging is now more systematic, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
 + Added the option to use different price factor for the average price when worldwide search is used for price update (there is a separate slider for it now)
 + The main window can now be enlarged
 + The number of API calls you sent to MKM is now displayed on the bottom of the window along the maximum number of calls you are allowed. When the limit is reached, MKMTool will no longer send any requests to MKM until you restart MKMTool or new day has passed (MKM resets the counter on 0:00 CET). The number of calls comes directly from MKM (they send it with each call), so it is 100% reliable. When you have only 50 calls remaining, the text will turn red to warn you.
++ Added the option to add markup on estimated price when you have multiple copies of a given card (see documentation below)
 
 9.2.2019 (by Tomas Janak)
 + Fixed "Bad Request 400" error when working with more than 100 items (partially by Ramiro Aparicio) after API changes announced on 6.2.2019
@@ -41,7 +42,7 @@ x.x.2019 (by Tomas Janak)
 
 ## What is this?
 
-MKMTool ist a helper application I wrote for tinkering around with optimization of sale processes on magiccardmarket.eu and the idea of automation of some tasks most people wouldn’t be able to get done by pure manpower. 
+MKMTool is a helper application I wrote for tinkering around with optimization of sale processes on magiccardmarket.eu and the idea of automation of some tasks most people wouldn’t be able to get done by pure manpower. 
 
 This tool is intended for everyone who is curious about buying and selling MTG cards with more comfort. But needs some (minimum) technical skill at the current state.
 
@@ -50,9 +51,9 @@ First a small disclaimer and things to remember:
 + The entire tool uses the mkmapi 2.0 and is purely designed as proof of concept. If you use this application, always remember that this is coded for fun and not 100% perfectly tested. I am not responsible for any damage or anything it might cause. You are using it in a real environment where real loss of money is possible. Don’t blame me if you sell your lotus for pennies.
 + This is not an official MKM software product, it’s a private venture for the fun of it.
 + Non commercial users have 5000 API calls by day, depending on the function these can be exhausted very quickly (check for cheap deals, get box value i.e.).
-+ I am german, the code was written to sell Magic Cards. Everything else will need some adjustments. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
-+ Beware the program might be slow or if it is calculating it might be not responding a while. This is ok, I didn’t multithread it so this is no problem. Keep an eye on the main log window.
-+ In the evening hours if magiccardmarket is crowded, the api seems to be slower, please take this into account if you use the tool.
++ I am German, the code was written to sell Magic Cards. Everything else will need some adjustments. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
++ Beware the program might be slow or if it is calculating it might be not responding a while. This is OK, I didn’t multithread it so this is no problem. Keep an eye on the main log window.
++ In the evening hours if magiccardmarket is crowded, the API seems to be slower, please take this into account if you use the tool.
 + If you find bugs, feel free to report them on github. 
 + This is GPL v3, free software written in C#.
 
@@ -66,7 +67,7 @@ http://www.alexander-pick.com/github/MKMTool-05b-Release_11072017.rar
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
-**Short howto run**
+**Short how-to run**
 
 + download the binaries
 + unzip everything to a folder
@@ -90,11 +91,16 @@ The base part of the algorithm is finding "similar items". This is a sequence of
 
 The following figure shows the settings window. Each of the parameters will now be described in details, going from top to bottom, left to right:
 
-![screenshot](http://tomasjanak.github.io/MKMToolUpdatePriceSettings.png)
+![screenshot](updatePriceSettings.png)
 
 + **Minimum price of rares:** This is the minimum price that will ever be assigned to your rares (and mythics) no matter what price is computed.
 + **Minimum # of similar items:** if by the end the sequence of similar items is smaller than this number, no price update will be performed.
 + **Maximum # of similar items:** once the sequence of similar items has this many items, the algorithm will stop adding new ones and will move on to computing the price. Since the sequence is built from cheapest to most expensive items, the larger this number is, the higher the computed price will potentially be as more expensive items will be included. However, it also limits the possibility of the price being too low due to some outliers.
++ **Markup for having multiple copies:** if you have more copies of a given card, you can increase the price a little - buyers who want multiple copies will be willing to pay extra when then safe on shipping compared to ordering the cards from multiple sellers one by one. After computing the price, MKMTool will add the specified percentage of the estimate on top of it. There are three levels of markup you can select - for 2 copies, 3 and for 4 or more. To avoid increasing the price way over what the potential buyers save on shipping, you can specify a cap, in euro. If the added amount would be more than this cap, only the cap value is added. 
+
+	For example,  MKMTool computes a price of 5€ for a given card. You have 3 of them in stock and you set the markup for three copies to 10% and cap to 2€. The marked-up price will be 5.50€. Let's assume the same parameters are used, but now we have 3 cards for 50€. The 10% is 5€, which is above the cap, so the final price will be 52€.
+
+	Note that there are several pitfalls: if you have the same card, but in different conditions or languages, these will not be counted as additional copies. If you have a card listed with the "Playset" tag, the 4-of markup will not be applied - but on the other hand, to estimate its price, only other "Playsets" on sale are used, so you should not need the markup. Lastly, this does not account for how many copies the other sellers have - we are basically assuming that all the N-cheapest prices are from sellers who have only 1 copy on sale. This will in most cases be true, but not always and as a result you might end up with higher prices than is competitive if there are many sellers selling multiple copies at low price. If you have suggestions on how this could be taken into account, leave a comment on the issues board.
 + **Max price change:** this allows you to set limits to how much can MKMTool change the prices of your cards. If the computed price is too much lower or higher than current price, it will not be sent to MKM. To account for different limits for different prices, this parameter is set as a sequence of pairs of numbers "T1;C1;T2;C2;T3;C3" etc. The first number in each pair, Tx, is a price threshold in €, the second number, Cx, is maximal allowed change in % of current price. For example, on the screenshot above you can see the following sequence: "1;200;5;25;10;15;50;10;100;5;999999;3;".
     
 	This means: cards cheaper than 1€ can change by at most 200%, cards cheaper than 5€ by 25%, below 10€ by 15% etc. Let's say you have listed a card A for 0.5€ and card B for 11€. MKMTool will compute new price for card A as 1.4€. This is a 180% change, but that is ok, the price for this level can change by 200%, so anything between 0€ and 1.50€ for card A is good. For price B, it computes 9.35€, i.e. a 15% decrease. Original price is 11€, hence it belongs to the "50;10" pair, i.e. max allowed change 10%. This would be violated, so card B will remain at 11€.
