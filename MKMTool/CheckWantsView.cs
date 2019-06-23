@@ -35,6 +35,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.Xml;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace MKMTool
 {
@@ -138,26 +139,25 @@ namespace MKMTool
             }
         }
 
-        private void checkListButton_Click(object sender, EventArgs e)
+        /// <summary>
+        /// For actually performing the check for cheap deals from wantlist, expected to be run in its separate thread
+        /// </summary>
+        private void checkListRun(string listID, double maxAllowedPrice, double shippingAdd, double percentBelow, bool checkTrend)
         {
-            var sListId = (wantListsBox2.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
-
             XmlDocument doc = null;
             try
             {
-                doc = MKMInteract.RequestHelper.getWantsListByID(sListId);
+                doc = MKMInteract.RequestHelper.getWantsListByID(listID);
             }
             catch (Exception eError)
             {
-                MKMHelpers.LogError("checking wantlist ID " + sListId, eError.Message, true);
+                MKMHelpers.LogError("checking wantlist ID " + listID, eError.Message, true);
                 return;
             }
 
             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                "Starting to check your Wantlist ID:" + sListId + " ...\n");
-
+                "Starting to check your Wantlist ID:" + listID + " ...\n");
             var node = doc.GetElementsByTagName("item");
-
             foreach (XmlNode article in node)
             {
                 string sProductID;
@@ -180,10 +180,31 @@ namespace MKMTool
                     article["isFoil"].InnerText, article["isSigned"].InnerText, article["isAltered"].InnerText,
                     // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
                     int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
-                    "");
+                    "", maxAllowedPrice, shippingAdd, percentBelow, checkTrend);
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
             }
+        }
+
+        private async void checkListButton_Click(object sender, EventArgs e)
+        {
+            string sListId = (wantListsBox2.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+
+            // the window controls can't be accesed from a different thread -> have to parse them here and send as arguments
+            double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
+            double shippingAdd = Convert.ToDouble(shipAddition.Text);
+            double percentBelow = Convert.ToDouble(percentText.Text);
+            bool checkTrend = checkBoxTrend.Checked;
+
+            groupBoxBulkCheck.Enabled = false;
+            groupBoxPriceParam.Enabled = false;
+            groupBoxWantlist.Enabled = false;
+            checkListButton.Text = "Checking wantlist...";
+            await Task.Run(() => checkListRun(sListId, maxAllowedPrice, shippingAdd, percentBelow, checkTrend));
+            checkListButton.Text = "Check selected list";
+            groupBoxBulkCheck.Enabled = true;
+            groupBoxPriceParam.Enabled = true;
+            groupBoxWantlist.Enabled = true;
         }
 
         private void wantListsBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -204,17 +225,104 @@ namespace MKMTool
                 MKMHelpers.LogError("emptying shopping cart, cart not emptied", eError.Message, true);
             }
         }
-        
 
-        private void checkEditionButton_Click(object sender, EventArgs e)
+        /// <summary>
+        /// For actually performing the check for cheap deals, expected to be run in its separate thread
+        /// </summary>
+        private void checkCheapDealsRun(string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
+            bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
+            System.Collections.Generic.List<string> selectedLanguage, string user = "")
         {
-            checkEditionButton.Enabled = false;
+            if (user != "")
+            {
+                if (domesticOnly)
+                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                        "WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.\n");
+                // Go through the stock of a specified user, checks for cheap deals and add them to the cart.
+                int start = 0;
+                while (true)
+                {
+                    String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
+
+                    try
+                    {
+                        // get the users stock, filtered by the selected parameters
+                        var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
+
+                        var node2 = doc2.GetElementsByTagName("article");
+                        foreach (XmlNode article in node2)
+                        {
+                            if ( // do as much filtering here as possible to reduce the number of API calls
+                                MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, minCondition) &&
+                                (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
+                                (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
+                                (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
+                                (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
+                                (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
+                                (maxPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
+                                )
+                            {
+
+                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                                    "Checking: " + article["idProduct"].InnerText + "\n");
+                                checkArticle(article["idProduct"].InnerText,
+                                    selectedLanguage, minCondition, isFoil, isSigned,
+                                    isAltered, isPlayset, article["idArticle"].InnerText, maxPrice, shippingAddition, percentBelowOthers, checkTrend);
+
+                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
+                            }
+                        }
+                        if (node2.Count != 1000) // there is no additional items to fetch
+                            break;
+                    }
+                    catch (Exception eError)
+                    {
+                        MKMHelpers.LogError("looking for cheap deals from user " + user, eError.Message, false, sUrl);
+                        break;
+                    }
+                    start += 1000;
+                }
+            }
+            else
+            {
+                var sT = dt.Clone();
+
+                var result = dt.Select(string.Format("[Expansion ID] = '{0}'", selectedExpansionID));
+
+                foreach (var row in result)
+                {
+                    sT.ImportRow(row);
+                }
+
+                foreach (DataRow oRecord in sT.Rows)
+                {
+                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                        "Checking: " + oRecord["Name"] + "\n");
+                    checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
+                        isAltered, isPlayset, "", maxPrice, shippingAddition, percentBelowOthers, checkTrend);
+
+                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
+                }
+            }
+        }
+
+        private async void checkEditionButton_Click(object sender, EventArgs e)
+        {
+            groupBoxBulkCheck.Enabled = false;
+            groupBoxPriceParam.Enabled = false;
+            groupBoxWantlist.Enabled = false;
             checkEditionButton.Text = "Checking cheap deals...";
-            var isFoil = "";
-            var isSigned = "";
-            var isAltered = "";
-            var isPlayset = "";
-            var minCondition = conditionCombo.Text;
+            // the window controls can't be accesed from a different thread -> have to parse them here and send as arguments
+            string isFoil = "";
+            string isSigned = "";
+            string isAltered = "";
+            string isPlayset = "";
+            string minCondition = conditionCombo.Text;
+            double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
+            double shippingAdd = Convert.ToDouble(shipAddition.Text);
+            double percentBelow = Convert.ToDouble(percentText.Text);
+            bool checkTrend = checkBoxTrend.Checked;
+            string selectedExpansionID = ((MKMHelpers.ComboboxItem)editionBox.SelectedItem).Value.ToString();
 
             if (foilBox.Checked)
                 isFoil = "true";
@@ -231,89 +339,21 @@ namespace MKMTool
             System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>();
             selectedLanguage.Add((langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
 
-            if (checkBoxUser.Checked)
-            {
-                if (domesticCheck.Checked)
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                        "WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.\n");
-                // Go through the stock of a specified user, checks for cheap deals and add them to the cart.
-                int start = 0;
-                double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
-                while (true)
-                { 
-                    String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + textBoxUser.Text + "/articles?start=" + start + "&maxResults=1000";
-
-                    try
-                    {
-                        // get the users stock, filtered by the selected parameters
-                        var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
-
-                        var node2 = doc2.GetElementsByTagName("article");
-                        foreach (XmlNode article in node2)
-                        {
-                            if ( // do as much filtering here as possible to reduce the number of API calls
-                                MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, conditionCombo.Text) &&
-                                (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
-                                (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
-                                (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
-                                (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
-                                (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
-                                (maxAllowedPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
-                                )
-                            {
-
-                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                                    "Checking: " + article["idProduct"].InnerText + "\n");
-                                checkArticle(article["idProduct"].InnerText,
-                                    selectedLanguage, minCondition, isFoil, isSigned,
-                                    isAltered, isPlayset, article["idArticle"].InnerText);
-
-                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
-                            }
-                        }
-                        if (node2.Count != 1000) // there is no additional items to fetch
-                            break;
-                    }
-                    catch (Exception eError)
-                    {
-                        MKMHelpers.LogError("looking for cheap deals from user " + textBoxUser.Text, eError.Message, false, sUrl);
-                        break;
-                    }
-                    start += 1000;
-                }
-            }
-            else
-            {
-                var sEdId = editionBox.SelectedItem.ToString();
-
-                var sT = dt.Clone();
-
-                var result = dt.Select(string.Format("[Expansion ID] = '{0}'", sEdId));
-
-                foreach (var row in result)
-                {
-                    sT.ImportRow(row);
-                }
-
-                foreach (DataRow oRecord in sT.Rows)
-                {
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                        "Checking: " + oRecord["idProduct"] + "\n");
-                    checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
-                        isAltered, isPlayset, "");
-
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
-                }
-            }
+            await Task.Run(() => checkCheapDealsRun(isFoil, isSigned, isAltered, isPlayset, minCondition, 
+                domesticCheck.Checked, maxAllowedPrice, shippingAdd, percentBelow, checkTrend, selectedExpansionID,
+                selectedLanguage, (checkBoxUser.Checked ? textBoxUser.Text : "")));
 
             checkEditionButton.Text = "Check now";
-            checkEditionButton.Enabled = true;
+            groupBoxBulkCheck.Enabled = true;
+            groupBoxPriceParam.Enabled = true;
+            groupBoxWantlist.Enabled = true;
         }
 
         // idArticle - if not empty, article will be added to shopping cart only if it is matching the specified idArticle. used for searching for cheap deals by user
         // idLanguages - list of languages to check for. if all are OK, pass in either an empty list or a list with exactly one entry which is an empty string
         private void checkArticle(string idProduct, System.Collections.Generic.List<string> idLanguages, string minCondition, string isFoil,
-            string isSigned, string isAltered, string isPlayset, string matchingArticle)
+            string isSigned, string isAltered, string isPlayset, string matchingArticle, 
+            double maxAllowedPrice, double shippingAddition, double percentBelowOthers, bool checkTrend)
         {
             var sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + idProduct +
                        "?minCondition=" + minCondition +
@@ -404,8 +444,7 @@ namespace MKMTool
                 }
                     
 
-                if (aPrices[0] + (float) Convert.ToDouble(shipAddition.Text) >
-                    (float) Convert.ToDouble(maxPrice.Text))
+                if (aPrices[0] + shippingAddition > maxAllowedPrice)
                 {
                     //frm1.logBox.Invoke(new Form1.logboxAppendCallback(frm1.logBoxAppend), "Price higher than Max Price\n");
                     continue;
@@ -423,29 +462,27 @@ namespace MKMTool
 
                 if (counter == 3)
                 {                        
-                    double factor = (float)Convert.ToDouble(percentText.Text);
+                    double factor = percentBelowOthers;
 
                     factor = factor / 100 + 1;
-
-                    //double f1 = Math.Round(((aPrices[0] * factor) + (float)Convert.ToDouble(shipAddition.Text)), 2);
 
                     frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                         "Price 1: " + aPrices[0] + " Price 2: " + aPrices[1] + "\n");
                     frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                         "Factor Price 1: " +
-                        Math.Round(aPrices[0] * factor + (float)Convert.ToDouble(shipAddition.Text), 2)
+                        Math.Round(aPrices[0] * factor + shippingAddition, 2)
                         + " Factor Price 2: " +
-                        Math.Round(aPrices[1] * factor + (float)Convert.ToDouble(shipAddition.Text), 2) + "\n");
+                        Math.Round(aPrices[1] * factor + shippingAddition, 2) + "\n");
 
                     //X% under others
                     if (
-                        (aPrices[0] * factor + (float)Convert.ToDouble(shipAddition.Text) < aPrices[1])
-                        && (aPrices[0] * factor + (float)Convert.ToDouble(shipAddition.Text) < aPrices[2])
+                        (aPrices[0] * factor + shippingAddition < aPrices[1])
+                        && (aPrices[0] * factor + shippingAddition < aPrices[2])
                         )
                     {
                         double fTrendprice = 100000; // fictive price 
 
-                        if (checkTrend.Checked)
+                        if (checkTrend)
                         {
                             //check Trend Price
                             try
@@ -479,7 +516,7 @@ namespace MKMTool
                         if (aPrices[0] * factor < fTrendprice)
                         {
                             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                                "Found cheap offer " + bestPriceArticle + "\n");
+                                "Found cheap offer, ID " + bestPriceArticle + "\n");
                             try
                             {
                                 var sRequestXML = MKMInteract.RequestHelper.addCartBody(bestPriceArticle);

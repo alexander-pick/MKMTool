@@ -37,13 +37,13 @@
             this.button1 = new System.Windows.Forms.Button();
             this.editionBox = new System.Windows.Forms.ComboBox();
             this.checkEditionButton = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBoxPriceParam = new System.Windows.Forms.GroupBox();
             this.checkBestInter = new System.Windows.Forms.CheckBox();
             this.domesticCheck = new System.Windows.Forms.CheckBox();
             this.maxPrice = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.checkTrend = new System.Windows.Forms.CheckBox();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.checkBoxTrend = new System.Windows.Forms.CheckBox();
+            this.groupBoxBulkCheck = new System.Windows.Forms.GroupBox();
             this.textBoxUser = new System.Windows.Forms.TextBox();
             this.checkBoxUser = new System.Windows.Forms.CheckBox();
             this.signedBox = new System.Windows.Forms.CheckBox();
@@ -54,10 +54,10 @@
             this.playsetBox = new System.Windows.Forms.CheckBox();
             this.langCombo = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox1.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.groupBox4.SuspendLayout();
+            this.groupBoxWantlist = new System.Windows.Forms.GroupBox();
+            this.groupBoxPriceParam.SuspendLayout();
+            this.groupBoxBulkCheck.SuspendLayout();
+            this.groupBoxWantlist.SuspendLayout();
             this.SuspendLayout();
             // 
             // wantListsBox2
@@ -77,7 +77,7 @@
             this.checkListButton.Name = "checkListButton";
             this.checkListButton.Size = new System.Drawing.Size(188, 51);
             this.checkListButton.TabIndex = 6;
-            this.checkListButton.Text = "Check selected List";
+            this.checkListButton.Text = "Check selected list";
             this.checkListButton.UseVisualStyleBackColor = true;
             this.checkListButton.Click += new System.EventHandler(this.checkListButton_Click);
             // 
@@ -121,7 +121,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(190, 51);
             this.button1.TabIndex = 13;
-            this.button1.Text = "Empty Cart";
+            this.button1.Text = "Empty cart";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -143,24 +143,24 @@
             this.checkEditionButton.UseVisualStyleBackColor = true;
             this.checkEditionButton.Click += new System.EventHandler(this.checkEditionButton_Click);
             // 
-            // groupBox1
+            // groupBoxPriceParam
             // 
-            this.groupBox1.Controls.Add(this.checkBestInter);
-            this.groupBox1.Controls.Add(this.domesticCheck);
-            this.groupBox1.Controls.Add(this.button1);
-            this.groupBox1.Controls.Add(this.maxPrice);
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.checkTrend);
-            this.groupBox1.Controls.Add(this.percentText);
-            this.groupBox1.Controls.Add(this.labelPercent);
-            this.groupBox1.Controls.Add(this.shipAddition);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Location = new System.Drawing.Point(11, 12);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(202, 231);
-            this.groupBox1.TabIndex = 29;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Price Parameter";
+            this.groupBoxPriceParam.Controls.Add(this.checkBestInter);
+            this.groupBoxPriceParam.Controls.Add(this.domesticCheck);
+            this.groupBoxPriceParam.Controls.Add(this.button1);
+            this.groupBoxPriceParam.Controls.Add(this.maxPrice);
+            this.groupBoxPriceParam.Controls.Add(this.label3);
+            this.groupBoxPriceParam.Controls.Add(this.checkBoxTrend);
+            this.groupBoxPriceParam.Controls.Add(this.percentText);
+            this.groupBoxPriceParam.Controls.Add(this.labelPercent);
+            this.groupBoxPriceParam.Controls.Add(this.shipAddition);
+            this.groupBoxPriceParam.Controls.Add(this.label2);
+            this.groupBoxPriceParam.Location = new System.Drawing.Point(11, 12);
+            this.groupBoxPriceParam.Name = "groupBoxPriceParam";
+            this.groupBoxPriceParam.Size = new System.Drawing.Size(202, 231);
+            this.groupBoxPriceParam.TabIndex = 29;
+            this.groupBoxPriceParam.TabStop = false;
+            this.groupBoxPriceParam.Text = "Price Parameter";
             // 
             // checkBestInter
             // 
@@ -203,38 +203,38 @@
             this.label3.TabIndex = 14;
             this.label3.Text = "Max Price per Card";
             // 
-            // checkTrend
+            // checkBoxTrend
             // 
-            this.checkTrend.AutoSize = true;
-            this.checkTrend.Checked = true;
-            this.checkTrend.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkTrend.Location = new System.Drawing.Point(6, 94);
-            this.checkTrend.Name = "checkTrend";
-            this.checkTrend.Size = new System.Drawing.Size(87, 17);
-            this.checkTrend.TabIndex = 12;
-            this.checkTrend.Text = "check Trend";
-            this.checkTrend.UseVisualStyleBackColor = true;
+            this.checkBoxTrend.AutoSize = true;
+            this.checkBoxTrend.Checked = true;
+            this.checkBoxTrend.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxTrend.Location = new System.Drawing.Point(6, 94);
+            this.checkBoxTrend.Name = "checkBoxTrend";
+            this.checkBoxTrend.Size = new System.Drawing.Size(87, 17);
+            this.checkBoxTrend.TabIndex = 12;
+            this.checkBoxTrend.Text = "check Trend";
+            this.checkBoxTrend.UseVisualStyleBackColor = true;
             // 
-            // groupBox3
+            // groupBoxBulkCheck
             // 
-            this.groupBox3.Controls.Add(this.textBoxUser);
-            this.groupBox3.Controls.Add(this.checkBoxUser);
-            this.groupBox3.Controls.Add(this.signedBox);
-            this.groupBox3.Controls.Add(this.editionBox);
-            this.groupBox3.Controls.Add(this.foilBox);
-            this.groupBox3.Controls.Add(this.checkEditionButton);
-            this.groupBox3.Controls.Add(this.alteredBox);
-            this.groupBox3.Controls.Add(this.conditionBox);
-            this.groupBox3.Controls.Add(this.conditionCombo);
-            this.groupBox3.Controls.Add(this.playsetBox);
-            this.groupBox3.Controls.Add(this.langCombo);
-            this.groupBox3.Controls.Add(this.label1);
-            this.groupBox3.Location = new System.Drawing.Point(219, 12);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(200, 231);
-            this.groupBox3.TabIndex = 31;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Bulk Check";
+            this.groupBoxBulkCheck.Controls.Add(this.textBoxUser);
+            this.groupBoxBulkCheck.Controls.Add(this.checkBoxUser);
+            this.groupBoxBulkCheck.Controls.Add(this.signedBox);
+            this.groupBoxBulkCheck.Controls.Add(this.editionBox);
+            this.groupBoxBulkCheck.Controls.Add(this.foilBox);
+            this.groupBoxBulkCheck.Controls.Add(this.checkEditionButton);
+            this.groupBoxBulkCheck.Controls.Add(this.alteredBox);
+            this.groupBoxBulkCheck.Controls.Add(this.conditionBox);
+            this.groupBoxBulkCheck.Controls.Add(this.conditionCombo);
+            this.groupBoxBulkCheck.Controls.Add(this.playsetBox);
+            this.groupBoxBulkCheck.Controls.Add(this.langCombo);
+            this.groupBoxBulkCheck.Controls.Add(this.label1);
+            this.groupBoxBulkCheck.Location = new System.Drawing.Point(219, 12);
+            this.groupBoxBulkCheck.Name = "groupBoxBulkCheck";
+            this.groupBoxBulkCheck.Size = new System.Drawing.Size(200, 231);
+            this.groupBoxBulkCheck.TabIndex = 31;
+            this.groupBoxBulkCheck.TabStop = false;
+            this.groupBoxBulkCheck.Text = "Bulk Check";
             // 
             // textBoxUser
             // 
@@ -353,35 +353,35 @@
             this.label1.TabIndex = 36;
             this.label1.Text = "Language";
             // 
-            // groupBox4
+            // groupBoxWantlist
             // 
-            this.groupBox4.Controls.Add(this.checkListButton);
-            this.groupBox4.Controls.Add(this.wantListsBox2);
-            this.groupBox4.Location = new System.Drawing.Point(425, 12);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(200, 231);
-            this.groupBox4.TabIndex = 32;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Check Wantslist";
+            this.groupBoxWantlist.Controls.Add(this.checkListButton);
+            this.groupBoxWantlist.Controls.Add(this.wantListsBox2);
+            this.groupBoxWantlist.Location = new System.Drawing.Point(425, 12);
+            this.groupBoxWantlist.Name = "groupBoxWantlist";
+            this.groupBoxWantlist.Size = new System.Drawing.Size(200, 231);
+            this.groupBoxWantlist.TabIndex = 32;
+            this.groupBoxWantlist.TabStop = false;
+            this.groupBoxWantlist.Text = "Check Wantslist";
             // 
             // CheckWantsView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(636, 254);
-            this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.groupBox4);
+            this.Controls.Add(this.groupBoxBulkCheck);
+            this.Controls.Add(this.groupBoxPriceParam);
+            this.Controls.Add(this.groupBoxWantlist);
             this.MinimizeBox = false;
             this.Name = "CheckWantsView";
             this.ShowIcon = false;
             this.Text = "Check for cheap deals";
             this.Load += new System.EventHandler(this.CheckWants_Load);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
+            this.groupBoxPriceParam.ResumeLayout(false);
+            this.groupBoxPriceParam.PerformLayout();
+            this.groupBoxBulkCheck.ResumeLayout(false);
+            this.groupBoxBulkCheck.PerformLayout();
+            this.groupBoxWantlist.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -397,9 +397,9 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ComboBox editionBox;
         private System.Windows.Forms.Button checkEditionButton;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.GroupBox groupBoxPriceParam;
+        private System.Windows.Forms.GroupBox groupBoxBulkCheck;
+        private System.Windows.Forms.GroupBox groupBoxWantlist;
         private System.Windows.Forms.CheckBox signedBox;
         private System.Windows.Forms.CheckBox alteredBox;
         private System.Windows.Forms.CheckBox playsetBox;
@@ -408,7 +408,7 @@
         private System.Windows.Forms.ComboBox langCombo;
         private System.Windows.Forms.Label conditionBox;
         private System.Windows.Forms.ComboBox conditionCombo;
-        private System.Windows.Forms.CheckBox checkTrend;
+        private System.Windows.Forms.CheckBox checkBoxTrend;
         private System.Windows.Forms.TextBox maxPrice;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox domesticCheck;
