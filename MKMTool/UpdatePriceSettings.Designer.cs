@@ -74,10 +74,13 @@ namespace MKMTool
             this.labelMatchExplanation = new System.Windows.Forms.Label();
             this.radioButtonCondMatchOnly = new System.Windows.Forms.RadioButton();
             this.groupBoxPriceEstim = new System.Windows.Forms.GroupBox();
-            this.checkBoxPriceEstWorldwide = new System.Windows.Forms.CheckBox();
-            this.textBoxPriceEstMaxDiff = new System.Windows.Forms.TextBox();
+            this.panelPriceEstWorldForSliderLabel = new System.Windows.Forms.Panel();
+            this.labelPriceEstSliderValueWorld = new System.Windows.Forms.Label();
             this.panelPriceEstForSliderLabel = new System.Windows.Forms.Panel();
             this.labelPriceEstSliderValue = new System.Windows.Forms.Label();
+            this.trackBarPriceEstAvgWorld = new System.Windows.Forms.TrackBar();
+            this.checkBoxPriceEstWorldwide = new System.Windows.Forms.CheckBox();
+            this.textBoxPriceEstMaxDiff = new System.Windows.Forms.TextBox();
             this.trackBarPriceEstAvg = new System.Windows.Forms.TrackBar();
             this.labelPriceEstMaximumPrice = new System.Windows.Forms.Label();
             this.textBoxPriceEstMaxChange = new System.Windows.Forms.TextBox();
@@ -104,12 +107,13 @@ namespace MKMTool
             this.buttonPresetsStore = new System.Windows.Forms.Button();
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
-            this.toolTipMaxPriceChange = new System.Windows.Forms.ToolTip(this.components);
-            this.toolTipMaxDifference = new System.Windows.Forms.ToolTip(this.components);
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
+            this.panelPriceEstWorldForSliderLabel.SuspendLayout();
             this.panelPriceEstForSliderLabel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarPriceEstAvgWorld)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPriceEstAvg)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstHighestPrice)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstLowestPrice)).BeginInit();
@@ -127,7 +131,7 @@ namespace MKMTool
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogSmallChange);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogMinItems);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogUpdated);
-            this.groupBoxLogSettings.Location = new System.Drawing.Point(13, 344);
+            this.groupBoxLogSettings.Location = new System.Drawing.Point(12, 395);
             this.groupBoxLogSettings.Name = "groupBoxLogSettings";
             this.groupBoxLogSettings.Size = new System.Drawing.Size(788, 99);
             this.groupBoxLogSettings.TabIndex = 14;
@@ -200,7 +204,7 @@ namespace MKMTool
             this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondAcceptBetterAlways);
             this.groupBoxConditionSettings.Controls.Add(this.labelMatchExplanation);
             this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondMatchOnly);
-            this.groupBoxConditionSettings.Location = new System.Drawing.Point(13, 266);
+            this.groupBoxConditionSettings.Location = new System.Drawing.Point(13, 317);
             this.groupBoxConditionSettings.Name = "groupBoxConditionSettings";
             this.groupBoxConditionSettings.Size = new System.Drawing.Size(788, 72);
             this.groupBoxConditionSettings.TabIndex = 13;
@@ -252,9 +256,11 @@ namespace MKMTool
             // 
             // groupBoxPriceEstim
             // 
+            this.groupBoxPriceEstim.Controls.Add(this.panelPriceEstWorldForSliderLabel);
+            this.groupBoxPriceEstim.Controls.Add(this.panelPriceEstForSliderLabel);
+            this.groupBoxPriceEstim.Controls.Add(this.trackBarPriceEstAvgWorld);
             this.groupBoxPriceEstim.Controls.Add(this.checkBoxPriceEstWorldwide);
             this.groupBoxPriceEstim.Controls.Add(this.textBoxPriceEstMaxDiff);
-            this.groupBoxPriceEstim.Controls.Add(this.panelPriceEstForSliderLabel);
             this.groupBoxPriceEstim.Controls.Add(this.trackBarPriceEstAvg);
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMaximumPrice);
             this.groupBoxPriceEstim.Controls.Add(this.textBoxPriceEstMaxChange);
@@ -275,21 +281,71 @@ namespace MKMTool
             this.groupBoxPriceEstim.Controls.Add(this.statusLabel);
             this.groupBoxPriceEstim.Location = new System.Drawing.Point(12, 12);
             this.groupBoxPriceEstim.Name = "groupBoxPriceEstim";
-            this.groupBoxPriceEstim.Size = new System.Drawing.Size(789, 248);
+            this.groupBoxPriceEstim.Size = new System.Drawing.Size(789, 299);
             this.groupBoxPriceEstim.TabIndex = 12;
             this.groupBoxPriceEstim.TabStop = false;
             this.groupBoxPriceEstim.Text = "Price estimation";
             // 
+            // panelPriceEstWorldForSliderLabel
+            // 
+            this.panelPriceEstWorldForSliderLabel.Controls.Add(this.labelPriceEstSliderValueWorld);
+            this.panelPriceEstWorldForSliderLabel.Location = new System.Drawing.Point(256, 211);
+            this.panelPriceEstWorldForSliderLabel.Name = "panelPriceEstWorldForSliderLabel";
+            this.panelPriceEstWorldForSliderLabel.Size = new System.Drawing.Size(522, 29);
+            this.panelPriceEstWorldForSliderLabel.TabIndex = 53;
+            // 
+            // labelPriceEstSliderValueWorld
+            // 
+            this.labelPriceEstSliderValueWorld.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelPriceEstSliderValueWorld.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.labelPriceEstSliderValueWorld.Location = new System.Drawing.Point(0, 0);
+            this.labelPriceEstSliderValueWorld.Name = "labelPriceEstSliderValueWorld";
+            this.labelPriceEstSliderValueWorld.Size = new System.Drawing.Size(522, 29);
+            this.labelPriceEstSliderValueWorld.TabIndex = 0;
+            this.labelPriceEstSliderValueWorld.Text = "AVG";
+            this.labelPriceEstSliderValueWorld.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panelPriceEstForSliderLabel
+            // 
+            this.panelPriceEstForSliderLabel.Controls.Add(this.labelPriceEstSliderValue);
+            this.panelPriceEstForSliderLabel.Location = new System.Drawing.Point(256, 147);
+            this.panelPriceEstForSliderLabel.Name = "panelPriceEstForSliderLabel";
+            this.panelPriceEstForSliderLabel.Size = new System.Drawing.Size(522, 29);
+            this.panelPriceEstForSliderLabel.TabIndex = 52;
+            // 
+            // labelPriceEstSliderValue
+            // 
+            this.labelPriceEstSliderValue.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelPriceEstSliderValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.labelPriceEstSliderValue.Location = new System.Drawing.Point(0, 0);
+            this.labelPriceEstSliderValue.Name = "labelPriceEstSliderValue";
+            this.labelPriceEstSliderValue.Size = new System.Drawing.Size(522, 29);
+            this.labelPriceEstSliderValue.TabIndex = 0;
+            this.labelPriceEstSliderValue.Text = "AVG";
+            this.labelPriceEstSliderValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // trackBarPriceEstAvgWorld
+            // 
+            this.trackBarPriceEstAvgWorld.Location = new System.Drawing.Point(248, 182);
+            this.trackBarPriceEstAvgWorld.Maximum = 50;
+            this.trackBarPriceEstAvgWorld.Name = "trackBarPriceEstAvgWorld";
+            this.trackBarPriceEstAvgWorld.Size = new System.Drawing.Size(534, 45);
+            this.trackBarPriceEstAvgWorld.TabIndex = 51;
+            this.trackBarPriceEstAvgWorld.Value = 25;
+            this.trackBarPriceEstAvgWorld.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvgWorld_ValueChanged);
+            // 
             // checkBoxPriceEstWorldwide
             // 
             this.checkBoxPriceEstWorldwide.AutoSize = true;
-            this.checkBoxPriceEstWorldwide.Location = new System.Drawing.Point(11, 38);
+            this.checkBoxPriceEstWorldwide.Location = new System.Drawing.Point(10, 182);
             this.checkBoxPriceEstWorldwide.Name = "checkBoxPriceEstWorldwide";
-            this.checkBoxPriceEstWorldwide.Size = new System.Drawing.Size(427, 17);
+            this.checkBoxPriceEstWorldwide.Size = new System.Drawing.Size(226, 17);
             this.checkBoxPriceEstWorldwide.TabIndex = 50;
-            this.checkBoxPriceEstWorldwide.Text = "Ignore seller\'s country if minimum # of items is not found in my country (without" +
-    " culling)";
+            this.checkBoxPriceEstWorldwide.Text = "Allow worldwide search for low-stock items";
+            this.toolTip1.SetToolTip(this.checkBoxPriceEstWorldwide, "If minimum number of items (before any culling) is not found in your countery, it" +
+        "ems from all sellers will be considered");
             this.checkBoxPriceEstWorldwide.UseVisualStyleBackColor = true;
+            this.checkBoxPriceEstWorldwide.CheckedChanged += new System.EventHandler(this.checkBoxPriceEstWorldwide_CheckedChanged);
             // 
             // textBoxPriceEstMaxDiff
             // 
@@ -297,34 +353,15 @@ namespace MKMTool
             this.textBoxPriceEstMaxDiff.Name = "textBoxPriceEstMaxDiff";
             this.textBoxPriceEstMaxDiff.Size = new System.Drawing.Size(526, 20);
             this.textBoxPriceEstMaxDiff.TabIndex = 49;
-            this.toolTipMaxDifference.SetToolTip(this.textBoxPriceEstMaxDiff, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx = max difference in % for items tha" +
+            this.toolTip1.SetToolTip(this.textBoxPriceEstMaxDiff, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx = max difference in % for items tha" +
         "t cost Tx or less");
-            // 
-            // panelPriceEstForSliderLabel
-            // 
-            this.panelPriceEstForSliderLabel.Controls.Add(this.labelPriceEstSliderValue);
-            this.panelPriceEstForSliderLabel.Location = new System.Drawing.Point(256, 169);
-            this.panelPriceEstForSliderLabel.Name = "panelPriceEstForSliderLabel";
-            this.panelPriceEstForSliderLabel.Size = new System.Drawing.Size(526, 23);
-            this.panelPriceEstForSliderLabel.TabIndex = 37;
-            // 
-            // labelPriceEstSliderValue
-            // 
-            this.labelPriceEstSliderValue.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelPriceEstSliderValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelPriceEstSliderValue.Location = new System.Drawing.Point(0, 0);
-            this.labelPriceEstSliderValue.Name = "labelPriceEstSliderValue";
-            this.labelPriceEstSliderValue.Size = new System.Drawing.Size(526, 23);
-            this.labelPriceEstSliderValue.TabIndex = 24;
-            this.labelPriceEstSliderValue.Text = "AVG";
-            this.labelPriceEstSliderValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackBarPriceEstAvg
             // 
-            this.trackBarPriceEstAvg.Location = new System.Drawing.Point(258, 124);
+            this.trackBarPriceEstAvg.Location = new System.Drawing.Point(248, 112);
             this.trackBarPriceEstAvg.Maximum = 50;
             this.trackBarPriceEstAvg.Name = "trackBarPriceEstAvg";
-            this.trackBarPriceEstAvg.Size = new System.Drawing.Size(526, 45);
+            this.trackBarPriceEstAvg.Size = new System.Drawing.Size(535, 45);
             this.trackBarPriceEstAvg.TabIndex = 36;
             this.trackBarPriceEstAvg.Value = 25;
             this.trackBarPriceEstAvg.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvg_ValueChanged);
@@ -337,7 +374,7 @@ namespace MKMTool
             this.labelPriceEstMaximumPrice.Size = new System.Drawing.Size(95, 13);
             this.labelPriceEstMaximumPrice.TabIndex = 17;
             this.labelPriceEstMaximumPrice.Text = "Max price change:";
-            this.toolTipMaxPriceChange.SetToolTip(this.labelPriceEstMaximumPrice, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx is max allowed price change in % fo" +
+            this.toolTip1.SetToolTip(this.labelPriceEstMaximumPrice, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx is max allowed price change in % fo" +
         "r items that cost (old price) Tx or less");
             // 
             // textBoxPriceEstMaxChange
@@ -346,8 +383,8 @@ namespace MKMTool
             this.textBoxPriceEstMaxChange.Name = "textBoxPriceEstMaxChange";
             this.textBoxPriceEstMaxChange.Size = new System.Drawing.Size(526, 20);
             this.textBoxPriceEstMaxChange.TabIndex = 18;
-            this.toolTipMaxPriceChange.SetToolTip(this.textBoxPriceEstMaxChange, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx is max allowed price change in % fo" +
-        "r items that cost (old price) Tx or less\r\n");
+            this.toolTip1.SetToolTip(this.textBoxPriceEstMaxChange, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx is max allowed price change in % fo" +
+        "r items that cost (old price) Tx or less");
             // 
             // labelPriceEstAvgOutliers1
             // 
@@ -357,13 +394,13 @@ namespace MKMTool
             this.labelPriceEstAvgOutliers1.Size = new System.Drawing.Size(217, 13);
             this.labelPriceEstAvgOutliers1.TabIndex = 48;
             this.labelPriceEstAvgOutliers1.Text = "Max differences between consecutive items:";
-            this.toolTipMaxDifference.SetToolTip(this.labelPriceEstAvgOutliers1, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx = max difference in % for items tha" +
+            this.toolTip1.SetToolTip(this.labelPriceEstAvgOutliers1, "insert sequence \"T1;C1;T2;C2;\" etc., where Cx = max difference in % for items tha" +
         "t cost Tx or less");
             // 
             // labelPriceEstHighestPrice
             // 
             this.labelPriceEstHighestPrice.AutoSize = true;
-            this.labelPriceEstHighestPrice.Location = new System.Drawing.Point(332, 227);
+            this.labelPriceEstHighestPrice.Location = new System.Drawing.Point(331, 273);
             this.labelPriceEstHighestPrice.Name = "labelPriceEstHighestPrice";
             this.labelPriceEstHighestPrice.Size = new System.Drawing.Size(325, 13);
             this.labelPriceEstHighestPrice.TabIndex = 32;
@@ -373,7 +410,7 @@ namespace MKMTool
             // 
             this.numericUpDownPriceEstHighestPrice.DecimalPlaces = 2;
             this.numericUpDownPriceEstHighestPrice.Enabled = false;
-            this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(256, 225);
+            this.numericUpDownPriceEstHighestPrice.Location = new System.Drawing.Point(255, 271);
             this.numericUpDownPriceEstHighestPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -392,7 +429,7 @@ namespace MKMTool
             // radioButtonPriceEstHighestPrice
             // 
             this.radioButtonPriceEstHighestPrice.AutoSize = true;
-            this.radioButtonPriceEstHighestPrice.Location = new System.Drawing.Point(11, 225);
+            this.radioButtonPriceEstHighestPrice.Location = new System.Drawing.Point(10, 271);
             this.radioButtonPriceEstHighestPrice.Name = "radioButtonPriceEstHighestPrice";
             this.radioButtonPriceEstHighestPrice.Size = new System.Drawing.Size(180, 17);
             this.radioButtonPriceEstHighestPrice.TabIndex = 30;
@@ -404,7 +441,7 @@ namespace MKMTool
             // labelPriceEstLowestPrice
             // 
             this.labelPriceEstLowestPrice.AutoSize = true;
-            this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(332, 197);
+            this.labelPriceEstLowestPrice.Location = new System.Drawing.Point(331, 243);
             this.labelPriceEstLowestPrice.Name = "labelPriceEstLowestPrice";
             this.labelPriceEstLowestPrice.Size = new System.Drawing.Size(408, 13);
             this.labelPriceEstLowestPrice.TabIndex = 29;
@@ -415,7 +452,7 @@ namespace MKMTool
             // 
             this.numericUpDownPriceEstLowestPrice.DecimalPlaces = 2;
             this.numericUpDownPriceEstLowestPrice.Enabled = false;
-            this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(256, 195);
+            this.numericUpDownPriceEstLowestPrice.Location = new System.Drawing.Point(255, 241);
             this.numericUpDownPriceEstLowestPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -434,7 +471,7 @@ namespace MKMTool
             // radioButtonPriceEstByLowestPrice
             // 
             this.radioButtonPriceEstByLowestPrice.AutoSize = true;
-            this.radioButtonPriceEstByLowestPrice.Location = new System.Drawing.Point(11, 195);
+            this.radioButtonPriceEstByLowestPrice.Location = new System.Drawing.Point(10, 241);
             this.radioButtonPriceEstByLowestPrice.Name = "radioButtonPriceEstByLowestPrice";
             this.radioButtonPriceEstByLowestPrice.Size = new System.Drawing.Size(176, 17);
             this.radioButtonPriceEstByLowestPrice.TabIndex = 26;
@@ -447,7 +484,7 @@ namespace MKMTool
             // 
             this.radioButtonPriceEstPriceByAvg.AutoSize = true;
             this.radioButtonPriceEstPriceByAvg.Checked = true;
-            this.radioButtonPriceEstPriceByAvg.Location = new System.Drawing.Point(11, 126);
+            this.radioButtonPriceEstPriceByAvg.Location = new System.Drawing.Point(10, 114);
             this.radioButtonPriceEstPriceByAvg.Name = "radioButtonPriceEstPriceByAvg";
             this.radioButtonPriceEstPriceByAvg.Size = new System.Drawing.Size(159, 17);
             this.radioButtonPriceEstPriceByAvg.TabIndex = 25;
@@ -572,7 +609,7 @@ namespace MKMTool
             // checkBoxTestMode
             // 
             this.checkBoxTestMode.AutoSize = true;
-            this.checkBoxTestMode.Location = new System.Drawing.Point(23, 554);
+            this.checkBoxTestMode.Location = new System.Drawing.Point(22, 605);
             this.checkBoxTestMode.Name = "checkBoxTestMode";
             this.checkBoxTestMode.Size = new System.Drawing.Size(248, 17);
             this.checkBoxTestMode.TabIndex = 15;
@@ -586,7 +623,7 @@ namespace MKMTool
             this.groupBoxPresets.Controls.Add(this.buttonPresetsStore);
             this.groupBoxPresets.Controls.Add(this.buttonPresetsLoad);
             this.groupBoxPresets.Controls.Add(this.comboBoxPresets);
-            this.groupBoxPresets.Location = new System.Drawing.Point(13, 449);
+            this.groupBoxPresets.Location = new System.Drawing.Point(12, 500);
             this.groupBoxPresets.Name = "groupBoxPresets";
             this.groupBoxPresets.Size = new System.Drawing.Size(787, 99);
             this.groupBoxPresets.TabIndex = 16;
@@ -656,19 +693,11 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
-            // toolTipMaxPriceChange
-            // 
-            this.toolTipMaxPriceChange.ToolTipTitle = "Max price change";
-            // 
-            // toolTipMaxDifference
-            // 
-            this.toolTipMaxDifference.ToolTipTitle = "Max difference between consecutive items";
-            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(812, 578);
+            this.ClientSize = new System.Drawing.Size(812, 634);
             this.Controls.Add(this.groupBoxPresets);
             this.Controls.Add(this.checkBoxTestMode);
             this.Controls.Add(this.groupBoxLogSettings);
@@ -683,7 +712,9 @@ namespace MKMTool
             this.groupBoxConditionSettings.PerformLayout();
             this.groupBoxPriceEstim.ResumeLayout(false);
             this.groupBoxPriceEstim.PerformLayout();
+            this.panelPriceEstWorldForSliderLabel.ResumeLayout(false);
             this.panelPriceEstForSliderLabel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.trackBarPriceEstAvgWorld)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPriceEstAvg)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstHighestPrice)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstLowestPrice)).EndInit();
@@ -710,8 +741,6 @@ namespace MKMTool
         private System.Windows.Forms.Label labelMatchExplanation;
         private System.Windows.Forms.RadioButton radioButtonCondMatchOnly;
         private System.Windows.Forms.GroupBox groupBoxPriceEstim;
-        private System.Windows.Forms.Panel panelPriceEstForSliderLabel;
-        private System.Windows.Forms.Label labelPriceEstSliderValue;
         private System.Windows.Forms.TrackBar trackBarPriceEstAvg;
         private System.Windows.Forms.NumericUpDown numericUpDownPriceEstMaxN;
         private System.Windows.Forms.NumericUpDown numericUpDownPriceEstMinN;
@@ -739,9 +768,13 @@ namespace MKMTool
         private System.Windows.Forms.Button buttonPresetsStore;
         private System.Windows.Forms.Button buttonPresetsLoad;
         private System.Windows.Forms.ComboBox comboBoxPresets;
-        private System.Windows.Forms.ToolTip toolTipMaxPriceChange;
-        private System.Windows.Forms.ToolTip toolTipMaxDifference;
         private System.Windows.Forms.Label labelPresetsDescr;
         private System.Windows.Forms.CheckBox checkBoxPriceEstWorldwide;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Panel panelPriceEstWorldForSliderLabel;
+        private System.Windows.Forms.Panel panelPriceEstForSliderLabel;
+        private System.Windows.Forms.Label labelPriceEstSliderValue;
+        private System.Windows.Forms.TrackBar trackBarPriceEstAvgWorld;
+        private System.Windows.Forms.Label labelPriceEstSliderValueWorld;
     }
 }

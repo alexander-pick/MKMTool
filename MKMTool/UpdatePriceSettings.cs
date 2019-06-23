@@ -121,16 +121,17 @@ namespace MKMTool
             {
                 s.priceSetPriceBy = PriceSetMethod.ByAverage;
                 s.priceFactor = (double)trackBarPriceEstAvg.Value / (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum);
+                s.priceFactorWorldwide = (double)trackBarPriceEstAvgWorld.Value / (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum);
             }
             else if (radioButtonPriceEstByLowestPrice.Checked)
             {
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfLowestPrice;
-                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value) / 100;
+                s.priceFactor = s.priceFactorWorldwide = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value) / 100;
             }
             else
             {
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfHighestPrice;
-                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value) / 100;
+                s.priceFactor = s.priceFactorWorldwide = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value) / 100;
             }
             
             if (radioButtonCondMatchOnly.Checked)
@@ -183,6 +184,8 @@ namespace MKMTool
                 radioButtonPriceEstByLowestPrice.Checked = false;
                 radioButtonPriceEstHighestPrice.Checked = false;
                 trackBarPriceEstAvg.Value = (int)(settings.priceFactor * (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum) + trackBarPriceEstAvg.Minimum);
+                trackBarPriceEstAvgWorld.Value = (int)(settings.priceFactorWorldwide * 
+                    (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum) + trackBarPriceEstAvgWorld.Minimum);
             }
             else if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
             {
@@ -226,6 +229,7 @@ namespace MKMTool
 
             checkBoxTestMode.Checked = settings.testMode;
             checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
+            trackBarPriceEstAvgWorld.Enabled = settings.searchWorldwide;
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
@@ -259,6 +263,21 @@ namespace MKMTool
                 labelPriceEstSliderValue.Text = "Min Price + " + ((priceByAvg) * 2).ToString("f2") + " * (AVG - Min Price)";
             else
                 labelPriceEstSliderValue.Text = "AVG";
+        }
+
+        private void trackBarPriceEstAvgWorld_ValueChanged(object sender, EventArgs e)
+        {
+            priceByAvg = (double)trackBarPriceEstAvgWorld.Value / (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum);
+            if (priceByAvg == 1)
+                labelPriceEstSliderValueWorld.Text = "Max Price";
+            else if (priceByAvg > 0.5)
+                labelPriceEstSliderValueWorld.Text = "AVG + " + ((priceByAvg - 0.5) * 2).ToString("f2") + " * (Max Price - AVG)";
+            else if (priceByAvg == 0)
+                labelPriceEstSliderValueWorld.Text = "Min Price";
+            else if (priceByAvg < 0.5)
+                labelPriceEstSliderValueWorld.Text = "Min Price + " + ((priceByAvg) * 2).ToString("f2") + " * (AVG - Min Price)";
+            else
+                labelPriceEstSliderValueWorld.Text = "AVG";
         }
 
         private void radioButtonPriceEstPriceByAvg_CheckedChanged(object sender, EventArgs e)
@@ -427,6 +446,11 @@ namespace MKMTool
                     MKMHelpers.LogError("deleting preset", exc.Message, true);
                 }
             }
+        }
+
+        private void checkBoxPriceEstWorldwide_CheckedChanged(object sender, EventArgs e)
+        {
+            trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked;
         }
     }
 }

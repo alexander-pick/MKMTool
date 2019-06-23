@@ -75,7 +75,7 @@ namespace MKMTool
         //      min price and average (0-0.5) or average and highest price (0.5-1)
         // if price computed as percentage of lowest or highest price, priceFactor is that percentage
         public double priceFactor;
-
+        public double priceFactorWorldwide; // the same, but for worldwide search
 
         /// Card Condition Settings
         
@@ -117,6 +117,7 @@ namespace MKMTool
             priceMaxSimilarItems = refSettings.priceMaxSimilarItems;
             priceSetPriceBy = refSettings.priceSetPriceBy;
             priceFactor = refSettings.priceFactor;
+            priceFactorWorldwide = refSettings.priceFactorWorldwide;
             condAcceptance = refSettings.condAcceptance;
             logUpdated = refSettings.logUpdated;
             logLessThanMinimum = refSettings.logLessThanMinimum;
@@ -167,6 +168,7 @@ namespace MKMTool
                         break;
                 }
             }
+            temp.priceFactorWorldwide = -1;
             foreach (XmlNode att in root.Attributes)
             {
                 switch (att.Name)
@@ -185,6 +187,9 @@ namespace MKMTool
                         break;
                     case "priceFactor":
                         temp.priceFactor = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceFactorWorldwide":
+                        temp.priceFactorWorldwide = double.Parse(att.Value, CultureInfo.InvariantCulture);
                         break;
                     case "condAcceptance":
                         temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
@@ -215,6 +220,8 @@ namespace MKMTool
                         break;
                 }
             }
+            if (temp.priceFactorWorldwide == -1)
+                temp.priceFactorWorldwide = temp.priceFactor; // for backwards compatibility - in 0.6.1 and older version, priceFactorWorldwide was always the same as priceFactor
             this.Copy(temp); // nothing failed, let's keep the settings
         }
 
@@ -245,6 +252,8 @@ namespace MKMTool
             root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceSetPriceBy", priceSetPriceBy.ToString());
             root.SetAttribute("priceFactor", priceFactor.ToString("f2", CultureInfo.InvariantCulture));
+            root.SetAttribute("priceFactorWorldwide", priceFactorWorldwide.ToString("f2", CultureInfo.InvariantCulture));
+
 
             root.SetAttribute("condAcceptance", condAcceptance.ToString());
 
@@ -297,6 +306,7 @@ namespace MKMTool
             s.priceMaxSimilarItems = 4;
             s.priceSetPriceBy = PriceSetMethod.ByAverage;
             s.priceFactor = 0.5;
+            s.priceFactorWorldwide = 0.5;
 
             s.condAcceptance = AcceptedCondition.OnlyMatching;
 
@@ -590,9 +600,10 @@ namespace MKMTool
                 res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
             }
             double priceEstimation = 0;
+            double priceFactor = ignoreSellersCountry ? settings.priceFactorWorldwide : settings.priceFactor;
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
             {
-                priceEstimation = prices[0] * settings.priceFactor;
+                priceEstimation = prices[0] * priceFactor;
             }
             else if (res == TraverseResult.Culled)
             {
@@ -646,17 +657,17 @@ namespace MKMTool
                 if (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove)
                     lastMatch = prices.Count - 1;
                 if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
-                    priceEstimation = prices[lastMatch] * settings.priceFactor;
+                    priceEstimation = prices[lastMatch] * priceFactor;
                 else // estimation by average
                 {
                     for (int i = 0; i <= lastMatch; i++)
                         priceEstimation += prices[i]; // priceEstimation is initialized to 0 above
                     priceEstimation /= (lastMatch + 1);
                     // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
-                    if (settings.priceFactor > 0.5)
-                        priceEstimation += (prices[lastMatch] - priceEstimation) * (settings.priceFactor - 0.5) * 2;
-                    else if (settings.priceFactor < 0.5) // linear interpolation between lowest price and average
-                        priceEstimation = prices[0] + (priceEstimation - prices[0]) * (settings.priceFactor) * 2;
+                    if (priceFactor > 0.5)
+                        priceEstimation += (prices[lastMatch] - priceEstimation) * (priceFactor - 0.5) * 2;
+                    else if (priceFactor < 0.5) // linear interpolation between lowest price and average
+                        priceEstimation = prices[0] + (priceEstimation - prices[0]) * (priceFactor) * 2;
                 }
             }
                     // increase the estimate based on how many of those articles do we have in stock
