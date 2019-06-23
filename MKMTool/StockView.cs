@@ -53,14 +53,15 @@ namespace MKMTool
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.ToString());
+                MKMHelpers.LogError("loading expansions from database for Stock View", eError.Message, true);
+                return;
             }
 
+            int start = 1;
+            var articles = new DataTable();
+            Boolean first = true;
             try
             {
-                int start = 1;
-                var articles = new DataTable();
-                Boolean first = true;
                 while (true)
                 {
                     var doc = MKMInteract.RequestHelper.readStock(start);
@@ -111,22 +112,21 @@ namespace MKMTool
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.ToString());
+                MKMHelpers.LogError("listing stock in Stock View", eError.Message, true);
             }
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+            string searchString = searchBox.Text.Replace("'", "");
             try
             {
-                string searchString = searchBox.Text.Replace("'", "");
-
                 (stockGridView.DataSource as DataTable).DefaultView.RowFilter =
                     string.Format("Name LIKE '%{0}%'", searchString);
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.ToString());
+                MKMHelpers.LogError("searching for " + searchString + " in Stock View", eError.Message, true);
             }
 
         }

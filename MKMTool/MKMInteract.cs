@@ -39,8 +39,25 @@ namespace MKMTool
     {
         public class RequestHelper
         {
+            public static bool denyAdditionalRequests = false; // this switches to true once requests limit is reached for the day
+
+            /// <summary>
+            /// Makes a request from MKM's API. 
+            /// If the daily request limit has been reached, does not send the request and instead throws an exception.
+            /// </summary>
+            /// <param name="url">The http URL of the API.</param>
+            /// <param name="method">The name of the request method (PUT, GET, etc.).</param>
+            /// <param name="body">The body containing parameters of the method if applicable.</param>
+            /// <returns>Document containing the response from MKM.</returns>
+            /// <exception cref="HttpListenerException">429 - Too many requests. Wait for 0:00 CET for request counter to reset.</exception>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument makeRequest(string url, string method, string body = null)
             {
+                // throw the exception ourselves to prevent sending requests to MKM that would end with this error 
+                // because MKM tends to revoke the user's app token if it gets too many requests above the limit
+                // the 429 code is the same MKM uses for this error
+                if (denyAdditionalRequests)
+                    throw new HttpListenerException(429, "Too many requests. Wait for 0:00 CET for request counter to reset.");
                 var request = WebRequest.CreateHttp(url);
                 request.Method = method;
 
@@ -63,6 +80,11 @@ namespace MKMTool
                 var response = request.GetResponse() as HttpWebResponse;
                 var doc = new XmlDocument();
                 doc.Load(response.GetResponseStream());
+
+                int requestCount = int.Parse(response.Headers.Get("X-Request-Limit-Count"));
+                int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));
+                if (requestCount >= requestLimit)
+                    denyAdditionalRequests = true;
 
                 return doc;
             }
@@ -141,36 +163,76 @@ namespace MKMTool
                 return XMLContent;
             }
 
+            /// <summary>
+            /// Gets our account info.
+            /// </summary>
+            /// <returns>From MKM documentation: <i>Returns the Account entity of the authenticated user.</i></returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getAccount()
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/account", "GET");
             }
 
+            /// <summary>
+            /// Gets all our wantlists.
+            /// </summary>
+            /// <returns>From MKM documentation: <i>Returns a list with all of the user's wantslists, their name, associated game, and item count.</i></returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getWantsLists()
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist", "GET");
             }
 
+            /// <summary>
+            /// Gets wantlist by its ID.
+            /// </summary>
+            /// <param name="sID">Id of want list</param>
+            /// <returns>Returns a specific wantslist designated by the provided ID</returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getWantsListByID(string sID)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sID, "GET");
             }
 
+            /// <summary>
+            /// Gets our stock.
+            /// </summary>
+            /// <param name="start">How many first items in the stock to skip.</param>
+            /// <returns>Returns the users stock, starting from the specified item and grabbing the largest amount of 
+            /// items allowed by the API.</returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument readStock(int start = 1)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/stock/" + start, "GET");
             }
 
+            /// <summary>
+            /// From MKM documentation: <i>Empties the authenticated user's shopping cart.</i>
+            /// </summary>
+            /// <returns>Not used</returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument emptyCart()
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/shoppingcart", "DELETE");
             }
 
+            /// <summary>
+            /// Gets all cards from a given expansion.
+            /// </summary>
+            /// <param name="ExpansionID">ID of the expansion.</param>
+            /// <returns>From MKM documentation: <i>Returns all single cards for the specified expansion.</i></returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getExpansionsSingles(string ExpansionID)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/expansions/" + ExpansionID + "/singles", "GET"); ;
             }
 
+            /// <summary>
+            /// Gets all expansions from a given game.
+            /// </summary>
+            /// <param name="ExpansionID">Game ID (use 1 for M:tG).</param>
+            /// <returns>From MKM documentation: <i>Returns all expansions with single cards for the specified game..</i></returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getExpansions(string sGameID)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/games/" + sGameID + "/expansions", "GET");

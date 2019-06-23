@@ -338,16 +338,14 @@ namespace MKMTool
                 {
                     XmlDocument doc = new XmlDocument();
                     doc.Load(file.FullName);
-                    if (s.Parse(doc))
-                    {
-                        string name = file.Name.Substring(0, file.Name.Length - 4); // cut off the ".xml"
-                        presets[name] = s;
-                        comboBoxPresets.Items.Add(name);
-                    }
+                    s.Parse(doc);
+                    string name = file.Name.Substring(0, file.Name.Length - 4); // cut off the ".xml"
+                    presets[name] = s;
+                    comboBoxPresets.Items.Add(name);
                 }
-                catch (Exception)
+                catch (Exception eError)
                 {
-                    continue;
+                    MKMHelpers.LogError("reading preset " + file.Name, eError.Message, false);
                 }
             }
             comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add("Choose Preset...");
@@ -426,8 +424,7 @@ namespace MKMTool
                 }
                 catch (Exception exc)
                 {
-                    MessageBox.Show("Deleting preset faile: " + Environment.NewLine + Environment.NewLine + exc.Message,
-                        "Deleting preset failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MKMHelpers.LogError("deleting preset", exc.Message, true);
                 }
             }
         }

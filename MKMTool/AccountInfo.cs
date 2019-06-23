@@ -39,21 +39,26 @@ namespace MKMTool
         public AccountInfo()
         {
             InitializeComponent();
-                        
-            var doc = MKMInteract.RequestHelper.getAccount();
-
             treeView1.Nodes.Clear();
             treeView1.Nodes.Add(new TreeNode("Account Details"));
             var tNode = new TreeNode();
             tNode = treeView1.Nodes[0];
 
-            AddNode(doc["response"]["account"], tNode);
+            try
+            {
+                var doc = MKMInteract.RequestHelper.getAccount();
+
+                AddNode(doc["response"]["account"], tNode);
+            }
+            catch (System.Exception eError)
+            {
+                MKMHelpers.LogError("fetching account info", eError.Message, true);
+            }
             //treeView1.ExpandAll();
         }
 
         // SRC:
         // https://support.microsoft.com/de-de/help/317597/how-to-populate-a-treeview-control-with-xml-data-in-visual-c-2005-or-in-visual-c-.net
-
         private void AddNode(XmlNode inXmlNode, TreeNode inTreeNode)
         {
             XmlNode xNode;

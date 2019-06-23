@@ -52,14 +52,37 @@ namespace MKMTool
         public WantlistEditorView()
         {
             InitializeComponent();
-            
-            var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
+
+            eS.Columns.Add("idExpansion", typeof(string));
+            eS.Columns.Add("abbreviation", typeof(string));
+            eS.Columns.Add("enName", typeof(string));
+
+            foreach (var Lang in MKMHelpers.dLanguages)
+            {
+                var item = new MKMHelpers.ComboboxItem();
+
+                item.Text = Lang.Value;
+                item.Value = Lang.Key;
+
+                langCombo.Items.Add(item);
+
+                langCombo.SelectedIndex = 0;
+            }
+
+            XmlDocument doc = null;
+            try
+            {
+                doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
+            }
+            catch (Exception eError)
+            {
+                MKMHelpers.LogError("getting MTG expansions for wantlist editor, editor will be disabled", eError.Message, true);
+                addButton.Enabled = false;
+                deleteItemButton.Enabled = false;
+                return;
+            }
 
             var node = doc.GetElementsByTagName("expansion");
-
-            eS.Columns.Add("idExpansion", typeof (string));
-            eS.Columns.Add("abbreviation", typeof (string));
-            eS.Columns.Add("enName", typeof (string));
 
             foreach (XmlNode nExpansion in node)
             {
@@ -76,28 +99,7 @@ namespace MKMTool
 
                 editionBox.Items.Add(item);
             }
-
             editionBox.Sorted = true;
-
-            foreach (var Lang in MKMHelpers.dLanguages)
-            {
-                try
-                {
-                    var item = new MKMHelpers.ComboboxItem();
-
-                    item.Text = Lang.Value;
-                    item.Value = Lang.Key;
-
-                    langCombo.Items.Add(item);
-
-                    langCombo.SelectedIndex = 0;
-                }
-                catch (Exception eError)
-                {
-                    addButton.Enabled = false;
-                    deleteItemButton.Enabled = false;
-                }
-            }
 
             initWantLists();
 
@@ -108,73 +110,63 @@ namespace MKMTool
 
         public void initWantLists()
         {
+            XmlDocument doc = null;
+
             try
             {
-                var doc = MKMInteract.RequestHelper.getWantsLists();
-
-                var node = doc.GetElementsByTagName("wantslist");
-
-                if (node.Count > 0)
-                {
-                    foreach (XmlNode nWantlist in node)
-                    {
-                        try
-                        {
-                            var item = new MKMHelpers.ComboboxItem();
-
-                            item.Text = nWantlist["name"].InnerText;
-                            item.Value = nWantlist["idWantslist"].InnerText;
-
-                            wantListsBox.Items.Add(item);
-
-                            wantListsBox.SelectedIndex = 0;
-                        }
-                        catch (Exception eError)
-                        {
-                            addButton.Enabled = false;
-                            deleteItemButton.Enabled = false;
-                        }
-                    }
-                }
+                doc = MKMInteract.RequestHelper.getWantsLists();
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.ToString());
+                MKMHelpers.LogError("initializing want list, editor will be disabled", eError.Message, true);
+                addButton.Enabled = false;
+                deleteItemButton.Enabled = false;
+                return;
+            }
+
+            var node = doc.GetElementsByTagName("wantslist");
+
+            if (node.Count > 0)
+            {
+                foreach (XmlNode nWantlist in node)
+                {
+                    var item = new MKMHelpers.ComboboxItem();
+
+                    item.Text = nWantlist["name"].InnerText;
+                    item.Value = nWantlist["idWantslist"].InnerText;
+
+                    wantListsBox.Items.Add(item);
+
+                    wantListsBox.SelectedIndex = 0;
+                }
             }
         }
 
         public void initCardView()
         {
-            try
+            cardView.View = View.Details;
+            cardView.GridLines = true;
+            cardView.FullRowSelect = true;
+
+            cardView.BackColor = Color.WhiteSmoke;
+
+            cardView.Columns.Add("ProduktID", 60);
+            cardView.Columns.Add("Card Name", 220);
+            cardView.Columns.Add("Edition", 120);
+
+            dj = new DataTable();
+
+            dj = MKMHelpers.JoinDataTables(dt, eS,
+                (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
+
+            foreach (DataRow row in dj.Rows)
             {
-                cardView.View = View.Details;
-                cardView.GridLines = true;
-                cardView.FullRowSelect = true;
+                var item = new ListViewItem(row["idProduct"].ToString());
 
-                cardView.BackColor = Color.WhiteSmoke;
+                item.SubItems.Add(row["Name"].ToString());
+                item.SubItems.Add(row["enName"].ToString());
 
-                cardView.Columns.Add("ProduktID", 60);
-                cardView.Columns.Add("Card Name", 220);
-                cardView.Columns.Add("Edition", 120);
-
-                dj = new DataTable();
-
-                dj = MKMHelpers.JoinDataTables(dt, eS,
-                    (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
-
-                foreach (DataRow row in dj.Rows)
-                {
-                    var item = new ListViewItem(row["idProduct"].ToString());
-
-                    item.SubItems.Add(row["Name"].ToString());
-                    item.SubItems.Add(row["enName"].ToString());
-
-                    cardView.Items.Add(item);
-                }
-            }
-            catch (Exception eError)
-            {
-                MessageBox.Show(eError.ToString());
+                cardView.Items.Add(item);
             }
         }
 
@@ -220,43 +212,34 @@ namespace MKMTool
 
         private void wantsListBoxReload()
         {
-            try
+            var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+
+            wantsView.Columns.Clear();
+
+            var ds = MainView.Instance().Bot.buildProperWantsList(sListId);
+
+            if (ds.Select().Length > 0)
             {
-                var bot = new MKMBot();
+                wantsView.AutoGenerateColumns = true;
+                wantsView.DataSource = ds;
 
-                var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+                wantsView.Refresh();
 
-                wantsView.Columns.Clear();
+                wantsView.Columns["idProduct"].Visible = false;
+                wantsView.Columns["Category ID"].Visible = false;
+                wantsView.Columns["Expansion ID"].Visible = false;
+                wantsView.Columns["Date Added"].Visible = false;
+                wantsView.Columns["idExpansion"].Visible = false;
+                wantsView.Columns["abbreviation"].Visible = false;
+                wantsView.Columns["idWant"].Visible = false;
+                wantsView.Columns["item_Id"].Visible = false;
+                wantsView.Columns["wantslist_Id"].Visible = false;
+                wantsView.Columns["type"].Visible = false;
+                wantsView.Columns["wishPrice"].Visible = false;
+                wantsView.Columns["count"].Visible = false;
 
-                var ds = bot.buildProperWantsList(sListId);
-
-                if (ds.Select().Length > 0)
-                {
-                    wantsView.AutoGenerateColumns = true;
-                    wantsView.DataSource = ds;
-
-                    wantsView.Refresh();
-
-                    wantsView.Columns["idProduct"].Visible = false;
-                    wantsView.Columns["Category ID"].Visible = false;
-                    wantsView.Columns["Expansion ID"].Visible = false;
-                    wantsView.Columns["Date Added"].Visible = false;
-                    wantsView.Columns["idExpansion"].Visible = false;
-                    wantsView.Columns["abbreviation"].Visible = false;
-                    wantsView.Columns["idWant"].Visible = false;
-                    wantsView.Columns["item_Id"].Visible = false;
-                    wantsView.Columns["wantslist_Id"].Visible = false;
-                    wantsView.Columns["type"].Visible = false;
-                    wantsView.Columns["wishPrice"].Visible = false;
-                    wantsView.Columns["count"].Visible = false;
-
-                    wantsView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-                    wantsView.ReadOnly = true;
-                }
-            }
-            catch (Exception eError)
-            {
-                MessageBox.Show(eError.ToString());
+                wantsView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+                wantsView.ReadOnly = true;
             }
         }
 
@@ -290,50 +273,40 @@ namespace MKMTool
 
                     MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sListId, "PUT",
                         sRequestXML);
-
-                    //MessageBox.Show("Item " + idProduct + " added successfully!");
                 }
                 catch (Exception eError)
                 {
-                    //frm1.logBox.Invoke(new Form1.logboxAppendCallback(this.logBoxAppend), "ERR Msg : " + eError.Message + "\n", frm1);
-                    MessageBox.Show(eError.Message);
+                    MKMHelpers.LogError("adding to wantlist, product id " + idProduct, eError.Message, true, sRequestXML);
                     return;
                 }
             }
-
             wantsListBoxReload();
         }
 
         private void deleteItemButton_Click(object sender, EventArgs e)
         {
+            var iCellIndex = wantsView.Columns["idWant"].Index;
+
+            if (wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString() == "")
+            {
+                MessageBox.Show("Please select the row you want to delete!");
+                return;
+            }
+            var idWant = wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString();
+
+            var sRequestXML = MKMInteract.RequestHelper.deleteWantsListBody(idWant);
+            sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
+            var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+
             try
             {
-                var iCellIndex = wantsView.Columns["idWant"].Index;
-
-                if (wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString() == "")
-                {
-                    MessageBox.Show("Please select the row you want to delete!");
-                    return;
-                }
-
-                var idWant = wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString();
-
-                var sRequestXML = MKMInteract.RequestHelper.deleteWantsListBody(idWant);
-
-                sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
-
-
-                var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
-
                 MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sListId, "PUT",
                     sRequestXML);
-
                 wantsListBoxReload();
             }
             catch (Exception eError)
             {
-                //frm1.logBox.Invoke(new Form1.logboxAppendCallback(this.logBoxAppend), "ERR Msg : " + eError.Message + "\n", frm1);
-                MessageBox.Show(eError.Message);
+                MKMHelpers.LogError("deleting from wantlist item #" + idWant, eError.Message, true, sRequestXML);
             }
         }
 

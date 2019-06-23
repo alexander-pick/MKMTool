@@ -118,6 +118,7 @@
             this.runtimeIntervall.Size = new System.Drawing.Size(34, 20);
             this.runtimeIntervall.TabIndex = 10;
             this.runtimeIntervall.Text = "1440";
+            this.runtimeIntervall.TextChanged += new System.EventHandler(this.runtimeIntervall_TextChanged);
             // 
             // label1
             // 

@@ -56,6 +56,41 @@ namespace MKMTool
 
         private MKMBot bot;
 
+        /// <summary>
+        /// The price updating bot of the application's main window. Initialized at the start of the application.
+        /// </summary>
+        /// <value>
+        /// The bot.
+        /// </value>
+        internal MKMBot Bot
+        {
+            get
+            {
+                return bot;
+            }
+        }
+
+        private static MainView instance = null; // singleton instance of the main app window
+
+        /// <summary>
+        /// The main application window as a singleton so that it can be easily accessed from anywhere without having to pass it around as method's argument.
+        /// Not thread-safe, but we don't care because the first instance is created right at the begging by the main thread.
+        /// </summary>
+        /// <returns>The main application window</returns>
+        public static MainView Instance()
+        {
+            if (instance == null)
+            {
+                instance = new MainView();
+                instance.Load += new EventHandler(instance.initialize);
+            }
+            return instance;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainView"/> class.
+        /// Keep the constructor simple - put any initializations that might call MainView.Instance() (which is anything really) in the Initialize() method.
+        /// </summary>
         public MainView()
         {
             InitializeComponent();
@@ -63,30 +98,38 @@ namespace MKMTool
 #if DEBUG
             logBox.AppendText("DEBUG MODE ON!\n");
 #endif
+
+            if (!File.Exists(@".\\config.xml"))
+            {
+                MessageBox.Show("No config file found! Create a config.xml first.");
+
+                Application.Exit();
+            }
+        }
+
+        /// <summary>
+        /// Initializes the instance of this MainView.
+        /// Because error logging mechanism uses the MainView's console, it needs to be called only after the handle for the window
+        /// has been created --> during the "Load" event or later (after the form has been created and shown).
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void initialize(object sender, EventArgs e)
+        {
+            timer.Interval = 1440 * 1000 * 60; // set the interval to one day (1440 minutes in ms)
             try
             {
-
-
-                if (!File.Exists(@".\\config.xml"))
-                {
-                    MessageBox.Show("No config file found! Create a config.xml first.");
-
-                    Application.Exit();
-                }
-
                 MKMHelpers.GetProductList();
-                                
                 var doc2 = MKMInteract.RequestHelper.getAccount();
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
                 MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
-
-                bot = new MKMBot();
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.Message);
+                MKMHelpers.LogError("initializing product list and account info", eError.Message, true);
             }
+            bot = new MKMBot();
         }
 
         private void loginButton_Click(object sender, EventArgs e)
@@ -107,7 +150,7 @@ namespace MKMTool
 
         private void updatePriceRun()
         {
-            bot.updatePrices(this);
+            bot.updatePrices();
         }
 
         private async void updatePriceButton_Click(object sender, EventArgs e)
@@ -149,9 +192,7 @@ namespace MKMTool
 
                 logBox.AppendText("Timing MKM Update job every " + Convert.ToInt32(runtimeIntervall.Text) +
                                   " minutes." + Environment.NewLine);
-
-                timer.Interval = Convert.ToInt32(runtimeIntervall.Text) * 1000 * 60;
-
+                
                 timer.Elapsed += updatePriceEvent;
 
                 timer.Start();
@@ -178,27 +219,18 @@ namespace MKMTool
 
         private void updatePriceEvent(object sender, ElapsedEventArgs e)
         {
-            //var mainForm = Application.OpenForms["Form1"] != null ? (MainView) Application.OpenForms["Form1"] : null;
-
-            try
-            {
-                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job..." + Environment.NewLine);
-            }
-            catch (Exception eError)
-            {
-                MessageBox.Show(eError.ToString());
-            }
+            logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job..." + Environment.NewLine);
 
             MKMBotSettings s;
             if (settingsWindow.GenerateBotSettings(out s))
             {
                 bot.setSettings(s);
                 updatePriceButton.Text = "Updating...";
-                bot.updatePrices(this); //mainForm
+                bot.updatePrices(); //mainForm
                 updatePriceButton.Text = "Update Prices";
             }
             else
-                logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
+                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Update abandoned, incorrect setting parameters." + Environment.NewLine);
         }
 
         public void logBoxAppend(string text)
@@ -233,11 +265,11 @@ namespace MKMTool
                 bot.setSettings(s);
 
                 string sFilename = bot.getBuys(this, "8"); //mainForm
-
-                Process.Start(sFilename);
+                if (sFilename != "")
+                    Process.Start(sFilename);
             }
             else
-                logBox.AppendText("Bud data download abandoned, incorrect setting parameters." + Environment.NewLine);
+                logBox.AppendText("Buy data download abandoned, incorrect setting parameters." + Environment.NewLine);
         }
 
         private void buttonSettings_Click(object sender, EventArgs e)
@@ -246,6 +278,16 @@ namespace MKMTool
                 settingsWindow.Hide();
             else
                 settingsWindow.Show(this);
+        }
+
+        // validate that it is numerical
+        private void runtimeIntervall_TextChanged(object sender, EventArgs e)
+        {
+            int res;
+            if (Int32.TryParse(runtimeIntervall.Text, out res))
+                timer.Interval = res * 1000 * 60;
+            else
+                runtimeIntervall.Text = "" + (int)(timer.Interval / 60000);
         }
     }
 }

@@ -39,7 +39,7 @@
             this.checkEditionButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.checkBestInter = new System.Windows.Forms.CheckBox();
-            this.domnesticCheck = new System.Windows.Forms.CheckBox();
+            this.domesticCheck = new System.Windows.Forms.CheckBox();
             this.maxPrice = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.checkTrend = new System.Windows.Forms.CheckBox();
@@ -146,7 +146,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.checkBestInter);
-            this.groupBox1.Controls.Add(this.domnesticCheck);
+            this.groupBox1.Controls.Add(this.domesticCheck);
             this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Controls.Add(this.maxPrice);
             this.groupBox1.Controls.Add(this.label3);
@@ -174,17 +174,17 @@
             this.checkBestInter.Text = "check best price international";
             this.checkBestInter.UseVisualStyleBackColor = true;
             // 
-            // domnesticCheck
+            // domesticCheck
             // 
-            this.domnesticCheck.AutoSize = true;
-            this.domnesticCheck.Checked = true;
-            this.domnesticCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.domnesticCheck.Location = new System.Drawing.Point(6, 115);
-            this.domnesticCheck.Name = "domnesticCheck";
-            this.domnesticCheck.Size = new System.Drawing.Size(151, 17);
-            this.domnesticCheck.TabIndex = 15;
-            this.domnesticCheck.Text = "check domestic deals only";
-            this.domnesticCheck.UseVisualStyleBackColor = true;
+            this.domesticCheck.AutoSize = true;
+            this.domesticCheck.Checked = true;
+            this.domesticCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.domesticCheck.Location = new System.Drawing.Point(6, 115);
+            this.domesticCheck.Name = "domesticCheck";
+            this.domesticCheck.Size = new System.Drawing.Size(151, 17);
+            this.domesticCheck.TabIndex = 15;
+            this.domesticCheck.Text = "check domestic deals only";
+            this.domesticCheck.UseVisualStyleBackColor = true;
             // 
             // maxPrice
             // 
@@ -411,7 +411,7 @@
         private System.Windows.Forms.CheckBox checkTrend;
         private System.Windows.Forms.TextBox maxPrice;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.CheckBox domnesticCheck;
+        private System.Windows.Forms.CheckBox domesticCheck;
         private System.Windows.Forms.CheckBox checkBestInter;
         private System.Windows.Forms.TextBox textBoxUser;
         private System.Windows.Forms.CheckBox checkBoxUser;

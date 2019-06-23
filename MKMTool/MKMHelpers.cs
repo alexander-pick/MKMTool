@@ -46,8 +46,7 @@ namespace MKMTool
 {
     public static class MKMHelpers
     {
-
-        // My origin country (to find domnestic deals)
+        // My origin country (to find domestic deals)
         public static string sMyOwnCountry = "D";
 
         // My userId (to disregard items listed by myself when setting a new price)
@@ -78,7 +77,7 @@ namespace MKMTool
         /// <summary>
         /// Determines whether the specified condition is better than the reference condition.
         /// Mint and Near Mint are considered to be the same.
-        /// According to API: (MT for Mint > NM for Near Mint > EX for Exellent > GD for Good > LP for Light Played > PL for Played > PO for Poor) 
+        /// According to API: (MT for Mint > NM for Near Mint > EX for Excellent > GD for Good > LP for Light Played > PL for Played > PO for Poor) 
         /// </summary>
         /// <param name="itemCond">Card condition.</param>
         /// <param name="reference">The reference condition.</param>
@@ -323,7 +322,7 @@ namespace MKMTool
             }
             catch (Exception Ex)
             {
-                MessageBox.Show(Ex.Message);
+                MKMHelpers.LogError("bulk insert data table", Ex.Message, true);
             }
         }
 
@@ -379,23 +378,31 @@ namespace MKMTool
         {
             if (!File.Exists(@".\\mkminventory.csv"))
             {
-                var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
+                try
+                {
+                    var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
 
-                var node = doc.GetElementsByTagName("response");
+                    var node = doc.GetElementsByTagName("response");
 
-                var zipPath = @".\\mkminventory.zip";
+                    var zipPath = @".\\mkminventory.zip";
 
-                foreach (XmlNode aFile in node)
-                    if (aFile["productsfile"].InnerText != null)
-                    {
-                        var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
-                        File.WriteAllBytes(zipPath, data);
-                    }
+                    foreach (XmlNode aFile in node)
+                        if (aFile["productsfile"].InnerText != null)
+                        {
+                            var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
+                            File.WriteAllBytes(zipPath, data);
+                        }
 
-                var file = File.ReadAllBytes(zipPath);
-                var aDecompressed = gzDecompress(file);
+                    var file = File.ReadAllBytes(zipPath);
+                    var aDecompressed = gzDecompress(file);
 
-                File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
+                    File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
+                }
+                catch (Exception eError)
+                {
+                    MKMHelpers.LogError("parsing mkm inventory, product list cannot be obtained", eError.Message, true);
+                    return;
+                }
             }
 
             //db init
@@ -486,13 +493,51 @@ namespace MKMTool
             }
             catch (Exception Ex)
             {
-                MessageBox.Show(Ex.Message);
+                LogError("building expansions table", Ex.Message, true);
             }
-
-
-
-
         }
+
+        /// <summary>
+        /// Method for unified logging of exceptions and errors. Writes the error in the application's console, the error log file and
+        /// if requested, shows a pop-up window with the error message.
+        /// The error message will be "Error with 'subject': 'errorMessage' @ URL: 'sURL'" (URL part is optional and only logged in file).
+        /// </summary>
+        /// <param name="subject">The variable/item/process that caused the error. The error message will start "Error with 'subject': ...".</param>
+        /// <param name="errorMessage">The error message to log.</param>
+        /// <param name="popup">If set to <c>true</c>, a pop-up window with the message will be showed. In general, use this for errors
+        /// that interrupt the current action completely.</param>
+        /// <param name="sURL">When relevant (= in case of exceptions invoked by an API request), include the URL that triggered it. Leave empty for other errors.
+        /// Since the URL can be very long, it is never outputted in the console window, only in the file.</param>
+        public static void LogError(string subject, string errorMessage, bool popup, string sURL = "")
+        {
+            // if this the first error of this run, write a header with current date and time in the error log file to know which errors are old and which new
+            // monitoring when (if) first error happens helps limit the size of the log in runs when no error happens
+            // TODO - maybe clean the log once in a while?
+            if (firstError) 
+            {
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                using (var sw = File.AppendText(@".\\error_log.txt"))
+                {
+                    sw.WriteLine(DateTime.Now.ToString() + ", version: " + fileVersionInfo.ProductVersion);
+                    firstError = false;
+                }
+            }
+            string msg = "Error with " + subject + ": " + errorMessage;
+            using (var sw = File.AppendText(@".\\error_log.txt"))
+            {
+                if (sURL.Length > 0)
+                    sw.WriteLine(msg + " @ " + sURL);
+                else
+                    sw.WriteLine(msg);
+            }
+            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend), msg + "\n");
+
+            if (popup)
+                MessageBox.Show(msg);
+        }
+
+        private static bool firstError = true; // for logging errors, see LogError()
 
         public class ComboboxItem
         {

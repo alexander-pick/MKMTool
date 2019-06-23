@@ -78,7 +78,7 @@ namespace MKMTool
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.Message);
+                MKMHelpers.LogError("initializing expansions for display price check", eError.Message, true);
             }
         }
 
@@ -86,7 +86,7 @@ namespace MKMTool
         {
             try
             {
-                //used to determain index of best start edition
+                //used to determine index of best start edition
                 //MessageBox.Show((editionBox.SelectedIndex.ToString()));
 
                 var doc =
@@ -234,7 +234,7 @@ namespace MKMTool
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.Message);
+                MKMHelpers.LogError("checking display prices", eError.Message, true);
             }
         }
     }
