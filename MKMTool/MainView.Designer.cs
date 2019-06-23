@@ -51,6 +51,7 @@
             // 
             // loginButton
             // 
+            this.loginButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.loginButton.Location = new System.Drawing.Point(532, 347);
             this.loginButton.Margin = new System.Windows.Forms.Padding(2);
             this.loginButton.Name = "loginButton";
@@ -62,6 +63,7 @@
             // 
             // readStockButton
             // 
+            this.readStockButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.readStockButton.Location = new System.Drawing.Point(638, 347);
             this.readStockButton.Margin = new System.Windows.Forms.Padding(2);
             this.readStockButton.Name = "readStockButton";
@@ -73,6 +75,9 @@
             // 
             // logBox
             // 
+            this.logBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.logBox.Location = new System.Drawing.Point(109, 11);
             this.logBox.Margin = new System.Windows.Forms.Padding(2);
             this.logBox.Multiline = true;
@@ -114,6 +119,7 @@
             // 
             // runtimeIntervall
             // 
+            this.runtimeIntervall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.runtimeIntervall.Location = new System.Drawing.Point(3, 347);
             this.runtimeIntervall.Name = "runtimeIntervall";
             this.runtimeIntervall.Size = new System.Drawing.Size(34, 20);
@@ -123,6 +129,7 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(41, 350);
             this.label1.Name = "label1";
@@ -132,6 +139,7 @@
             // 
             // autoUpdateCheck
             // 
+            this.autoUpdateCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.autoUpdateCheck.AutoSize = true;
             this.autoUpdateCheck.Location = new System.Drawing.Point(85, 349);
             this.autoUpdateCheck.Name = "autoUpdateCheck";
@@ -206,6 +214,7 @@
             // 
             // buttonSettings
             // 
+            this.buttonSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSettings.Location = new System.Drawing.Point(426, 347);
             this.buttonSettings.Margin = new System.Windows.Forms.Padding(2);
             this.buttonSettings.Name = "buttonSettings";
@@ -217,6 +226,7 @@
             // 
             // labelRequestCounter
             // 
+            this.labelRequestCounter.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.labelRequestCounter.AutoSize = true;
             this.labelRequestCounter.ForeColor = System.Drawing.SystemColors.ControlText;
             this.labelRequestCounter.Location = new System.Drawing.Point(178, 350);
@@ -246,10 +256,10 @@
             this.Controls.Add(this.readStockButton);
             this.Controls.Add(this.loginButton);
             this.Controls.Add(this.groupBox1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(760, 417);
             this.Name = "MainView";
             this.Text = "MKMTool 0.6 - Alexander Pick 2017 - Licensed under GPL v3 ";
             this.groupBox1.ResumeLayout(false);

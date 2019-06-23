@@ -95,6 +95,9 @@ namespace MKMTool
         public MainView()
         {
             InitializeComponent();
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+            this.Text = "MKMTool " + fileVersionInfo.ProductVersion + " - Alexander Pick 2017 - Licensed under GPL v3";
 
 #if DEBUG
             logBox.AppendText("DEBUG MODE ON!\n");
