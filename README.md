@@ -8,6 +8,7 @@ version 0.7.0, x.x.2019 (by Tomas Janak)
 + The main window can now be enlarged
 + The number of API calls you sent to MKM is now displayed on the bottom of the window along the maximum number of calls you are allowed. When the limit is reached, MKMTool will no longer send any requests to MKM until you restart MKMTool or new day has passed (MKM resets the counter on 0:00 CET). The number of calls comes directly from MKM (they send it with each call), so it is 100% reliable. When you have only 50 calls remaining, the text will turn red to warn you.
 + Added the option to add markup on estimated price when you have multiple copies of a given card (see documentation below)
++ Reworked GUI for Check for cheap deals. Also, for user check you can now filter only cards from the specified expansion rather than checking all cards of the user
 
 9.2.2019 (by Tomas Janak)
 + Fixed "Bad Request 400" error when working with more than 100 items (partially by Ramiro Aparicio) after API changes announced on 6.2.2019
@@ -136,13 +137,14 @@ You must feel comfortable with the formula or change it to your demands, be awar
 
 ### Check for cheap deals
 
-![screenshot](http://www.alexander-pick.com/github/tool2.PNG)
+![screenshot](checkCheapDeals.png)
 
-For the fun of it – with this feature you can find cheap deals with X percent cheaper than other vendors and cheaper than the Trend if selected. The algo calcs + 1 Eur fixed for shipping to score you a good deal with resale value. It’s also possible to check for cheap deals of cards on your wants list, use this if you are only looking for specific cards. Beware, this feature is API call heavy.
+For the fun of it – with this feature you can find cheap deals with X percent cheaper (the first parameter, see figure above) than other vendors and cheaper than the Trend if selected. You can specify a shipping addition to be added to the lowest found price to ensure a good deal. If cards are found they are directly added to your cart on MKM, just log in and check your cart. Use the parameters on the right side of the window to specify what kind of cards you are looking for and how it should be priced. There are three ways to check cheap deals:
++ Whole expansion check: all cards from a given expansion will be checked for cheap deals.
++ User check: just fill in the username and MKMTool will look through all articles from the specified user and check them for cheap deals. By default, all cards, regardless of expansion, are checked. You can uncheck the checkbox above the button to ensure that only cards from the specified expansion will be taken into account.
++ Wantlist check: specify one of your wantlists in the drop-down menu above the button and MKMTool will look for cheap deals for all the cards in the list. Note that in this case, all the "Card parameters" are ignored - all the cards in the wantlist are checked. The "Price parameters" are still used though.
 
-If cards are found they are directly added to your cart on MKM, just log in and check your cart.
 
-You can also specify to look for cheap deals from a given user - check the "User" checkbox and then fill in the username. The same algorithm will be used, but only on stock of that user.
 
 ### Check Display Value
 

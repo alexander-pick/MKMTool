@@ -155,7 +155,7 @@ namespace MKMTool
                 return;
             }
 
-            frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                 "Starting to check your Wantlist ID:" + listID + " ...\n");
             var node = doc.GetElementsByTagName("item");
             foreach (XmlNode article in node)
@@ -166,8 +166,8 @@ namespace MKMTool
                 else
                     sProductID = article["metaproduct"]["idMetaproduct"].InnerText; // apparently even normal cards can be metaproducts...whatever that means
 
-                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                    "checking:" + sProductID + " ...\n");
+                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    "checking product ID:" + sProductID + " ...\n");
 
                 // a wantlist item can have more idLanguage entries, one for each wanted language
                 System.Collections.Generic.List<string> selectedLanguages = new System.Collections.Generic.List<string>();
@@ -181,8 +181,6 @@ namespace MKMTool
                     // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
                     int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
                     "", maxAllowedPrice, shippingAdd, percentBelow, checkTrend);
-
-                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
             }
         }
 
@@ -190,21 +188,19 @@ namespace MKMTool
         {
             string sListId = (wantListsBox2.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
-            // the window controls can't be accesed from a different thread -> have to parse them here and send as arguments
+            // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
             double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
             double shippingAdd = Convert.ToDouble(shipAddition.Text);
             double percentBelow = Convert.ToDouble(percentText.Text);
             bool checkTrend = checkBoxTrend.Checked;
 
-            groupBoxBulkCheck.Enabled = false;
-            groupBoxPriceParam.Enabled = false;
-            groupBoxWantlist.Enabled = false;
+            groupBoxParams.Enabled = false;
+            groupBoxPerform.Enabled = false;
             checkListButton.Text = "Checking wantlist...";
             await Task.Run(() => checkListRun(sListId, maxAllowedPrice, shippingAdd, percentBelow, checkTrend));
             checkListButton.Text = "Check selected list";
-            groupBoxBulkCheck.Enabled = true;
-            groupBoxPriceParam.Enabled = true;
-            groupBoxWantlist.Enabled = true;
+            groupBoxParams.Enabled = true;
+            groupBoxPerform.Enabled = true;
         }
 
         private void wantListsBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -218,7 +214,7 @@ namespace MKMTool
             {
                 MKMInteract.RequestHelper.emptyCart();
 
-                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Shopping Cart emptied.\n");
+                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend), "Shopping Cart emptied.\n");
             }
             catch (Exception eError)
             {
@@ -227,92 +223,101 @@ namespace MKMTool
         }
 
         /// <summary>
-        /// For actually performing the check for cheap deals, expected to be run in its separate thread
+        /// For actually performing the check for cheap deals from a given user, expected to be run in its separate thread.
         /// </summary>
-        private void checkCheapDealsRun(string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
-            bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
-            System.Collections.Generic.List<string> selectedLanguage, string user = "")
+        /// <param name="selectedExpansionID">Leave as empty string if all expansion should be checked.</param>
+        private void checkUserRun(string user, string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
+            bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend,
+            System.Collections.Generic.List<string> selectedLanguage, string selectedExpansionID = "")
         {
-            if (user != "")
+            if (domesticOnly)
+                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    "WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.\n");
+            // Go through the stock of a specified user, checks for cheap deals and add them to the cart.
+            int start = 0;
+            while (true)
             {
-                if (domesticOnly)
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                        "WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.\n");
-                // Go through the stock of a specified user, checks for cheap deals and add them to the cart.
-                int start = 0;
-                while (true)
+                String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
+
+                try
                 {
-                    String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
+                    // get the users stock, filtered by the selected parameters
+                    var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
 
-                    try
+                    var node2 = doc2.GetElementsByTagName("article");
+                    foreach (XmlNode article in node2)
                     {
-                        // get the users stock, filtered by the selected parameters
-                        var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
-
-                        var node2 = doc2.GetElementsByTagName("article");
-                        foreach (XmlNode article in node2)
+                        if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
                         {
-                            if ( // do as much filtering here as possible to reduce the number of API calls
-                                MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, minCondition) &&
-                                (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
-                                (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
-                                (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
-                                (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
-                                (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
-                                (maxPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
-                                )
+                            DataRow[] result = dt.Select(string.Format("[idProduct] = '{0}'", article["idProduct"].InnerText));
+                            if (result.Length != 1 ||  // should always be exactly 1, but to be sure
+                                result[0].Field<string>("Expansion ID") != selectedExpansionID) // compare
                             {
-
-                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                                    "Checking: " + article["idProduct"].InnerText + "\n");
-                                checkArticle(article["idProduct"].InnerText,
-                                    selectedLanguage, minCondition, isFoil, isSigned,
-                                    isAltered, isPlayset, article["idArticle"].InnerText, maxPrice, shippingAddition, percentBelowOthers, checkTrend);
-
-                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
+                                continue;
                             }
                         }
-                        if (node2.Count != 1000) // there is no additional items to fetch
-                            break;
+
+                        if ( // do as much filtering here as possible to reduce the number of API calls
+                            MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, minCondition) &&
+                            (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
+                            (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
+                            (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
+                            (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
+                            (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
+                            (maxPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
+                            )
+                        {
+
+                            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                                "Checking product ID: " + article["idProduct"].InnerText + "\n");
+                            checkArticle(article["idProduct"].InnerText,
+                                selectedLanguage, minCondition, isFoil, isSigned,
+                                isAltered, isPlayset, article["idArticle"].InnerText, maxPrice, shippingAddition, percentBelowOthers, checkTrend);
+                        }
                     }
-                    catch (Exception eError)
-                    {
-                        MKMHelpers.LogError("looking for cheap deals from user " + user, eError.Message, false, sUrl);
+                    if (node2.Count != 1000) // there is no additional items to fetch
                         break;
-                    }
-                    start += 1000;
                 }
+                catch (Exception eError)
+                {
+                    MKMHelpers.LogError("looking for cheap deals from user " + user, eError.Message, false, sUrl);
+                    break;
+                }
+                start += 1000;
             }
-            else
+        }
+
+        /// <summary>
+        /// For actually performing the check for cheap deals, expected to be run in its separate thread
+        /// </summary>
+        private void checkExpansionRun(string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
+            bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
+            System.Collections.Generic.List<string> selectedLanguage)
+        {
+            var sT = dt.Clone();
+
+            var result = dt.Select(string.Format("[Expansion ID] = '{0}'", selectedExpansionID));
+
+            foreach (var row in result)
             {
-                var sT = dt.Clone();
+                sT.ImportRow(row);
+            }
 
-                var result = dt.Select(string.Format("[Expansion ID] = '{0}'", selectedExpansionID));
-
-                foreach (var row in result)
-                {
-                    sT.ImportRow(row);
-                }
-
-                foreach (DataRow oRecord in sT.Rows)
-                {
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                        "Checking: " + oRecord["Name"] + "\n");
-                    checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
-                        isAltered, isPlayset, "", maxPrice, shippingAddition, percentBelowOthers, checkTrend);
-
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Done.\n");
-                }
+            foreach (DataRow oRecord in sT.Rows)
+            {
+                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    "Checking: " + oRecord["Name"] + "\n");
+                checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
+                    isAltered, isPlayset, "", maxPrice, shippingAddition, percentBelowOthers, checkTrend);
             }
         }
 
         private async void checkEditionButton_Click(object sender, EventArgs e)
         {
-            groupBoxBulkCheck.Enabled = false;
-            groupBoxPriceParam.Enabled = false;
-            groupBoxWantlist.Enabled = false;
+            groupBoxParams.Enabled = false;
+            groupBoxPerform.Enabled = false;
             checkEditionButton.Text = "Checking cheap deals...";
-            // the window controls can't be accesed from a different thread -> have to parse them here and send as arguments
+            // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
             string isFoil = "";
             string isSigned = "";
             string isAltered = "";
@@ -339,14 +344,55 @@ namespace MKMTool
             System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>();
             selectedLanguage.Add((langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
 
-            await Task.Run(() => checkCheapDealsRun(isFoil, isSigned, isAltered, isPlayset, minCondition, 
+            await Task.Run(() => checkExpansionRun(isFoil, isSigned, isAltered, isPlayset, minCondition, 
                 domesticCheck.Checked, maxAllowedPrice, shippingAdd, percentBelow, checkTrend, selectedExpansionID,
-                selectedLanguage, (checkBoxUser.Checked ? textBoxUser.Text : "")));
+                selectedLanguage));
 
             checkEditionButton.Text = "Check now";
-            groupBoxBulkCheck.Enabled = true;
-            groupBoxPriceParam.Enabled = true;
-            groupBoxWantlist.Enabled = true;
+            groupBoxParams.Enabled = true;
+            groupBoxPerform.Enabled = true;
+        }
+
+        private async void buttonCheckUser_Click(object sender, EventArgs e)
+        {
+            groupBoxParams.Enabled = false;
+            groupBoxPerform.Enabled = false;
+            buttonCheckUser.Text = "Checking cheap deals...";
+
+            // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
+            string isFoil = "";
+            string isSigned = "";
+            string isAltered = "";
+            string isPlayset = "";
+            string minCondition = conditionCombo.Text;
+            double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
+            double shippingAdd = Convert.ToDouble(shipAddition.Text);
+            double percentBelow = Convert.ToDouble(percentText.Text);
+            bool checkTrend = checkBoxTrend.Checked;
+            string selectedExpansionID = ((MKMHelpers.ComboboxItem)editionBox.SelectedItem).Value.ToString();
+
+            if (foilBox.Checked)
+                isFoil = "true";
+
+            if (signedBox.Checked)
+                isSigned = "true";
+
+            if (alteredBox.Checked)
+                isAltered = "true";
+
+            if (playsetBox.Checked)
+                isPlayset = "true";
+
+            System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>();
+            selectedLanguage.Add((langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
+
+            await Task.Run(() => checkUserRun(textBoxUser.Text, isFoil, isSigned, isAltered, isPlayset, minCondition,
+                domesticCheck.Checked, maxAllowedPrice, shippingAdd, percentBelow, checkTrend,
+                selectedLanguage, checkBoxUserExpansions.Checked ? "" : selectedExpansionID));
+
+            buttonCheckUser.Text = "Check user's stock";
+            groupBoxParams.Enabled = true;
+            groupBoxPerform.Enabled = true;
         }
 
         // idArticle - if not empty, article will be added to shopping cart only if it is matching the specified idArticle. used for searching for cheap deals by user
@@ -466,9 +512,9 @@ namespace MKMTool
 
                     factor = factor / 100 + 1;
 
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                         "Price 1: " + aPrices[0] + " Price 2: " + aPrices[1] + "\n");
-                    frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                         "Factor Price 1: " +
                         Math.Round(aPrices[0] * factor + shippingAddition, 2)
                         + " Factor Price 2: " +
@@ -493,7 +539,7 @@ namespace MKMTool
                                 fTrendprice =
                                     Convert.ToDouble(doc3.GetElementsByTagName("TREND")[0].InnerText.Replace(".", ","));
 
-                                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                                     "Trend: " + fTrendprice + "\n");
                             }
                             catch (Exception eError)
@@ -515,7 +561,7 @@ namespace MKMTool
                         // X% under TREND
                         if (aPrices[0] * factor < fTrendprice)
                         {
-                            frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                                 "Found cheap offer, ID " + bestPriceArticle + "\n");
                             try
                             {
@@ -536,16 +582,6 @@ namespace MKMTool
                     break;
                 }
             }
-        }
-
-        private void CheckWants_Load(object sender, EventArgs e)
-        {
-        }
-
-        private void checkBoxUser_CheckedChanged(object sender, EventArgs e)
-        {
-            textBoxUser.Enabled = checkBoxUser.Checked;
-            editionBox.Enabled = !checkBoxUser.Checked;
         }
     }
 }
