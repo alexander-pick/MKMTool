@@ -534,7 +534,7 @@ namespace MKMTool
             MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend), msg + "\n");
 
             if (popup)
-                MessageBox.Show(msg);
+                MessageBox.Show(msg, "MKMTool encountered error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private static bool firstError = true; // for logging errors, see LogError()

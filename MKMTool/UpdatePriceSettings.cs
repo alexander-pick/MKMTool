@@ -295,12 +295,16 @@ namespace MKMTool
             if (radioButtonPriceEstPriceByAvg.Checked)
             {
                 trackBarPriceEstAvg.Enabled = true;
+                checkBoxPriceEstWorldwide.Enabled = true;
+                trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked;
                 radioButtonPriceEstHighestPrice.Checked = false;
                 radioButtonPriceEstByLowestPrice.Checked = false;
             }
             else
             {
                 trackBarPriceEstAvg.Enabled = false;
+                checkBoxPriceEstWorldwide.Enabled = false;
+                trackBarPriceEstAvgWorld.Enabled = false;
             }
         }
 
