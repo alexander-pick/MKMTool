@@ -243,11 +243,22 @@ namespace MKMTool
             /// Gets all expansions from a given game.
             /// </summary>
             /// <param name="ExpansionID">Game ID (use 1 for M:tG).</param>
-            /// <returns>From MKM documentation: <i>Returns all expansions with single cards for the specified game..</i></returns>
+            /// <returns>From MKM documentation: <i>Returns all expansions with single cards for the specified game.</i></returns>
             /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getExpansions(string sGameID)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/games/" + sGameID + "/expansions", "GET");
+            }
+
+            /// <summary>
+            /// Gets the specified metaproduct.
+            /// </summary>
+            /// <param name="idMetaproduct">ID stored in product->metaproduct->idMetaproduct of wantlist items.</param>
+            /// <returns>From MKM documentation: <i>Returns the metaproduct specified by its ID.</i></returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
+            public static XmlDocument getMetaproduct(string idMetaproduct)
+            {
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/metaproducts/" + idMetaproduct, "GET");
             }
         }
     }

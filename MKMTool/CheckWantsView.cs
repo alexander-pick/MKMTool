@@ -156,32 +156,60 @@ namespace MKMTool
             }
 
             MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Starting to check your Wantlist ID:" + listID + " ...\n");
+                "Starting to check your wantlist ID:" + listID + " ...\n");
             var node = doc.GetElementsByTagName("item");
             foreach (XmlNode article in node)
             {
-                string sProductID;
-                if (article["product"] != null)
-                    sProductID = article["product"]["idProduct"].InnerText;
-                else
-                    sProductID = article["metaproduct"]["idMetaproduct"].InnerText; // apparently even normal cards can be metaproducts...whatever that means
-
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "checking product ID:" + sProductID + " ...\n");
-
-                // a wantlist item can have more idLanguage entries, one for each wanted language
-                System.Collections.Generic.List<string> selectedLanguages = new System.Collections.Generic.List<string>();
-                foreach (XmlNode langNodes in article.ChildNodes)
+                // articles in a wantlist can be either product or metaproducts (the same card from multiple sets)
+                // each metaproduct needs to be expanded into a list of products that are "realized" by it
+                System.Collections.Generic.List<XmlNode> products = new System.Collections.Generic.List<XmlNode>();
+                if (article["type"].InnerText == "product")
+                    products.Add(article["product"]);
+                else // it is a metaproduct
                 {
-                    if (langNodes.Name == "idLanguage")
-                        selectedLanguages.Add(langNodes.InnerText);
+                    try
+                    {
+                        XmlDocument metaDoc = MKMInteract.RequestHelper.getMetaproduct(article["metaproduct"]["idMetaproduct"].InnerText);
+                        XmlNodeList mProducts = metaDoc.GetElementsByTagName("product");
+                        foreach (XmlNode prod in mProducts)
+                            products.Add(prod);
+                    }
+                    catch (Exception eError)
+                    {
+                        MKMHelpers.LogError("checking wantlist metaproduct ID " + article["metaproduct"]["idMetaproduct"], eError.Message, false);
+                        continue;
+                    }
                 }
-                checkArticle(sProductID, selectedLanguages, article["minCondition"].InnerText,
-                    article["isFoil"].InnerText, article["isSigned"].InnerText, article["isAltered"].InnerText,
-                    // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
-                    int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
-                    "", maxAllowedPrice, shippingAdd, percentBelow, checkTrend);
+                foreach (XmlNode product in products)
+                {
+                    // As of 25.6.2019, the countArticles and countFoils fields are not described in MKM documentation, but they seem to be there.
+                    // I think this is indeed a new thing that appeared since MKM started to force promo-sets as foils only
+                    // We can use this to prune lot of useless calls that will end up in empty responses from searching for non foils in promo (foil only) sets
+                    int total = int.Parse(product["countArticles"].InnerText);
+                    int foils = int.Parse(product["countFoils"].InnerText);
+                    if ((article["isFoil"].InnerText == "true" && foils == 0) || // there are only non-foils of this article and we want foils
+                        (article["isFoil"].InnerText == "false" && foils == total)) // there are only foils and we want non-foil
+                        continue;
+
+                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                        "checking:" + product["enName"].InnerText + " from  " + product["expansionName"].InnerText + "...\n");
+
+                    // a wantlist item can have more idLanguage entries, one for each wanted language
+                    System.Collections.Generic.List<string> selectedLanguages = new System.Collections.Generic.List<string>();
+                    foreach (XmlNode langNodes in product.ChildNodes)
+                    {
+                        if (langNodes.Name == "idLanguage")
+                            selectedLanguages.Add(langNodes.InnerText);
+                    }
+                    checkArticle(product["idProduct"].InnerText, selectedLanguages, article["minCondition"].InnerText,
+                        article["isFoil"].InnerText, article["isSigned"].InnerText, article["isAltered"].InnerText,
+                        // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
+                        int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
+                        "", maxAllowedPrice, shippingAdd, percentBelow, checkTrend);
+                }
             }
+            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                "Check finished.\n");
         }
 
         private async void checkListButton_Click(object sender, EventArgs e)
@@ -230,6 +258,8 @@ namespace MKMTool
             bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend,
             System.Collections.Generic.List<string> selectedLanguage, string selectedExpansionID = "")
         {
+            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                "Check for cheap deals from seller '" + user + "'...\n");
             if (domesticOnly)
                 MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                     "WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.\n");
@@ -285,6 +315,8 @@ namespace MKMTool
                 }
                 start += 1000;
             }
+            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                "Check finished.\n");
         }
 
         /// <summary>
@@ -302,7 +334,9 @@ namespace MKMTool
             {
                 sT.ImportRow(row);
             }
-
+            if (sT.Rows.Count > 0)
+                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    "Check for cheap deals from selected expansion...\n");
             foreach (DataRow oRecord in sT.Rows)
             {
                 MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
@@ -310,6 +344,8 @@ namespace MKMTool
                 checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
                     isAltered, isPlayset, "", maxPrice, shippingAddition, percentBelowOthers, checkTrend);
             }
+            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                "Check finished.\n");
         }
 
         private async void checkEditionButton_Click(object sender, EventArgs e)
