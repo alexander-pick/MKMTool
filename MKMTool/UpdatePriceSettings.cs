@@ -133,7 +133,12 @@ namespace MKMTool
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfHighestPrice;
                 s.priceFactor = s.priceFactorWorldwide = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value) / 100;
             }
-            
+
+            s.priceMarkup2 = Decimal.ToDouble(numericUpDownPriceMultCopies2.Value) / 100;
+            s.priceMarkup3 = Decimal.ToDouble(numericUpDownPriceMultCopies3.Value) / 100;
+            s.priceMarkup4 = Decimal.ToDouble(numericUpDownPriceMultCopies4.Value) / 100;
+            s.priceMarkupCap = Decimal.ToDouble(numericUpDownPriceMultCopiesCap.Value);
+
             if (radioButtonCondMatchOnly.Checked)
                 s.condAcceptance = AcceptedCondition.OnlyMatching;
             else if (radioButtonCondAcceptBetterAlways.Checked)
@@ -149,11 +154,6 @@ namespace MKMTool
             
             s.testMode = checkBoxTestMode.Checked;
             s.searchWorldwide = checkBoxPriceEstWorldwide.Checked;
-
-            s.markup2 = Decimal.ToDouble(numericUpDownMultCopies2.Value) / 100;
-            s.markup3 = Decimal.ToDouble(numericUpDownMultCopies3.Value) / 100;
-            s.markup4 = Decimal.ToDouble(numericUpDownMultCopies4.Value) / 100;
-            s.markupCap = Decimal.ToDouble(numericUpDownMultCopiesCap.Value);
 
             return true;
         }
@@ -207,6 +207,11 @@ namespace MKMTool
                 numericUpDownPriceEstHighestPrice.Value = new decimal(settings.priceFactor * 100);
             }
 
+            numericUpDownPriceMultCopies2.Value = new decimal(settings.priceMarkup2 * 100);
+            numericUpDownPriceMultCopies3.Value = new decimal(settings.priceMarkup3 * 100);
+            numericUpDownPriceMultCopies4.Value = new decimal(settings.priceMarkup4 * 100);
+            numericUpDownPriceMultCopiesCap.Value = new decimal(settings.priceMarkupCap);
+
             if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
             {
                 radioButtonCondMatchOnly.Checked = true;
@@ -235,11 +240,6 @@ namespace MKMTool
             checkBoxTestMode.Checked = settings.testMode;
             checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
             trackBarPriceEstAvgWorld.Enabled = settings.searchWorldwide;
-
-            numericUpDownMultCopies2.Value = new decimal(settings.markup2 * 100);
-            numericUpDownMultCopies3.Value = new decimal(settings.markup3 * 100);
-            numericUpDownMultCopies4.Value = new decimal(settings.markup4 * 100);
-            numericUpDownMultCopiesCap.Value = new decimal(settings.markupCap);
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
@@ -295,7 +295,6 @@ namespace MKMTool
             if (radioButtonPriceEstPriceByAvg.Checked)
             {
                 trackBarPriceEstAvg.Enabled = true;
-                checkBoxPriceEstWorldwide.Enabled = true;
                 trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked;
                 radioButtonPriceEstHighestPrice.Checked = false;
                 radioButtonPriceEstByLowestPrice.Checked = false;
@@ -303,7 +302,6 @@ namespace MKMTool
             else
             {
                 trackBarPriceEstAvg.Enabled = false;
-                checkBoxPriceEstWorldwide.Enabled = false;
                 trackBarPriceEstAvgWorld.Enabled = false;
             }
         }
@@ -464,7 +462,7 @@ namespace MKMTool
 
         private void checkBoxPriceEstWorldwide_CheckedChanged(object sender, EventArgs e)
         {
-            trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked;
+            trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked && radioButtonPriceEstPriceByAvg.Checked;
         }
     }
 }
