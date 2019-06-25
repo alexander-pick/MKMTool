@@ -123,19 +123,16 @@ namespace MKMTool
 
             var node = doc.GetElementsByTagName("wantslist");
 
-            if (node.Count > 0)
+            foreach (XmlNode nWantlist in node)
             {
-                foreach (XmlNode nWantlist in node)
-                {
-                    var item = new MKMHelpers.ComboboxItem();
+                var item = new MKMHelpers.ComboboxItem();
 
-                    item.Text = nWantlist["name"].InnerText;
-                    item.Value = nWantlist["idWantslist"].InnerText;
+                item.Text = nWantlist["name"].InnerText;
+                item.Value = nWantlist["idWantslist"].InnerText;
 
-                    wantListsBox2.Items.Add(item);
+                wantListsBox2.Items.Add(item);
 
-                    wantListsBox2.SelectedIndex = 0;
-                }
+                wantListsBox2.SelectedIndex = 0;
             }
         }
 
@@ -268,51 +265,51 @@ namespace MKMTool
             while (true)
             {
                 String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
-
+                XmlDocument doc2 = null;
                 try
                 {
                     // get the users stock, filtered by the selected parameters
-                    var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
-
-                    var node2 = doc2.GetElementsByTagName("article");
-                    foreach (XmlNode article in node2)
-                    {
-                        if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
-                        {
-                            DataRow[] result = dt.Select(string.Format("[idProduct] = '{0}'", article["idProduct"].InnerText));
-                            if (result.Length != 1 ||  // should always be exactly 1, but to be sure
-                                result[0].Field<string>("Expansion ID") != selectedExpansionID) // compare
-                            {
-                                continue;
-                            }
-                        }
-
-                        if ( // do as much filtering here as possible to reduce the number of API calls
-                            MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, minCondition) &&
-                            (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
-                            (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
-                            (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
-                            (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
-                            (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
-                            (maxPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
-                            )
-                        {
-
-                            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                                "Checking product ID: " + article["idProduct"].InnerText + "\n");
-                            checkArticle(article["idProduct"].InnerText,
-                                selectedLanguage, minCondition, isFoil, isSigned,
-                                isAltered, isPlayset, article["idArticle"].InnerText, maxPrice, shippingAddition, percentBelowOthers, checkTrend);
-                        }
-                    }
-                    if (node2.Count != 1000) // there is no additional items to fetch
-                        break;
+                    doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
                 }
                 catch (Exception eError)
                 {
                     MKMHelpers.LogError("looking for cheap deals from user " + user, eError.Message, false, sUrl);
                     break;
                 }
+
+                var node2 = doc2.GetElementsByTagName("article");
+                foreach (XmlNode article in node2)
+                {
+                    if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
+                    {
+                        DataRow[] result = dt.Select(string.Format("[idProduct] = '{0}'", article["idProduct"].InnerText));
+                        if (result.Length != 1 ||  // should always be exactly 1, but to be sure
+                            result[0].Field<string>("Expansion ID") != selectedExpansionID) // compare
+                        {
+                            continue;
+                        }
+                    }
+
+                    if ( // do as much filtering here as possible to reduce the number of API calls
+                        MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, minCondition) &&
+                        (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
+                        (!playsetBox.Checked || article["isPlayset"].InnerText == "true") &&
+                        (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
+                        (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
+                        (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
+                        (maxPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
+                        )
+                    {
+
+                        MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                            "Checking product ID: " + article["idProduct"].InnerText + "\n");
+                        checkArticle(article["idProduct"].InnerText,
+                            selectedLanguage, minCondition, isFoil, isSigned,
+                            isAltered, isPlayset, article["idArticle"].InnerText, maxPrice, shippingAddition, percentBelowOthers, checkTrend);
+                    }
+                }
+                if (node2.Count != 1000) // there is no additional items to fetch
+                    break;
                 start += 1000;
             }
             MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),

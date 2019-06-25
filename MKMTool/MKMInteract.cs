@@ -49,7 +49,7 @@ namespace MKMTool
             /// <param name="url">The http URL of the API.</param>
             /// <param name="method">The name of the request method (PUT, GET, etc.).</param>
             /// <param name="body">The body containing parameters of the method if applicable.</param>
-            /// <returns>Document containing the response from MKM.</returns>
+            /// <returns>Document containing the response from MKM. In some cases this can empty (when the response is "nothing matches your request").</returns>
             /// <exception cref="HttpListenerException">429 - Too many requests. Wait for 0:00 CET for request counter to reset.</exception>
             /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument makeRequest(string url, string method, string body = null)
@@ -87,7 +87,13 @@ namespace MKMTool
 
                 var response = request.GetResponse() as HttpWebResponse;
                 var doc = new XmlDocument();
-                doc.Load(response.GetResponseStream());
+                StreamReader s = new StreamReader(response.GetResponseStream()); // just for checking EoF, it is not accessible directly from the Stream object
+                // Empty streams can be returned for example for article fetches that result in 0 matches (happens regularly when e.g. seeking nonfoils in foil-only promo sets). 
+                // Passing empty stream to doc.Load causes exception and also sometimes seems to screw up the XML parser 
+                // even when the exception is handled and it then causes problems for subsequent calls => first check if the stream is empty
+                if (!s.EndOfStream)
+                    doc.Load(s);
+                s.Close();
 
                 int requestCount = int.Parse(response.Headers.Get("X-Request-Limit-Count"));
                 int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));

@@ -65,29 +65,33 @@ namespace MKMTool
                 while (true)
                 {
                     var doc = MKMInteract.RequestHelper.readStock(start);
-                    var xmlReader = new XmlNodeReader(doc);
-                    var ds = new DataSet();
-                    ds.ReadXml(xmlReader);
-                    var articleTable = ds.Tables[0];
-                    var elementCount = articleTable.Rows.Count;
-                    if (first)
+                    if (doc.HasChildNodes)
                     {
-                        articles = articleTable;
-                        first = false;
-                    }
-                    else
-                    {
-                        foreach (DataRow dr in articleTable.Rows)
+                        var xmlReader = new XmlNodeReader(doc);
+                        var ds = new DataSet();
+                        ds.ReadXml(xmlReader);
+                        var articleTable = ds.Tables[0];
+                        int elementCount = articleTable.Rows.Count;
+                        if (first)
                         {
-                            dr["article_Id"] = articles.Rows.Count;
-                            articles.ImportRow(dr);
+                            articles = articleTable;
+                            first = false;
                         }
+                        else
+                        {
+                            foreach (DataRow dr in articleTable.Rows)
+                            {
+                                dr["article_Id"] = articles.Rows.Count;
+                                articles.ImportRow(dr);
+                            }
+                        }
+                        if (elementCount != 100)
+                        {
+                            break;
+                        }
+                        start += elementCount;
                     }
-                    if (elementCount != 100)
-                    {
-                        break;
-                    }
-                    start += elementCount;
+                    else break; // document is empty -> end
                 }
 
                 var dj = MKMHelpers.JoinDataTables(articles, dt,

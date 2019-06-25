@@ -542,6 +542,33 @@ namespace MKMTool
             {
                 rdoc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/stock", "PUT",
                     sRequestXML);
+                var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
+                var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
+
+                var iUpdated = xUpdatedArticles.Count;
+                var iFailed = xNotUpdatedArticles.Count;
+
+                if (iFailed == 1)
+                {
+                    iFailed = 0;
+                }
+
+                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    iUpdated + " articles updated successfully, " + iFailed + " failed" + Environment.NewLine);
+
+                if (iFailed > 1)
+                {
+                    try
+                    {
+                        File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
+                    }
+                    catch (Exception eError)
+                    {
+                        MKMHelpers.LogError("logging failed price update articles", eError.Message, false);
+                    }
+                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                        "Failed articles logged in " + @".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log" + Environment.NewLine);
+                }
             }
             catch (Exception eError)
             {
@@ -550,33 +577,6 @@ namespace MKMTool
                 return;
             }
 
-            var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
-            var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
-
-            var iUpdated = xUpdatedArticles.Count;
-            var iFailed = xNotUpdatedArticles.Count;
-
-            if (iFailed == 1)
-            {
-                iFailed = 0;
-            }
-
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                iUpdated + " articles updated successfully, " + iFailed + " failed" + Environment.NewLine);
-
-            if (iFailed > 1)
-            {
-                try
-                {
-                    File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
-                }
-                catch (Exception eError)
-                {
-                    MKMHelpers.LogError("logging failed price update articles", eError.Message, false);
-                }
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Failed articles logged in " + @".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log" + Environment.NewLine);
-            }
         }
 
         private string checkArticle(XmlNode article, ref Dictionary<string, List<XmlNode>> myStock)

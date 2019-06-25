@@ -171,17 +171,19 @@ namespace MKMTool
                             MKMInteract.RequestHelper.makeRequest(
                                 "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
 
-                        var fCardPrice =
-                            (float)
-                                Convert.ToDouble(
-                                    doc2.SelectSingleNode("response/product/priceGuide/SELL")
-                                        .InnerText.Replace(".", ","));
+                        if (doc2.HasChildNodes)
+                        {
+                            var fCardPrice =
+                                (float)Convert.ToDouble(
+                                        doc2.SelectSingleNode("response/product/priceGuide/SELL")
+                                            .InnerText.Replace(".", ","));
 
-                        frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                            "Current SELL Price: " + fCardPrice + "\n");
+                            frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                                "Current SELL Price: " + fCardPrice + "\n");
 
-                        fBoxValue += fCardPrice*fFactorMyticRareCombinedBox;
+                            fBoxValue += fCardPrice * fFactorMyticRareCombinedBox;
                             //changed cause it's actually a rare + mytic not rare or mytiv I think?  was fFactorRareBox;
+                        }
                     }
 
                     if (xn["rarity"].InnerText == "Mythic")
@@ -193,16 +195,18 @@ namespace MKMTool
                             MKMInteract.RequestHelper.makeRequest(
                                 "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
 
-                        var fCardPrice =
-                            (float)
-                                Convert.ToDouble(
-                                    doc2.SelectSingleNode("response/product/priceGuide/SELL")
-                                        .InnerText.Replace(".", ","));
+                        if (doc2.HasChildNodes)
+                        {
+                            var fCardPrice =
+                                (float)Convert.ToDouble(
+                                        doc2.SelectSingleNode("response/product/priceGuide/SELL")
+                                            .InnerText.Replace(".", ","));
 
-                        frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                            "Current SELL Price: " + fCardPrice + "\n");
+                            frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                                "Current SELL Price: " + fCardPrice + "\n");
 
-                        fBoxValue += fCardPrice*fFactorMyticBox;
+                            fBoxValue += fCardPrice * fFactorMyticBox;
+                        }
                     }
 
                     if (xn["rarity"].InnerText == "Uncommon")
@@ -214,16 +218,19 @@ namespace MKMTool
                             MKMInteract.RequestHelper.makeRequest(
                                 "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
 
-                        var fCardPrice =
-                            (float)
-                                Convert.ToDouble(
-                                    doc2.SelectSingleNode("response/product/priceGuide/SELL")
-                                        .InnerText.Replace(".", ","));
+                        if (doc2.HasChildNodes)
+                        {
+                            var fCardPrice =
+                                (float)
+                                    Convert.ToDouble(
+                                        doc2.SelectSingleNode("response/product/priceGuide/SELL")
+                                            .InnerText.Replace(".", ","));
 
-                        frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                            "Current SELL Price: " + fCardPrice + "\n");
+                            frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
+                                "Current SELL Price: " + fCardPrice + "\n");
 
-                        fBoxValue += fCardPrice*fFactorUncommonBox;
+                            fBoxValue += fCardPrice * fFactorUncommonBox;
+                        }
                     }
                 }
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
