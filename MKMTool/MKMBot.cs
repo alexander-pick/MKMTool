@@ -79,6 +79,7 @@ namespace MKMTool
 
         public double priceMarkup2, priceMarkup3, priceMarkup4; // in percent, markup to use when we have 2, 3 or more copies of the given card
         public double priceMarkupCap; // in euro, max amount of money allowed to be added on top of the estimated price by the markup
+        public bool priceIgnorePlaysets; // if set to true, articles with isPlayset=true will be treated as four single cards - both for our stock and other sellers
 
         /// Card Condition Settings
         
@@ -121,6 +122,12 @@ namespace MKMTool
             priceSetPriceBy = refSettings.priceSetPriceBy;
             priceFactor = refSettings.priceFactor;
             priceFactorWorldwide = refSettings.priceFactorWorldwide;
+            priceMarkup2 = refSettings.priceMarkup2;
+            priceMarkup3 = refSettings.priceMarkup3;
+            priceMarkup4 = refSettings.priceMarkup4;
+            priceMarkupCap = refSettings.priceMarkupCap;
+            priceIgnorePlaysets = refSettings.priceIgnorePlaysets;
+
             condAcceptance = refSettings.condAcceptance;
             logUpdated = refSettings.logUpdated;
             logLessThanMinimum = refSettings.logLessThanMinimum;
@@ -130,10 +137,6 @@ namespace MKMTool
             testMode = refSettings.testMode;
             description = refSettings.description;
             searchWorldwide = refSettings.searchWorldwide;
-            priceMarkup2 = refSettings.priceMarkup2;
-            priceMarkup3 = refSettings.priceMarkup3;
-            priceMarkup4 = refSettings.priceMarkup4;
-            priceMarkupCap = refSettings.priceMarkupCap;
         }
 
         /// <summary>
@@ -210,6 +213,9 @@ namespace MKMTool
                     case "priceMarkupCap":
                         temp.priceMarkupCap = double.Parse(att.Value, CultureInfo.InvariantCulture);
                         break;
+                    case "priceIgnorePlaysets":
+                        temp.priceIgnorePlaysets = bool.Parse(att.Value);
+                        break;
                     case "condAcceptance":
                         temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
                         break;
@@ -276,6 +282,7 @@ namespace MKMTool
             root.SetAttribute("priceMarkup3", priceMarkup3.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceMarkup4", priceMarkup4.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceMarkupCap", priceMarkupCap.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("priceIgnorePlaysets", priceIgnorePlaysets.ToString());
 
             root.SetAttribute("condAcceptance", condAcceptance.ToString());
 
@@ -329,6 +336,9 @@ namespace MKMTool
             s.priceSetPriceBy = PriceSetMethod.ByAverage;
             s.priceFactor = 0.5;
             s.priceFactorWorldwide = 0.5;
+            s.priceMarkup2 = s.priceMarkup3 = s.priceMarkup4 = 0;
+            s.priceMarkupCap = 0;
+            s.priceIgnorePlaysets = false;
 
             s.condAcceptance = AcceptedCondition.OnlyMatching;
 
@@ -341,8 +351,6 @@ namespace MKMTool
             s.testMode = false;
             s.searchWorldwide = false;
 
-            s.priceMarkup2 = s.priceMarkup3 = s.priceMarkup4 = 0;
-            s.priceMarkupCap = 0;
 
             return s;
         }
@@ -612,8 +620,6 @@ namespace MKMTool
             XmlNodeList similarItems = doc2.GetElementsByTagName("article");
 
             List<double> prices = new List<double>();
-            string sOldPrice = article["price"].InnerText;
-            double dOldPrice = Convert.ToDouble(sOldPrice, CultureInfo.InvariantCulture);
             int lastMatch = -1;
             bool ignoreSellersCountry = false;
             TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
@@ -697,14 +703,19 @@ namespace MKMTool
             }
 
             // increase the estimate based on how many of those articles do we have in stock
-            int count = Convert.ToInt32(article["count"].InnerText, CultureInfo.InvariantCulture);
             double markupValue = 0;
-            if (count == 2)
-                markupValue = priceEstimation * settings.priceMarkup2;
-            else if (count == 3)
-                markupValue = priceEstimation * settings.priceMarkup3;
-            else if (count > 3)
+            if (settings.priceIgnorePlaysets && article["isPlayset"].InnerText == "true")
                 markupValue = priceEstimation * settings.priceMarkup4;
+            else
+            {
+                int count = Convert.ToInt32(article["count"].InnerText, CultureInfo.InvariantCulture);
+                if (count == 2)
+                    markupValue = priceEstimation * settings.priceMarkup2;
+                else if (count == 3)
+                    markupValue = priceEstimation * settings.priceMarkup3;
+                else if (count > 3)
+                    markupValue = priceEstimation * settings.priceMarkup4;
+            }
             if (markupValue > settings.priceMarkupCap)
                 markupValue = settings.priceMarkupCap;
             priceEstimation += markupValue;
@@ -714,8 +725,15 @@ namespace MKMTool
                 priceEstimation = settings.priceMinRarePrice;
 
             // check the estimation is OK
+            string sOldPrice = article["price"].InnerText;
+            double dOldPrice = Convert.ToDouble(sOldPrice, CultureInfo.InvariantCulture);
             string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
-
+            // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
+            if (settings.priceIgnorePlaysets && article["isPlayset"].InnerText == "true")
+            {
+                dOldPrice /= 4;
+                sNewPrice = (priceEstimation * 4).ToString("f2", CultureInfo.InvariantCulture);
+            }
             // check it is not above the max price change limits
             foreach (var limits in settings.priceMaxChangeLimits)
             {
@@ -764,6 +782,7 @@ namespace MKMTool
                             }
                         }
                     }
+                // log large change or small change when enabled
                 if (settings.logUpdated && (settings.logSmallPriceChange ||
                     (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
                     MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
@@ -788,7 +807,7 @@ namespace MKMTool
             foreach (XmlNode offer in similarItems)
             {
                 if ((ignoreSellersCountry || offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry)
-                    && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
+                    && (settings.priceIgnorePlaysets || (offer["isPlayset"].InnerText == article["isPlayset"].InnerText))
                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                     )
                 {
@@ -799,6 +818,8 @@ namespace MKMTool
                         continue;
 
                     float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
+                    if (settings.priceIgnorePlaysets && offer["isPlayset"].InnerText == "true") // if we are ignoring playsets, work with the price of a single
+                        price /= 4;
 
                     if (minNumberNotYetFound)
                     {

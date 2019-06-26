@@ -118,6 +118,7 @@ namespace MKMTool
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.checkBoxPricePlaysetIgnore = new System.Windows.Forms.CheckBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -271,6 +272,7 @@ namespace MKMTool
             // groupBoxPriceEstim
             // 
             this.groupBoxPriceEstim.Controls.Add(this.labelWorlwideAvg);
+            this.groupBoxPriceEstim.Controls.Add(this.checkBoxPricePlaysetIgnore);
             this.groupBoxPriceEstim.Controls.Add(this.labelMultCopiesCap);
             this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceMultCopiesCap);
             this.groupBoxPriceEstim.Controls.Add(this.label1);
@@ -819,6 +821,17 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
+            // checkBoxPricePlaysetIgnore
+            // 
+            this.checkBoxPricePlaysetIgnore.AutoSize = true;
+            this.checkBoxPricePlaysetIgnore.Location = new System.Drawing.Point(11, 125);
+            this.checkBoxPricePlaysetIgnore.Name = "checkBoxPricePlaysetIgnore";
+            this.checkBoxPricePlaysetIgnore.Size = new System.Drawing.Size(174, 17);
+            this.checkBoxPricePlaysetIgnore.TabIndex = 63;
+            this.checkBoxPricePlaysetIgnore.Text = "Treat playsets as 4 single cards";
+            this.toolTip1.SetToolTip(this.checkBoxPricePlaysetIgnore, resources.GetString("checkBoxPricePlaysetIgnore.ToolTip"));
+            this.checkBoxPricePlaysetIgnore.UseVisualStyleBackColor = true;
+            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -916,5 +929,6 @@ namespace MKMTool
         private System.Windows.Forms.NumericUpDown numericUpDownPriceMultCopies2;
         private System.Windows.Forms.Label labelMultiples;
         private System.Windows.Forms.Label labelWorlwideAvg;
+        private System.Windows.Forms.CheckBox checkBoxPricePlaysetIgnore;
     }
 }

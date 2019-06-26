@@ -138,6 +138,7 @@ namespace MKMTool
             s.priceMarkup3 = Decimal.ToDouble(numericUpDownPriceMultCopies3.Value) / 100;
             s.priceMarkup4 = Decimal.ToDouble(numericUpDownPriceMultCopies4.Value) / 100;
             s.priceMarkupCap = Decimal.ToDouble(numericUpDownPriceMultCopiesCap.Value);
+            s.priceIgnorePlaysets = checkBoxPricePlaysetIgnore.Checked;
 
             if (radioButtonCondMatchOnly.Checked)
                 s.condAcceptance = AcceptedCondition.OnlyMatching;
@@ -211,6 +212,7 @@ namespace MKMTool
             numericUpDownPriceMultCopies3.Value = new decimal(settings.priceMarkup3 * 100);
             numericUpDownPriceMultCopies4.Value = new decimal(settings.priceMarkup4 * 100);
             numericUpDownPriceMultCopiesCap.Value = new decimal(settings.priceMarkupCap);
+            checkBoxPricePlaysetIgnore.Checked = settings.priceIgnorePlaysets;
 
             if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
             {
