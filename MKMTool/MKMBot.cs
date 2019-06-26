@@ -950,7 +950,9 @@ namespace MKMTool
                             try
                             {
                                 file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + article["product"]["name"].InnerText
-                                    + "\";\"" + article["product"]["expansion"].InnerText + "\";\"" + article["language"]["languageName"].InnerText
+                                    // only single cards have expansion -> leave it empty for displays etc.
+                                    + "\";\"" + (article["product"]["expansion"] == null ? "" : article["product"]["expansion"].InnerText)
+                                    + "\";\"" + article["language"]["languageName"].InnerText
                                     + "\";\"" + article["price"].InnerText + "\"");
                             }
                             catch (Exception eError)
