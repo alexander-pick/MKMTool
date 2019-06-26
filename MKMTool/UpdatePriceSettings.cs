@@ -150,7 +150,8 @@ namespace MKMTool
             s.logUpdated = checkBoxLogUpdated.Checked;
             s.logLessThanMinimum = checkBoxLogMinItems.Checked;
             s.logSmallPriceChange = checkBoxLogSmallChange.Checked;
-            s.logHighPriceChange = checkBoxLogLargeChange.Checked;
+            s.logLargePriceChangeTooLow = checkBoxLogLargeChangeLow.Checked;
+            s.logLargePriceChangeTooHigh = checkBoxLogLargeChangeHigh.Checked;
             s.logHighPriceVariance = checkBoxLogHighVariance.Checked;
             
             s.testMode = checkBoxTestMode.Checked;
@@ -236,7 +237,8 @@ namespace MKMTool
             checkBoxLogUpdated.Checked = settings.logUpdated;
             checkBoxLogMinItems.Checked = settings.logLessThanMinimum;
             checkBoxLogSmallChange.Checked = settings.logSmallPriceChange;
-            checkBoxLogLargeChange.Checked = settings.logHighPriceChange;
+            checkBoxLogLargeChangeLow.Checked = settings.logLargePriceChangeTooLow;
+            checkBoxLogLargeChangeHigh.Checked = settings.logLargePriceChangeTooHigh;
             checkBoxLogHighVariance.Checked = settings.logHighPriceVariance;
 
             checkBoxTestMode.Checked = settings.testMode;

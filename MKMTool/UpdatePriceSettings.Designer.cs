@@ -64,7 +64,7 @@ namespace MKMTool
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdatePriceSettings));
             this.groupBoxLogSettings = new System.Windows.Forms.GroupBox();
             this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
-            this.checkBoxLogLargeChange = new System.Windows.Forms.CheckBox();
+            this.checkBoxLogLargeChangeLow = new System.Windows.Forms.CheckBox();
             this.checkBoxLogSmallChange = new System.Windows.Forms.CheckBox();
             this.checkBoxLogMinItems = new System.Windows.Forms.CheckBox();
             this.checkBoxLogUpdated = new System.Windows.Forms.CheckBox();
@@ -75,6 +75,7 @@ namespace MKMTool
             this.radioButtonCondMatchOnly = new System.Windows.Forms.RadioButton();
             this.groupBoxPriceEstim = new System.Windows.Forms.GroupBox();
             this.labelWorlwideAvg = new System.Windows.Forms.Label();
+            this.checkBoxPricePlaysetIgnore = new System.Windows.Forms.CheckBox();
             this.labelMultCopiesCap = new System.Windows.Forms.Label();
             this.numericUpDownPriceMultCopiesCap = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
@@ -118,7 +119,7 @@ namespace MKMTool
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.checkBoxPricePlaysetIgnore = new System.Windows.Forms.CheckBox();
+            this.checkBoxLogLargeChangeHigh = new System.Windows.Forms.CheckBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -141,8 +142,9 @@ namespace MKMTool
             // 
             // groupBoxLogSettings
             // 
+            this.groupBoxLogSettings.Controls.Add(this.checkBoxLogLargeChangeHigh);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogHighVariance);
-            this.groupBoxLogSettings.Controls.Add(this.checkBoxLogLargeChange);
+            this.groupBoxLogSettings.Controls.Add(this.checkBoxLogLargeChangeLow);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogSmallChange);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogMinItems);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogUpdated);
@@ -158,31 +160,31 @@ namespace MKMTool
             this.checkBoxLogHighVariance.AutoSize = true;
             this.checkBoxLogHighVariance.Checked = true;
             this.checkBoxLogHighVariance.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(10, 66);
+            this.checkBoxLogHighVariance.Location = new System.Drawing.Point(405, 66);
             this.checkBoxLogHighVariance.Name = "checkBoxLogHighVariance";
             this.checkBoxLogHighVariance.Size = new System.Drawing.Size(315, 17);
             this.checkBoxLogHighVariance.TabIndex = 4;
             this.checkBoxLogHighVariance.Text = "Log non-updates due to high variance among cheapest items";
             this.checkBoxLogHighVariance.UseVisualStyleBackColor = true;
             // 
-            // checkBoxLogLargeChange
+            // checkBoxLogLargeChangeLow
             // 
-            this.checkBoxLogLargeChange.AutoSize = true;
-            this.checkBoxLogLargeChange.Checked = true;
-            this.checkBoxLogLargeChange.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogLargeChange.Location = new System.Drawing.Point(10, 43);
-            this.checkBoxLogLargeChange.Name = "checkBoxLogLargeChange";
-            this.checkBoxLogLargeChange.Size = new System.Drawing.Size(230, 17);
-            this.checkBoxLogLargeChange.TabIndex = 3;
-            this.checkBoxLogLargeChange.Text = "Log non-updates due to large price change";
-            this.checkBoxLogLargeChange.UseVisualStyleBackColor = true;
+            this.checkBoxLogLargeChangeLow.AutoSize = true;
+            this.checkBoxLogLargeChangeLow.Checked = true;
+            this.checkBoxLogLargeChangeLow.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLogLargeChangeLow.Location = new System.Drawing.Point(10, 43);
+            this.checkBoxLogLargeChangeLow.Name = "checkBoxLogLargeChangeLow";
+            this.checkBoxLogLargeChangeLow.Size = new System.Drawing.Size(311, 17);
+            this.checkBoxLogLargeChangeLow.TabIndex = 3;
+            this.checkBoxLogLargeChangeLow.Text = "Log non-updates due to large price change (yours is too low)";
+            this.checkBoxLogLargeChangeLow.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogSmallChange
             // 
             this.checkBoxLogSmallChange.AutoSize = true;
             this.checkBoxLogSmallChange.Checked = true;
             this.checkBoxLogSmallChange.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogSmallChange.Location = new System.Drawing.Point(253, 19);
+            this.checkBoxLogSmallChange.Location = new System.Drawing.Point(405, 19);
             this.checkBoxLogSmallChange.Name = "checkBoxLogSmallChange";
             this.checkBoxLogSmallChange.Size = new System.Drawing.Size(225, 17);
             this.checkBoxLogSmallChange.TabIndex = 2;
@@ -194,7 +196,7 @@ namespace MKMTool
             this.checkBoxLogMinItems.AutoSize = true;
             this.checkBoxLogMinItems.Checked = true;
             this.checkBoxLogMinItems.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogMinItems.Location = new System.Drawing.Point(253, 43);
+            this.checkBoxLogMinItems.Location = new System.Drawing.Point(405, 43);
             this.checkBoxLogMinItems.Name = "checkBoxLogMinItems";
             this.checkBoxLogMinItems.Size = new System.Drawing.Size(307, 17);
             this.checkBoxLogMinItems.TabIndex = 1;
@@ -320,6 +322,17 @@ namespace MKMTool
             this.labelWorlwideAvg.Size = new System.Drawing.Size(179, 13);
             this.labelWorlwideAvg.TabIndex = 64;
             this.labelWorlwideAvg.Text = "Price based on average - worldwide:";
+            // 
+            // checkBoxPricePlaysetIgnore
+            // 
+            this.checkBoxPricePlaysetIgnore.AutoSize = true;
+            this.checkBoxPricePlaysetIgnore.Location = new System.Drawing.Point(11, 125);
+            this.checkBoxPricePlaysetIgnore.Name = "checkBoxPricePlaysetIgnore";
+            this.checkBoxPricePlaysetIgnore.Size = new System.Drawing.Size(174, 17);
+            this.checkBoxPricePlaysetIgnore.TabIndex = 63;
+            this.checkBoxPricePlaysetIgnore.Text = "Treat playsets as 4 single cards";
+            this.toolTip1.SetToolTip(this.checkBoxPricePlaysetIgnore, resources.GetString("checkBoxPricePlaysetIgnore.ToolTip"));
+            this.checkBoxPricePlaysetIgnore.UseVisualStyleBackColor = true;
             // 
             // labelMultCopiesCap
             // 
@@ -821,16 +834,17 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
-            // checkBoxPricePlaysetIgnore
+            // checkBoxLogLargeChangeHigh
             // 
-            this.checkBoxPricePlaysetIgnore.AutoSize = true;
-            this.checkBoxPricePlaysetIgnore.Location = new System.Drawing.Point(11, 125);
-            this.checkBoxPricePlaysetIgnore.Name = "checkBoxPricePlaysetIgnore";
-            this.checkBoxPricePlaysetIgnore.Size = new System.Drawing.Size(174, 17);
-            this.checkBoxPricePlaysetIgnore.TabIndex = 63;
-            this.checkBoxPricePlaysetIgnore.Text = "Treat playsets as 4 single cards";
-            this.toolTip1.SetToolTip(this.checkBoxPricePlaysetIgnore, resources.GetString("checkBoxPricePlaysetIgnore.ToolTip"));
-            this.checkBoxPricePlaysetIgnore.UseVisualStyleBackColor = true;
+            this.checkBoxLogLargeChangeHigh.AutoSize = true;
+            this.checkBoxLogLargeChangeHigh.Checked = true;
+            this.checkBoxLogLargeChangeHigh.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLogLargeChangeHigh.Location = new System.Drawing.Point(11, 66);
+            this.checkBoxLogLargeChangeHigh.Name = "checkBoxLogLargeChangeHigh";
+            this.checkBoxLogLargeChangeHigh.Size = new System.Drawing.Size(315, 17);
+            this.checkBoxLogLargeChangeHigh.TabIndex = 5;
+            this.checkBoxLogLargeChangeHigh.Text = "Log non-updates due to large price change (yours is too high)";
+            this.checkBoxLogLargeChangeHigh.UseVisualStyleBackColor = true;
             // 
             // UpdatePriceSettings
             // 
@@ -874,7 +888,7 @@ namespace MKMTool
         #endregion
 
         private System.Windows.Forms.GroupBox groupBoxLogSettings;
-        private System.Windows.Forms.CheckBox checkBoxLogLargeChange;
+        private System.Windows.Forms.CheckBox checkBoxLogLargeChangeLow;
         private System.Windows.Forms.CheckBox checkBoxLogSmallChange;
         private System.Windows.Forms.CheckBox checkBoxLogMinItems;
         private System.Windows.Forms.CheckBox checkBoxLogUpdated;
@@ -930,5 +944,6 @@ namespace MKMTool
         private System.Windows.Forms.Label labelMultiples;
         private System.Windows.Forms.Label labelWorlwideAvg;
         private System.Windows.Forms.CheckBox checkBoxPricePlaysetIgnore;
+        private System.Windows.Forms.CheckBox checkBoxLogLargeChangeHigh;
     }
 }

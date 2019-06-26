@@ -88,7 +88,7 @@ namespace MKMTool
 
         /// Log Settings
 
-        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logHighPriceChange, logHighPriceVariance;
+        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logLargePriceChangeTooLow, logLargePriceChangeTooHigh, logHighPriceVariance;
 
         /// Other Settings
 
@@ -132,7 +132,8 @@ namespace MKMTool
             logUpdated = refSettings.logUpdated;
             logLessThanMinimum = refSettings.logLessThanMinimum;
             logSmallPriceChange = refSettings.logSmallPriceChange;
-            logHighPriceChange = refSettings.logHighPriceChange;
+            logLargePriceChangeTooLow = refSettings.logLargePriceChangeTooLow;
+            logLargePriceChangeTooHigh = refSettings.logLargePriceChangeTooHigh;
             logHighPriceVariance = refSettings.logHighPriceVariance;
             testMode = refSettings.testMode;
             description = refSettings.description;
@@ -228,8 +229,11 @@ namespace MKMTool
                     case "logSmallPriceChange":
                         temp.logSmallPriceChange = bool.Parse(att.Value);
                         break;
-                    case "logHighPriceChange":
-                        temp.logHighPriceChange = bool.Parse(att.Value);
+                    case "logLargePriceChangeTooLow":
+                        temp.logLargePriceChangeTooLow = bool.Parse(att.Value);
+                        break;
+                    case "logLargePriceChangeTooHigh":
+                        temp.logLargePriceChangeTooHigh = bool.Parse(att.Value);
                         break;
                     case "logHighPriceVariance":
                         temp.logHighPriceVariance = bool.Parse(att.Value);
@@ -289,7 +293,8 @@ namespace MKMTool
             root.SetAttribute("logUpdated", logUpdated.ToString());
             root.SetAttribute("logLessThanMinimum", logLessThanMinimum.ToString());
             root.SetAttribute("logSmallPriceChange", logSmallPriceChange.ToString());
-            root.SetAttribute("logHighPriceChange", logHighPriceChange.ToString());
+            root.SetAttribute("logLargePriceChangeTooLow", logLargePriceChangeTooLow.ToString());
+            root.SetAttribute("logLargePriceChangeTooHigh", logLargePriceChangeTooHigh.ToString());
             root.SetAttribute("logHighPriceVariance", logHighPriceVariance.ToString());
 
             root.SetAttribute("testMode", testMode.ToString());
@@ -345,7 +350,8 @@ namespace MKMTool
             s.logUpdated = true;
             s.logLessThanMinimum = true;
             s.logSmallPriceChange = true;
-            s.logHighPriceChange = true;
+            s.logLargePriceChangeTooLow = true;
+            s.logLargePriceChangeTooHigh = true;
             s.logHighPriceVariance = true;
 
             s.testMode = false;
@@ -739,10 +745,12 @@ namespace MKMTool
             {
                 if (dOldPrice < limits.Key)
                 {
-                    if (Math.Abs(dOldPrice - priceEstimation) > dOldPrice * limits.Value)
+                    double priceDif = dOldPrice - priceEstimation; // positive when our price is too high, negative when our price is too low
+                    if (Math.Abs(priceDif) > dOldPrice * limits.Value)
                     {
                         priceEstimation = -1;
-                        if (settings.logHighPriceVariance)
+                        if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
+                            settings.logLargePriceChangeTooLow && priceDif < 0)
                             MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
                                 sArticleID + ">>> " + article["product"]["enName"].InnerText +
                                 " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
