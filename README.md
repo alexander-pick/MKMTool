@@ -3,6 +3,7 @@
 ## Last changes
 
 version 0.7.0, x.x.2019 (by Tomas Janak)
++ Fixed "Check Display Value" using locale-dependent number parsing, which caused the decimal delimiter be ignored if you are using '.' instead of ',', leading to 100x higher prices.
 + Error logging is now more systematic, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
 + The main window can now be enlarged
 + The number of API calls you sent to MKM is now displayed on the bottom of the window along the maximum number of calls you are allowed. When the limit is reached, MKMTool will no longer send any requests to MKM until you restart MKMTool or new day has passed (MKM resets the counter on 0:00 CET). The number of calls comes directly from MKM (they send it with each call), so it is 100% reliable. When you have only 50 calls remaining, the text will turn red to warn you.

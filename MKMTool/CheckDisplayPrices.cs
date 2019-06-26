@@ -31,6 +31,8 @@
 */
 using System;
 using System.Data;
+using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -82,7 +84,33 @@ namespace MKMTool
             }
         }
 
-        private void checkDipslayPrice_Click(object sender, EventArgs e)
+        private async void checkDisplayPrice_Click(object sender, EventArgs e)
+        {
+            checkDisplayPrice.Enabled = false;
+
+            // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
+            var fMythicFactor = (float)Convert.ToDouble(mythicPerRareText.Text, CultureInfo.InvariantCulture); // 1 out of 8 packs has a Mythic
+            var fPackUncommon = (float)Convert.ToDouble(uncommonPerPackText.Text, CultureInfo.InvariantCulture);
+            var fPackRareMythic = (float)Convert.ToDouble(raremythicPerPackText.Text, CultureInfo.InvariantCulture);
+
+            var fRareCardsNotinPacks = (float)Convert.ToDouble(rareNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
+            var fMythicCardsNotinPacks = (float)Convert.ToDouble(mythicNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
+            var fUncommonCardsNotinPacks = (float)Convert.ToDouble(uncommonNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
+
+            var fBoxContent = (float)Convert.ToDouble(boosterPerBoxText.Text, CultureInfo.InvariantCulture); //36 Packs
+            string edition = (editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+            
+            // run the check in a separate thread so that the main GUI is correctly updated
+            await Task.Run(() => checkDisplayPrice_run(fMythicFactor, fPackUncommon, fPackRareMythic, fRareCardsNotinPacks, fMythicCardsNotinPacks,
+                fUncommonCardsNotinPacks, fBoxContent, edition));
+            checkDisplayPrice.Enabled = true;
+        }
+
+        /// <summary>
+        /// Checks the expected ROI of a given display. Expected to be run in a separate thread
+        /// </summary>
+        private void checkDisplayPrice_run(float fMythicFactor, float fPackUncommon, float fPackRareMythic, float fRareCardsNotinPacks,
+            float fMythicCardsNotinPacks, float fUncommonCardsNotinPacks, float fBoxContent, string edition)
         {
             try
             {
@@ -90,60 +118,51 @@ namespace MKMTool
                 //MessageBox.Show((editionBox.SelectedIndex.ToString()));
 
                 var doc =
-                    MKMInteract.RequestHelper.getExpansionsSingles((editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
+                    MKMInteract.RequestHelper.getExpansionsSingles(edition);
                 //would be easier if mkm would deliver detailed info with this call but ...
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                    "====== Extension Stats ======\n");
+                    "====== Expansion Stats ======\n");
 
                 //Multiplier 
                 float fCardsInSet = doc.SelectNodes("response/single").Count;
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "Cards in set: " + fCardsInSet + "\n");
 
-                var fMyticFactor = (float) Convert.ToDouble(myticPerRareText.Text); // 1 out of 8 packs has a mytic
-                var fPackUncommon = (float) Convert.ToDouble(uncommonPerPackText.Text);
-                var fPackRareMytic = (float) Convert.ToDouble(raremyticPerPackText.Text);
-
-                var fRareCardsNotinPacks = (float) Convert.ToDouble(rareNotInBoosterText.Text); //rare and mytic
-                var fMyticCardsNotinPacks = (float) Convert.ToDouble(mythicNotInBoosterText.Text); //rare and mytic
-                var fUncommonCardsNotinPacks = (float) Convert.ToDouble(uncommonNotInBoosterText.Text); //rare and mytic
-
-                var fBoxContent = (float) Convert.ToDouble(boosterPerBoxText.Text); //36 Packs
 
                 var xRares = doc.SelectNodes("response/single/rarity[. = \"Rare\"]");
                 var xMythic = doc.SelectNodes("response/single/rarity[. = \"Mythic\"]");
                 var xUncommon = doc.SelectNodes("response/single/rarity[. = \"Uncommon\"]");
 
                 var iCountRares = xRares.Count - fRareCardsNotinPacks; //53F;
-                var iCountMytics = xMythic.Count - fMyticCardsNotinPacks; //15F;
+                var iCountMythics = xMythic.Count - fMythicCardsNotinPacks; //15F;
                 var iCountUncommons = xUncommon.Count - fUncommonCardsNotinPacks; //80F;
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "Rares in set: " + iCountRares + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                    "Mytic in set: " + iCountMytics + "\n");
+                    "Mythic in set: " + iCountMythics + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "Uncommon in set: " + iCountUncommons + "\n");
 
                 //factors per booster
                 var fFactorUncommon = fPackUncommon/iCountUncommons; //0,0375
-                var fFactorMyticRareCombined = fPackRareMytic/(iCountRares + iCountMytics); // 0,014
-                var fFactorMytic = fFactorMyticRareCombined/fMyticFactor; //chance is 1:8 fpr Mytic
-                var fFactorRare = fFactorMyticRareCombined/fMyticFactor*(fMyticFactor - 1);
+                var fFactorMythicRareCombined = fPackRareMythic/(iCountRares + iCountMythics); // 0,014
+                var fFactorMythic = fFactorMythicRareCombined/fMythicFactor; //chance is 1:8 fpr Mythic
+                var fFactorRare = fFactorMythicRareCombined/fMythicFactor*(fMythicFactor - 1);
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "====== Calculated Booster Factors ======\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "Uncommon: " + fFactorUncommon + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                    "MR Combo: " + fFactorMyticRareCombined + "\n");
+                    "MR Combo: " + fFactorMythicRareCombined + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Rare:" + fFactorRare + "\n");
-                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Mytic:" + fFactorMytic + "\n");
+                frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Mythic:" + fFactorMythic + "\n");
 
                 var fFactorUncommonBox = fFactorUncommon*fBoxContent;
-                var fFactorMyticRareCombinedBox = fFactorMyticRareCombined*fBoxContent;
-                var fFactorMyticBox = fFactorMytic*fBoxContent;
+                var fFactorMythicRareCombinedBox = fFactorMythicRareCombined*fBoxContent;
+                var fFactorMythicBox = fFactorMythic*fBoxContent;
                 var fFactorRareBox = fFactorRare*fBoxContent;
 
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
@@ -151,10 +170,10 @@ namespace MKMTool
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                     "Uncommon: " + fFactorUncommonBox + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                    "MR Combo: " + fFactorMyticRareCombinedBox + "\n");
+                    "MR Combo: " + fFactorMythicRareCombinedBox + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend), "Rare:" + fFactorRareBox + "\n");
                 frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
-                    "Mytic:" + fFactorMyticBox + "\n");
+                    "Mythic:" + fFactorMythicBox + "\n");
 
                 xRares = doc.SelectNodes("response/single");
 
@@ -175,14 +194,13 @@ namespace MKMTool
                         {
                             var fCardPrice =
                                 (float)Convert.ToDouble(
-                                        doc2.SelectSingleNode("response/product/priceGuide/SELL")
-                                            .InnerText.Replace(".", ","));
+                                        doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
 
                             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                                 "Current SELL Price: " + fCardPrice + "\n");
 
-                            fBoxValue += fCardPrice * fFactorMyticRareCombinedBox;
-                            //changed cause it's actually a rare + mytic not rare or mytiv I think?  was fFactorRareBox;
+                            fBoxValue += fCardPrice * fFactorMythicRareCombinedBox;
+                            //changed cause it's actually a rare + Mythic not rare or mythic I think?  was fFactorRareBox;
                         }
                     }
 
@@ -199,13 +217,11 @@ namespace MKMTool
                         {
                             var fCardPrice =
                                 (float)Convert.ToDouble(
-                                        doc2.SelectSingleNode("response/product/priceGuide/SELL")
-                                            .InnerText.Replace(".", ","));
-
+                                        doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
                             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                                 "Current SELL Price: " + fCardPrice + "\n");
 
-                            fBoxValue += fCardPrice * fFactorMyticBox;
+                            fBoxValue += fCardPrice * fFactorMythicBox;
                         }
                     }
 
@@ -223,8 +239,7 @@ namespace MKMTool
                             var fCardPrice =
                                 (float)
                                     Convert.ToDouble(
-                                        doc2.SelectSingleNode("response/product/priceGuide/SELL")
-                                            .InnerText.Replace(".", ","));
+                                        doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
 
                             frm1.logBox.Invoke(new MainView.logboxAppendCallback(frm1.logBoxAppend),
                                 "Current SELL Price: " + fCardPrice + "\n");

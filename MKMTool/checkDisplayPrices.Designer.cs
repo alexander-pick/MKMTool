@@ -29,11 +29,11 @@
         private void InitializeComponent()
         {
             this.editionBox = new System.Windows.Forms.ComboBox();
-            this.checkDipslayPrice = new System.Windows.Forms.Button();
-            this.myticPerRareText = new System.Windows.Forms.TextBox();
+            this.checkDisplayPrice = new System.Windows.Forms.Button();
+            this.mythicPerRareText = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.labelxy = new System.Windows.Forms.Label();
-            this.raremyticPerPackText = new System.Windows.Forms.TextBox();
+            this.raremythicPerPackText = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.uncommonPerPackText = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -54,23 +54,23 @@
             this.editionBox.Size = new System.Drawing.Size(260, 21);
             this.editionBox.TabIndex = 27;
             // 
-            // checkDipslayPrice
+            // checkDisplayPrice
             // 
-            this.checkDipslayPrice.Location = new System.Drawing.Point(12, 221);
-            this.checkDipslayPrice.Name = "checkDipslayPrice";
-            this.checkDipslayPrice.Size = new System.Drawing.Size(260, 45);
-            this.checkDipslayPrice.TabIndex = 28;
-            this.checkDipslayPrice.Text = "Check expected sale value of singles in a display";
-            this.checkDipslayPrice.UseVisualStyleBackColor = true;
-            this.checkDipslayPrice.Click += new System.EventHandler(this.checkDipslayPrice_Click);
+            this.checkDisplayPrice.Location = new System.Drawing.Point(12, 221);
+            this.checkDisplayPrice.Name = "checkDisplayPrice";
+            this.checkDisplayPrice.Size = new System.Drawing.Size(260, 45);
+            this.checkDisplayPrice.TabIndex = 28;
+            this.checkDisplayPrice.Text = "Check expected sale value of singles in a display";
+            this.checkDisplayPrice.UseVisualStyleBackColor = true;
+            this.checkDisplayPrice.Click += new System.EventHandler(this.checkDisplayPrice_Click);
             // 
-            // myticPerRareText
+            // mythicPerRareText
             // 
-            this.myticPerRareText.Location = new System.Drawing.Point(12, 39);
-            this.myticPerRareText.Name = "myticPerRareText";
-            this.myticPerRareText.Size = new System.Drawing.Size(57, 20);
-            this.myticPerRareText.TabIndex = 29;
-            this.myticPerRareText.Text = "8";
+            this.mythicPerRareText.Location = new System.Drawing.Point(12, 39);
+            this.mythicPerRareText.Name = "mythicPerRareText";
+            this.mythicPerRareText.Size = new System.Drawing.Size(57, 20);
+            this.mythicPerRareText.TabIndex = 29;
+            this.mythicPerRareText.Text = "8";
             // 
             // label1
             // 
@@ -90,13 +90,13 @@
             this.labelxy.TabIndex = 35;
             this.labelxy.Text = "Rare or Mythic per Booster";
             // 
-            // raremyticPerPackText
+            // raremythicPerPackText
             // 
-            this.raremyticPerPackText.Location = new System.Drawing.Point(12, 65);
-            this.raremyticPerPackText.Name = "raremyticPerPackText";
-            this.raremyticPerPackText.Size = new System.Drawing.Size(57, 20);
-            this.raremyticPerPackText.TabIndex = 34;
-            this.raremyticPerPackText.Text = "1";
+            this.raremythicPerPackText.Location = new System.Drawing.Point(12, 65);
+            this.raremythicPerPackText.Name = "raremythicPerPackText";
+            this.raremythicPerPackText.Size = new System.Drawing.Size(57, 20);
+            this.raremythicPerPackText.TabIndex = 34;
+            this.raremythicPerPackText.Text = "1";
             // 
             // label3
             // 
@@ -199,10 +199,10 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.uncommonPerPackText);
             this.Controls.Add(this.labelxy);
-            this.Controls.Add(this.raremyticPerPackText);
+            this.Controls.Add(this.raremythicPerPackText);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.myticPerRareText);
-            this.Controls.Add(this.checkDipslayPrice);
+            this.Controls.Add(this.mythicPerRareText);
+            this.Controls.Add(this.checkDisplayPrice);
             this.Controls.Add(this.editionBox);
             this.MaximizeBox = false;
             this.Name = "CheckDisplayPrices";
@@ -216,11 +216,11 @@
         #endregion
 
         private System.Windows.Forms.ComboBox editionBox;
-        private System.Windows.Forms.Button checkDipslayPrice;
-        private System.Windows.Forms.TextBox myticPerRareText;
+        private System.Windows.Forms.Button checkDisplayPrice;
+        private System.Windows.Forms.TextBox mythicPerRareText;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelxy;
-        private System.Windows.Forms.TextBox raremyticPerPackText;
+        private System.Windows.Forms.TextBox raremythicPerPackText;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox uncommonPerPackText;
         private System.Windows.Forms.Label label2;
