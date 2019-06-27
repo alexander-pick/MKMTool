@@ -32,30 +32,25 @@
 #undef DEBUG
 
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Serialization;
 using Timer = System.Timers.Timer;
 
 namespace MKMTool
 {
     public partial class MainView : Form
     {
-        public delegate void logboxAppendCallback(string text);
+        private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
 
         private static readonly Timer timer = new Timer();
 
         private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
 
-        private MKMBot bot;
+        internal MKMBot bot;
 
         /// <summary>
         /// The price updating bot of the application's main window. Initialized at the start of the application.
@@ -78,21 +73,24 @@ namespace MKMTool
         /// Not thread-safe, but we don't care because the first instance is created right at the begging by the main thread.
         /// </summary>
         /// <returns>The main application window</returns>
-        public static MainView Instance()
+        public static MainView Instance
         {
-            if (instance == null)
+            get
             {
-                instance = new MainView();
-                instance.Load += new EventHandler(instance.initialize);
+                if (instance == null)
+                {
+                    instance = new MainView();
+                    instance.Load += new EventHandler(instance.initialize);
+                }
+                return instance;
             }
-            return instance;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainView"/> class.
-        /// Keep the constructor simple - put any initializations that might call MainView.Instance() (which is anything really) in the Initialize() method.
+        /// Keep the constructor simple - put any initializations that might call MainView.Instance (which is anything really) in the Initialize() method.
         /// </summary>
-        public MainView()
+        private MainView()
         {
             InitializeComponent();
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
@@ -123,7 +121,6 @@ namespace MKMTool
             timer.Interval = 1440 * 1000 * 60; // set the interval to one day (1440 minutes in ms)
             try
             {
-                MKMHelpers.GetProductList();
                 var doc2 = MKMInteract.RequestHelper.getAccount();
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
@@ -134,6 +131,28 @@ namespace MKMTool
                 MKMHelpers.LogError("initializing product list and account info", eError.Message, true);
             }
             bot = new MKMBot();
+        }
+
+        /// <summary>
+        /// Logs a messages in the application's main window within the main thread by using Delegate.Invoke
+        /// so that it can be safely called from other threads.
+        /// This is just a convenience method to shorten the syntax of something as simple as writing a message in a window.
+        /// Thread safe (the whole point of it...).
+        /// </summary>
+        /// <param name="message">The message to log. An new line will be appended at the end of it.</param>
+        public void LogMainWindow(string message)
+        {
+            logBox.Invoke(new logboxAppendCallback(logBoxAppend), message + Environment.NewLine);
+        }
+
+        /// <summary>
+        /// Appends a given string to the main window's log. 
+        /// Not thread safe -> only for internal use, use the public method LogMainWindow from the outside classes.
+        /// </summary>
+        /// <param name="text">The text.</param>
+        private void logBoxAppend(string text)
+        {
+            logBox.AppendText(text);
         }
 
         private void loginButton_Click(object sender, EventArgs e)
@@ -175,7 +194,7 @@ namespace MKMTool
 
         private void getProductListButton_Click(object sender, EventArgs e)
         {
-            MKMHelpers.GetProductList();
+          //  MKMHelpers.GetProductList();
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)
@@ -223,7 +242,7 @@ namespace MKMTool
 
         private void updatePriceEvent(object sender, ElapsedEventArgs e)
         {
-            logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job..." + Environment.NewLine);
+            LogMainWindow("Starting scheduled MKM Update Job...");
 
             MKMBotSettings s;
             if (settingsWindow.GenerateBotSettings(out s))
@@ -234,12 +253,7 @@ namespace MKMTool
                 updatePriceButton.Text = "Update Prices";
             }
             else
-                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Update abandoned, incorrect setting parameters." + Environment.NewLine);
-        }
-
-        public void logBoxAppend(string text)
-        {
-            logBox.AppendText(text);
+                LogMainWindow("Update abandoned, incorrect setting parameters.");
         }
 
         private void wantlistButton_Click(object sender, EventArgs e)
@@ -256,7 +270,7 @@ namespace MKMTool
 
         private void checkDisplayPriceButton_Click(object sender, EventArgs e)
         {
-            var cw = new CheckDisplayPrices(this);
+            var cw = new CheckDisplayPrices();
             cw.ShowDialog();
         }
 

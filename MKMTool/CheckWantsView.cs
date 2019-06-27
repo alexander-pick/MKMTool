@@ -152,8 +152,7 @@ namespace MKMTool
                 return;
             }
 
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Starting to check your wantlist ID:" + listID + " ...\n");
+            MainView.Instance.LogMainWindow("Starting to check your wantlist ID:" + listID + " ...");
             var node = doc.GetElementsByTagName("item");
             foreach (XmlNode article in node)
             {
@@ -188,8 +187,7 @@ namespace MKMTool
                         (article["isFoil"].InnerText == "false" && foils == total)) // there are only foils and we want non-foil
                         continue;
 
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                        "checking:" + product["enName"].InnerText + " from  " + product["expansionName"].InnerText + "...\n");
+                    MainView.Instance.LogMainWindow("checking:" + product["enName"].InnerText + " from  " + product["expansionName"].InnerText + "...");
 
                     // a wantlist item can have more idLanguage entries, one for each wanted language
                     System.Collections.Generic.List<string> selectedLanguages = new System.Collections.Generic.List<string>();
@@ -205,8 +203,7 @@ namespace MKMTool
                         "", maxAllowedPrice, shippingAdd, percentBelow, checkTrend);
                 }
             }
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Check finished.\n");
+            MainView.Instance.LogMainWindow("Check finished.");
         }
 
         private async void checkListButton_Click(object sender, EventArgs e)
@@ -239,7 +236,7 @@ namespace MKMTool
             {
                 MKMInteract.RequestHelper.emptyCart();
 
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend), "Shopping Cart emptied.\n");
+                MainView.Instance.LogMainWindow( "Shopping Cart emptied.");
             }
             catch (Exception eError)
             {
@@ -255,11 +252,9 @@ namespace MKMTool
             bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend,
             System.Collections.Generic.List<string> selectedLanguage, string selectedExpansionID = "")
         {
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Check for cheap deals from seller '" + user + "'...\n");
+            MainView.Instance.LogMainWindow("Check for cheap deals from seller '" + user + "'...");
             if (domesticOnly)
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.\n");
+                MainView.Instance.LogMainWindow("WARNING - domestics only is checked, if the specified seller is from a foreign country, no deals will be found.");
             // Go through the stock of a specified user, checks for cheap deals and add them to the cart.
             int start = 0;
             while (true)
@@ -301,8 +296,7 @@ namespace MKMTool
                         )
                     {
 
-                        MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                            "Checking product ID: " + article["idProduct"].InnerText + "\n");
+                        MainView.Instance.LogMainWindow("Checking product ID: " + article["idProduct"].InnerText);
                         checkArticle(article["idProduct"].InnerText,
                             selectedLanguage, minCondition, isFoil, isSigned,
                             isAltered, isPlayset, article["idArticle"].InnerText, maxPrice, shippingAddition, percentBelowOthers, checkTrend);
@@ -312,8 +306,7 @@ namespace MKMTool
                     break;
                 start += 1000;
             }
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Check finished.\n");
+            MainView.Instance.LogMainWindow("Check finished.");
         }
 
         /// <summary>
@@ -332,17 +325,14 @@ namespace MKMTool
                 sT.ImportRow(row);
             }
             if (sT.Rows.Count > 0)
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Check for cheap deals from selected expansion...\n");
+                MainView.Instance.LogMainWindow("Check for cheap deals from selected expansion...");
             foreach (DataRow oRecord in sT.Rows)
             {
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Checking: " + oRecord["Name"] + "\n");
+                MainView.Instance.LogMainWindow("Checking: " + oRecord["Name"]);
                 checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
                     isAltered, isPlayset, "", maxPrice, shippingAddition, percentBelowOthers, checkTrend);
             }
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Check finished.\n");
+            MainView.Instance.LogMainWindow("Check finished.");
         }
 
         private async void checkEditionButton_Click(object sender, EventArgs e)
@@ -545,13 +535,10 @@ namespace MKMTool
 
                     factor = factor / 100 + 1;
 
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                        "Price 1: " + aPrices[0] + " Price 2: " + aPrices[1] + "\n");
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                        "Factor Price 1: " +
-                        Math.Round(aPrices[0] * factor + shippingAddition, 2)
-                        + " Factor Price 2: " +
-                        Math.Round(aPrices[1] * factor + shippingAddition, 2) + "\n");
+                    MainView.Instance.LogMainWindow("Price 1: " + aPrices[0] + " Price 2: " + aPrices[1]);
+                    MainView.Instance.LogMainWindow(
+                        "Factor Price 1: " + Math.Round(aPrices[0] * factor + shippingAddition, 2)
+                        + " Factor Price 2: " + Math.Round(aPrices[1] * factor + shippingAddition, 2));
 
                     //X% under others
                     if (
@@ -572,8 +559,7 @@ namespace MKMTool
                                 fTrendprice =
                                     Convert.ToDouble(doc3.GetElementsByTagName("TREND")[0].InnerText.Replace(".", ","));
 
-                                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                                    "Trend: " + fTrendprice + "\n");
+                                MainView.Instance.LogMainWindow("Trend: " + fTrendprice);
                             }
                             catch (Exception eError)
                             {
@@ -594,8 +580,7 @@ namespace MKMTool
                         // X% under TREND
                         if (aPrices[0] * factor < fTrendprice)
                         {
-                            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                                "Found cheap offer, ID " + bestPriceArticle + "\n");
+                            MainView.Instance.LogMainWindow("Found cheap offer, ID " + bestPriceArticle);
                             try
                             {
                                 var sRequestXML = MKMInteract.RequestHelper.addCartBody(bestPriceArticle);

@@ -35,7 +35,6 @@ using System;
 using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Windows.Forms;
 using System.Xml;
 using System.Collections.Generic;
 
@@ -422,17 +421,10 @@ namespace MKMTool
         {
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
             {
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Setting price according to lowest price is very risky - specify limits for maximal price change first!" + Environment.NewLine);
+                MainView.Instance.LogMainWindow("Setting price according to lowest price is very risky - specify limits for maximal price change first!");
                 return;
             }
-            // should fix weird float errors on foreign systems.
 
-            // TJ - this does not look like a good idea to me. MKM is sending data formated in a locale where '.' is used as decimal separator
-            // it makes no sense to force switch to German locale here and then later start replacing all '.' by ','
-            //System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
-
-            //MainView.Instance().logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), Application.CurrentCulture.EnglishName + "\n");
 #if (DEBUG)
             var debugCounter = 0;
 #endif
@@ -446,8 +438,7 @@ namespace MKMTool
             {
                 XmlDocument st = new XmlDocument();
                 st.Load(@".//myStock.xml");
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Found list of minimal prices..." + Environment.NewLine);
+                MainView.Instance.LogMainWindow("Found list of minimal prices...");
                 foreach (XmlNode n in st["stock"].ChildNodes)
                 {
                     string nameLower = n.Attributes["name"].InnerText.ToLower();
@@ -467,7 +458,6 @@ namespace MKMTool
                 {
                     var doc = MKMInteract.RequestHelper.readStock(start);
 
-                    //logBox.AppendText(OutputFormat.PrettyXml(doc.OuterXml));
                     result = doc.GetElementsByTagName("article");
                     foreach (XmlNode article in result)
                     {
@@ -482,8 +472,7 @@ namespace MKMTool
                 return;
             }
 
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Updating Prices..." + Environment.NewLine);
+            MainView.Instance.LogMainWindow("Updating Prices...");
             int putCounter = 0; 
             foreach (XmlNode article in articles)
             {
@@ -491,7 +480,7 @@ namespace MKMTool
                 debugCounter++;
                 if (debugCounter > 3)
                 {
-                    MainView.Instance().logBox.AppendText("DEBUG MODE - EXITING AFTER 3\n");
+                    MainView.Instance.logMainWindow("DEBUG MODE - EXITING AFTER 3\n");
                     break;
                 }
 #endif
@@ -518,8 +507,7 @@ namespace MKMTool
 
             if (settings.testMode)
             {
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Done. Prices NOT SENT to MKM - running in test mode finished." + Environment.NewLine);
+                MainView.Instance.LogMainWindow("Done. Prices NOT SENT to MKM - running in test mode finished.");
             }
             else if (sRequestXML.Length > 0)
             {
@@ -527,14 +515,12 @@ namespace MKMTool
             }
             else
             {
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    "Done. No valid/meaningful price updates created." + Environment.NewLine);
+                MainView.Instance.LogMainWindow("Done. No valid/meaningful price updates created.");
             }
 
             String timeStamp = GetTimestamp(DateTime.Now);
 
-            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                "Last Run finished: " + timeStamp + Environment.NewLine);
+            MainView.Instance.LogMainWindow("Last Run finished: " + timeStamp);
         }
 
         /// <summary>
@@ -544,10 +530,7 @@ namespace MKMTool
         private void sendPriceUpdate(string sRequestXML)
         {
             sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
-
-            //logBox.AppendText("final Request:\n");
-            //logBox.AppendText(OutputFormat.PrettyXml(sRequestXML));
-
+            
             XmlDocument rdoc = null;
 
             try
@@ -565,8 +548,8 @@ namespace MKMTool
                     iFailed = 0;
                 }
 
-                MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                    iUpdated + " articles updated successfully, " + iFailed + " failed" + Environment.NewLine);
+                MainView.Instance.LogMainWindow(
+                    iUpdated + " articles updated successfully, " + iFailed + " failed");
 
                 if (iFailed > 1)
                 {
@@ -578,8 +561,8 @@ namespace MKMTool
                     {
                         MKMHelpers.LogError("logging failed price update articles", eError.Message, false);
                     }
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
-                        "Failed articles logged in " + @".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log" + Environment.NewLine);
+                    MainView.Instance.LogMainWindow(
+                        "Failed articles logged in " + @".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log");
                 }
             }
             catch (Exception eError)
@@ -604,9 +587,6 @@ namespace MKMTool
             var sArticleID = article["idProduct"].InnerText;
             try
             {
-                /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/products/" + sArticleID, "GET");
-
-                logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
 
                 sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + sArticleID +
                             "?idLanguage=" + article["language"]["idLanguage"].InnerText +
@@ -645,33 +625,33 @@ namespace MKMTool
             else if (res == TraverseResult.Culled)
             {
                 if (settings.logLessThanMinimum)
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    MainView.Instance.LogMainWindow(
                             sArticleID + ">>> " + article["product"]["enName"].InnerText +
                             " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                             "Current Price: " + article["price"].InnerText + ", unchanged, only " +
                             (lastMatch + 1) + " similar items found (but some outliers were culled)" +
-                            (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine);
+                            (ignoreSellersCountry ? " - worldwide search!" : ""));
                 return null;
             }
             else if (res == TraverseResult.HighVariance)
             {
                 if (settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    MainView.Instance.LogMainWindow(
                         sArticleID + ">>> " + article["product"]["enName"].InnerText +
                         " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                         "NOT UPDATED - variance of prices among cheapest similar items is too high" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine);
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
                 return null;
             }
             else if (res == TraverseResult.NotEnoughSimilars)
             {
                 if (settings.logLessThanMinimum)
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    MainView.Instance.LogMainWindow(
                         sArticleID + ">>> " + article["product"]["enName"].InnerText +
                         " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                         "Current Price: " + article["price"].InnerText + ", unchanged, only " +
                         (lastMatch + 1) + " similar items found" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine);
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
                 return null;
             }
             else if (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
@@ -679,12 +659,12 @@ namespace MKMTool
 
             {
                 if (settings.logLessThanMinimum)
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    MainView.Instance.LogMainWindow(
                         sArticleID + ">>> " + article["product"]["enName"].InnerText +
                         " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                         "Current Price: " + article["price"].InnerText + ", unchanged, only " +
                         (lastMatch + 1) + " similar items with an item with matching condition above them were found" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine);
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
                 return null;
             }
             else
@@ -751,12 +731,12 @@ namespace MKMTool
                         priceEstimation = -1;
                         if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
                             settings.logLargePriceChangeTooLow && priceDif < 0)
-                            MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                            MainView.Instance.LogMainWindow(
                                 sArticleID + ">>> " + article["product"]["enName"].InnerText +
                                 " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                                 "NOT UPDATED - change too large: Current Price: "
                                 + sOldPrice + ", Calculated Price:" + sNewPrice +
-                                (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine);
+                                (ignoreSellersCountry ? " - worldwide search!" : ""));
 
                     }
                     break;
@@ -793,12 +773,12 @@ namespace MKMTool
                 // log large change or small change when enabled
                 if (settings.logUpdated && (settings.logSmallPriceChange ||
                     (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
-                    MainView.Instance().logBox.Invoke(new MainView.logboxAppendCallback(MainView.Instance().logBoxAppend),
+                    MainView.Instance.LogMainWindow(
                         sArticleID + ">>> " + article["product"]["enName"].InnerText +
                         " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
                         "Current Price: " + sOldPrice + ", Calculated Price:" + sNewPrice +
                         ", based on " + (lastMatch + 1) + " items" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine);
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
 
                 if (changeMT)
                     article["condition"].InnerText = "MT";
@@ -819,9 +799,6 @@ namespace MKMTool
                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                     )
                 {
-                    //MainView.Instance().logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["product"]["enName"].InnerText + "\n", MainView.Instance());
-                    //MainView.Instance().logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["price"].InnerText + " " + offer["price"].InnerText + "\n", MainView.Instance());
-
                     if (offer["condition"].InnerText != article["condition"].InnerText && settings.condAcceptance == AcceptedCondition.OnlyMatching)
                         continue;
 

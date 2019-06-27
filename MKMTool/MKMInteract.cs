@@ -102,7 +102,7 @@ namespace MKMTool
                     denyAdditionalRequests = true;
                     denyTime = System.DateTime.UtcNow;
                 }
-                MainView.Instance().Invoke(new MainView.updateRequestCountCallback(MainView.Instance().updateRequestCount), requestCount, requestLimit);
+                MainView.Instance.Invoke(new MainView.updateRequestCountCallback(MainView.Instance.updateRequestCount), requestCount, requestLimit);
     
                 return doc;
             }

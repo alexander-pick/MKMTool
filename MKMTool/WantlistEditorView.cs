@@ -216,7 +216,7 @@ namespace MKMTool
 
             wantsView.Columns.Clear();
 
-            var ds = MainView.Instance().Bot.buildProperWantsList(sListId);
+            var ds = MainView.Instance.Bot.buildProperWantsList(sListId);
 
             if (ds.Select().Length > 0)
             {

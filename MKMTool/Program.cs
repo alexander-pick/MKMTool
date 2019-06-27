@@ -44,7 +44,7 @@ namespace MKMTool
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(MainView.Instance());
+            Application.Run(MainView.Instance);
         }
     }
 }
