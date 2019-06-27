@@ -897,7 +897,7 @@ namespace MKMTool
             return now.ToString("dd.MM.yyyy HH:mm:ss");
         }
 
-        public string getBuys(MainView mainView, string iType)
+        public static string getBuys(MainView mainView, string iType)
         {
             /*
                 bought or 1

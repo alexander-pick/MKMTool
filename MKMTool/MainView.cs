@@ -262,18 +262,11 @@ namespace MKMTool
 
         private void downloadBuysToExcel_Click(object sender, EventArgs e)
         {
-            MKMBotSettings s;
-            if (settingsWindow.GenerateBotSettings(out s))
-            {
-                logBox.AppendText("Downloading Buys data." + Environment.NewLine);
-                bot.setSettings(s);
+            logBox.AppendText("Downloading Buys data." + Environment.NewLine);
 
-                string sFilename = bot.getBuys(this, "8"); //mainForm
-                if (sFilename != "")
-                    Process.Start(sFilename);
-            }
-            else
-                logBox.AppendText("Buy data download abandoned, incorrect setting parameters." + Environment.NewLine);
+            string sFilename = MKMBot.getBuys(this, "8"); //mainForm
+            if (sFilename != "")
+                Process.Start(sFilename);
         }
 
         private void buttonSettings_Click(object sender, EventArgs e)
