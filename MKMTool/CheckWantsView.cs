@@ -41,16 +41,8 @@ namespace MKMTool
 {
     public partial class CheckWantsView : Form
     {
-        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
-
-        private readonly DataTable eS = new DataTable();
-
-        private readonly MainView frm1;
-
-        public CheckWantsView(MainView frm)
+        public CheckWantsView()
         {
-            frm1 = frm;
-
             InitializeComponent();
 
             foreach (var Lang in MKMHelpers.dLanguages)
@@ -65,45 +57,18 @@ namespace MKMTool
                 langCombo.SelectedIndex = 0;
             }
 
-            XmlDocument doc = null;
-            try
+            MKMDatabaseManager.Instance.PopulateExpansionsComboBox(ref editionBox);
+            if (editionBox.Items.Count > 0)
             {
-                doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("fetching all MTG expansions for wants checking, disabling Bulk Check", eError.Message, true);
-                checkEditionButton.Enabled = false;
-            }
-            if (doc != null)
-            {
-
-                var node = doc.GetElementsByTagName("expansion");
-
-                eS.Columns.Add("idExpansion", typeof(string));
-                eS.Columns.Add("abbreviation", typeof(string));
-                eS.Columns.Add("enName", typeof(string));
-
-                foreach (XmlNode nExpansion in node)
-                {
-                    eS.Rows.Add(nExpansion["idExpansion"].InnerText, nExpansion["abbreviation"].InnerText,
-                        nExpansion["enName"].InnerText);
-                }
-
-                foreach (XmlNode nExpansion in node)
-                {
-                    var item = new MKMHelpers.ComboboxItem();
-
-                    item.Text = nExpansion["enName"].InnerText;
-                    item.Value = nExpansion["idExpansion"].InnerText;
-
-                    editionBox.Items.Add(item);
-                }
-
                 editionBox.Sorted = true;
                 editionBox.SelectedIndex = 0;
-                conditionCombo.SelectedIndex = 4;
             }
+            else
+            {
+                MKMHelpers.LogError("loading expansions from local database for Check Cheap Deals", "Database empty.", false);
+            }
+
+            conditionCombo.SelectedIndex = 4;
             initWantLists();
         }
 
@@ -277,12 +242,10 @@ namespace MKMTool
                 {
                     if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
                     {
-                        DataRow[] result = dt.Select(string.Format("[idProduct] = '{0}'", article["idProduct"].InnerText));
-                        if (result.Length != 1 ||  // should always be exactly 1, but to be sure
-                            result[0].Field<string>("Expansion ID") != selectedExpansionID) // compare
-                        {
+                        DataRow card = MKMDatabaseManager.Instance.GetSingleCard(article["idProduct"].InnerText);
+
+                        if (card == null || card.Field<string>("Expansion ID") != selectedExpansionID) // compare
                             continue;
-                        }
                     }
 
                     if ( // do as much filtering here as possible to reduce the number of API calls
@@ -316,17 +279,9 @@ namespace MKMTool
             bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
             System.Collections.Generic.List<string> selectedLanguage)
         {
-            var sT = dt.Clone();
-
-            var result = dt.Select(string.Format("[Expansion ID] = '{0}'", selectedExpansionID));
-
-            foreach (var row in result)
-            {
-                sT.ImportRow(row);
-            }
-            if (sT.Rows.Count > 0)
-                MainView.Instance.LogMainWindow("Check for cheap deals from selected expansion...");
-            foreach (DataRow oRecord in sT.Rows)
+            DataRow[] sT = MKMDatabaseManager.Instance.GetCardsInExpansion(selectedExpansionID);
+            MainView.Instance.LogMainWindow("Checking for cheap deals from selected expansion...");
+            foreach (DataRow oRecord in sT)
             {
                 MainView.Instance.LogMainWindow("Checking: " + oRecord["Name"]);
                 checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,

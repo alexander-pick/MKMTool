@@ -194,7 +194,13 @@ namespace MKMTool
 
         private void getProductListButton_Click(object sender, EventArgs e)
         {
-          //  MKMHelpers.GetProductList();
+            logBoxAppend("Updating local database files..." + Environment.NewLine);
+            getProductListButton.Text = "Updating...";
+            getProductListButton.Enabled = false;
+            if (MKMDatabaseManager.Instance.UpdateDatabaseFiles())
+                logBoxAppend("Database created." + Environment.NewLine);
+            getProductListButton.Enabled = true;
+            getProductListButton.Text = "Update local MKM Product List";
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)
@@ -264,7 +270,7 @@ namespace MKMTool
 
         private void checkWants_Click(object sender, EventArgs e)
         {
-            var cw = new CheckWantsView(this);
+            var cw = new CheckWantsView();
             cw.ShowDialog();
         }
 

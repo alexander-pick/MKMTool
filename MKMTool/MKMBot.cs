@@ -307,8 +307,6 @@ namespace MKMTool
 
     internal class MKMBot
     {
-        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
-
         private MKMBotSettings settings;
         
         public MKMBot()
@@ -399,13 +397,11 @@ namespace MKMTool
                 {
                     return new DataTable();
                 }
-
-                DataTable eS = MKMHelpers.ReadSQLiteToDt("expansions");
-                
-                var dv = MKMHelpers.JoinDataTables(dt, eS,
+               
+                var dv = MKMDatabaseManager.JoinDataTables(MKMDatabaseManager.Instance.Inventory, MKMDatabaseManager.Instance.Expansions,
                     (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
-                dv = MKMHelpers.JoinDataTables(dv, ds.Tables["item"],
+                dv = MKMDatabaseManager.JoinDataTables(dv, ds.Tables["item"],
                     (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
 
                 return dv;

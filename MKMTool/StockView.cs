@@ -38,25 +38,11 @@ namespace MKMTool
 {
     public partial class StockView : Form
     {
-        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
-        private readonly DataTable eS = new DataTable();
-
         public StockView()
         {
             InitializeComponent();
 
-            try
-            {
-                eS = MKMHelpers.ReadSQLiteToDt("expansions");
-
-                stockGridView.ReadOnly = true;
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("loading expansions from database for Stock View", eError.Message, true);
-                return;
-            }
-
+            stockGridView.ReadOnly = true;
             int start = 1;
             var articles = new DataTable();
             Boolean first = true;
@@ -94,10 +80,10 @@ namespace MKMTool
                     else break; // document is empty -> end
                 }
 
-                var dj = MKMHelpers.JoinDataTables(articles, dt,
+                var dj = MKMDatabaseManager.JoinDataTables(articles, MKMDatabaseManager.Instance.Inventory,
                     (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
 
-                dj = MKMHelpers.JoinDataTables(dj, eS,
+                dj = MKMDatabaseManager.JoinDataTables(dj, MKMDatabaseManager.Instance.Expansions,
                     (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
                 dj.Columns.Remove("article_Id");

@@ -33,11 +33,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -55,7 +53,7 @@ namespace MKMTool
         private static DataTable dt = new DataTable();
 
         /// <summary>
-        /// Converts the condition from string to int as.
+        /// Converts the condition from string to int so that it can be numerically compared.
         /// </summary>
         /// <param name="cond">The condition as two letter code.</param>
         /// <returns>5 for MT or NM, 4 for EX, 3 for GD, 2 for LP, 1 for PL, 0 for PO.</returns>
@@ -160,71 +158,7 @@ namespace MKMTool
 
             return stringBuilder.ToString();
         }
-
-        // 
-        // http://stackoverflow.com/questions/1050112/how-to-read-a-csv-file-into-a-net-datatable
-
-        public static DataTable ConvertCSVtoDataTable(string strFilePath)
-        {
-            if (dt != null && dt.Rows.Count > 0)
-                return dt;
-            using (var sr = new StreamReader(strFilePath))
-            {
-                var headers = sr.ReadLine().Split(',');
-
-                foreach (var header in headers)
-                    dt.Columns.Add(header.Replace("\"", ""));
-
-                while (!sr.EndOfStream)
-                {
-                    var rows = sr.ReadLine().Split(',');
-                    var dr = dt.NewRow();
-
-                    for (var i = 0; i < headers.Length; i++)
-                        dr[i] = rows[i].Replace("\"", "");
-
-                    dt.Rows.Add(dr);
-                }
-            }
-
-            dt = dt.Select("[Category ID] = '1'").CopyToDataTable(); // grab only MTG Singles
-
-            return dt;
-        }
-
-        // Reference:
-        // http://stackoverflow.com/questions/665754/inner-join-of-datatables-in-c-sharp
-
-        public static DataTable JoinDataTables(DataTable t1, DataTable t2, params Func<DataRow, DataRow, bool>[] joinOn)
-        {
-            var result = new DataTable();
-            foreach (DataColumn col in t1.Columns)
-                if (result.Columns[col.ColumnName] == null)
-                    result.Columns.Add(col.ColumnName, col.DataType);
-            foreach (DataColumn col in t2.Columns)
-                if (result.Columns[col.ColumnName] == null)
-                    result.Columns.Add(col.ColumnName, col.DataType);
-            foreach (DataRow row1 in t1.Rows)
-            {
-                var joinRows = t2.AsEnumerable().Where(row2 =>
-                {
-                    foreach (var parameter in joinOn)
-                        if (!parameter(row1, row2)) return false;
-                    return true;
-                });
-                foreach (var fromRow in joinRows)
-                {
-                    var insertRow = result.NewRow();
-                    foreach (DataColumn col1 in t1.Columns)
-                        insertRow[col1.ColumnName] = row1[col1.ColumnName];
-                    foreach (DataColumn col2 in t2.Columns)
-                        insertRow[col2.ColumnName] = fromRow[col2.ColumnName];
-                    result.Rows.Add(insertRow);
-                }
-            }
-            return result;
-        }
-
+        
         public static byte[] gzDecompress(byte[] gzip)
         {
             // Create a GZIP stream with decompression mode.
@@ -245,255 +179,6 @@ namespace MKMTool
                     } while (count > 0);
                     return memory.ToArray();
                 }
-            }
-        }
-
-        public static DataTable ReadSQLiteToDt(string sTableName)
-        {
-            var m_dbConnection = new SQLiteConnection("Data Source=mkmtool.sqlite;Version=3;");
-
-            m_dbConnection.Open();
-
-            var stringQuery = "SELECT * FROM " + sTableName;
-
-            var SqliteCmd = new SQLiteCommand(stringQuery, m_dbConnection);
-
-            SqliteCmd.CommandType = CommandType.Text;
-
-            var da = new SQLiteDataAdapter(SqliteCmd);
-
-            var dt = new DataTable();
-
-            da.Fill(dt);
-
-            return dt;
-        }
-
-        public static void BulkInsertDataTable(string tableName, DataTable table, SQLiteConnection m_dbConnection)
-        {
-            try
-            {
-                var rgx = new Regex("[^a-zA-Z0-9]");
-
-
-                using (var transaction = m_dbConnection.BeginTransaction())
-                {
-                    var sql = new StringBuilder();
-
-                    sql.AppendFormat("INSERT INTO {0} (", tableName);
-
-                    var i = 0;
-
-                    var iQm = "";
-
-                    for (i = 0; i < table.Columns.Count; i++)
-                    {
-                        sql.AppendFormat(" \"{0}\"", table.Columns[i].ColumnName);
-
-                        iQm = iQm + "@" + rgx.Replace(table.Columns[i].ColumnName, "");
-
-                        if (i != table.Columns.Count - 1)
-                        {
-                            sql.Append(",");
-                            iQm = iQm + ", ";
-                        }
-                    }
-
-                    sql.Append(") VALUES (" + iQm + ")");
-
-                    var sSql = sql.ToString();
-
-                    foreach (DataRow dtRow in table.Rows)
-                    {
-                        var insertSQL = new SQLiteCommand(sSql, m_dbConnection);
-
-                        foreach (DataColumn dc in table.Columns)
-                            insertSQL.Parameters.Add(new SQLiteParameter("@" + rgx.Replace(dc.ColumnName, ""),
-                                dtRow[dc].ToString()));
-
-                        //Console.WriteLine(dtRow[dc].ToString());
-
-                        insertSQL.ExecuteNonQuery();
-                    }
-
-                    transaction.Commit();
-                }
-
-            }
-            catch (Exception Ex)
-            {
-                MKMHelpers.LogError("bulk insert data table", Ex.Message, true);
-            }
-        }
-
-        public static string GetCreateTableSql(DataTable table, string tableName)
-        {
-            var sql = new StringBuilder();
-
-            sql.AppendFormat("CREATE TABLE {0} (", tableName);
-
-            for (var i = 0; i < table.Columns.Count; i++)
-            {
-                sql.AppendFormat(" \"{0}\"", table.Columns[i].ColumnName);
-
-                switch (table.Columns[i].DataType.ToString().ToUpper())
-                {
-                    case "SYSTEM.INT16":
-                        sql.Append(" integer");
-                        break;
-                    case "SYSTEM.INT32":
-                        sql.Append(" integer");
-                        break;
-                    case "SYSTEM.INT64":
-                        sql.Append(" integer");
-                        break;
-                    case "SYSTEM.STRING":
-                        sql.Append(" varchar(255)");
-                        break;
-                    case "SYSTEM.SINGLE":
-                        sql.Append(" real");
-                        break;
-                    case "SYSTEM.DOUBLE":
-                        sql.Append(" real");
-                        break;
-                    case "SYSTEM.DECIMAL":
-                        sql.Append(" integer");
-                        break;
-                    default:
-                        sql.Append(" varchar(255)");
-                        break;
-                }
-
-                if (i != table.Columns.Count - 1)
-                    sql.Append(",");
-            }
-
-            sql.AppendFormat(")");
-
-            return sql.ToString();
-        }
-
-
-        public static void GetProductList()
-        {
-            if (!File.Exists(@".\\mkminventory.csv"))
-            {
-                try
-                {
-                    var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
-
-                    var node = doc.GetElementsByTagName("response");
-
-                    var zipPath = @".\\mkminventory.zip";
-
-                    foreach (XmlNode aFile in node)
-                        if (aFile["productsfile"].InnerText != null)
-                        {
-                            var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
-                            File.WriteAllBytes(zipPath, data);
-                        }
-
-                    var file = File.ReadAllBytes(zipPath);
-                    var aDecompressed = gzDecompress(file);
-
-                    File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
-                }
-                catch (Exception eError)
-                {
-                    MKMHelpers.LogError("parsing mkm inventory, product list cannot be obtained", eError.Message, true);
-                    return;
-                }
-            }
-
-            //db init
-
-            SQLiteConnection m_dbConnection;
-
-            var dt = ConvertCSVtoDataTable(@".\\mkminventory.csv");
-
-            var sql2 = GetCreateTableSql(dt, "inventory");
-
-            Console.WriteLine(sql2);
-
-            if (!File.Exists("mkmtool.sqlite"))
-            {
-                SQLiteConnection.CreateFile("mkmtool.sqlite");
-
-                m_dbConnection = new SQLiteConnection("Data Source=mkmtool.sqlite;Version=3;");
-                m_dbConnection.Open();
-
-                var sql = GetCreateTableSql(dt, "inventory");
-
-                var command = new SQLiteCommand(sql, m_dbConnection);
-
-                command.ExecuteNonQuery();
-
-                sql = "CREATE TABLE expansions (idExpansion, abbreviation, enName)";
-
-                command = new SQLiteCommand(sql, m_dbConnection);
-
-                command.ExecuteNonQuery();
-            }
-            else
-            {
-                //clean inventory table
-                m_dbConnection = new SQLiteConnection("Data Source=mkmtool.sqlite;Version=3;");
-                m_dbConnection.Open();
-
-                var sql = "DELETE FROM inventory";
-
-                var command = new SQLiteCommand(sql, m_dbConnection);
-                command.ExecuteNonQuery();
-
-                sql = "DELETE FROM expansions";
-
-                command = new SQLiteCommand(sql, m_dbConnection);
-                command.ExecuteNonQuery();
-
-                sql = "VACUUM";
-
-                command = new SQLiteCommand(sql, m_dbConnection);
-                command.ExecuteNonQuery();
-            }
-
-            BulkInsertDataTable("inventory", dt, m_dbConnection);
-
-            BuildExpansionTable(m_dbConnection);
-
-            m_dbConnection.Close();
-        }
-
-        public static void BuildExpansionTable(SQLiteConnection m_dbConnection)
-        {
-            try
-            {
-                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
-
-                var node = doc.GetElementsByTagName("expansion");
-
-                string sSql = "INSERT INTO expansions (idExpansion, abbreviation, enName) VALUES (@idExpansion, @abbreviation, @enName)";
-
-                using (var transaction = m_dbConnection.BeginTransaction())
-                {
-
-                    var insertSQL = new SQLiteCommand(sSql, m_dbConnection);
-
-                    foreach (XmlNode nExpansion in node)
-                    {
-
-                        insertSQL.Parameters.Add(new SQLiteParameter("@idExpansion", nExpansion["idExpansion"].InnerText));
-                        insertSQL.Parameters.Add(new SQLiteParameter("@abbreviation", nExpansion["abbreviation"].InnerText));
-                        insertSQL.Parameters.Add(new SQLiteParameter("@enName", nExpansion["enName"].InnerText));
-
-                        insertSQL.ExecuteNonQuery();
-                    }
-
-                    transaction.Commit();
-                }
-            }
-            catch (Exception Ex)
-            {
-                LogError("building expansions table", Ex.Message, true);
             }
         }
 
@@ -537,8 +222,6 @@ namespace MKMTool
                 MessageBox.Show(msg, "MKMTool encountered error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        private static bool firstError = true; // for logging errors, see LogError()
-
         public class ComboboxItem
         {
             public string Text { get; set; }
@@ -549,5 +232,7 @@ namespace MKMTool
                 return Text;
             }
         }
+
+        private static bool firstError = true; // for logging errors, see LogError()
     }
 }

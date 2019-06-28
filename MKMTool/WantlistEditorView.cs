@@ -40,10 +40,7 @@ namespace MKMTool
 {
     public partial class WantlistEditorView : Form
     {
-        private DataTable dj = new DataTable();
-        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
-        private readonly DataTable eS = new DataTable();
-
+        private DataTable dj;
         // Column Sort for listView Elements:
         // https://msdn.microsoft.com/en-us/library/ms996467.aspx?f=255&MSPPError=-2147217396
 
@@ -52,10 +49,6 @@ namespace MKMTool
         public WantlistEditorView()
         {
             InitializeComponent();
-
-            eS.Columns.Add("idExpansion", typeof(string));
-            eS.Columns.Add("abbreviation", typeof(string));
-            eS.Columns.Add("enName", typeof(string));
 
             foreach (var Lang in MKMHelpers.dLanguages)
             {
@@ -69,36 +62,7 @@ namespace MKMTool
                 langCombo.SelectedIndex = 0;
             }
 
-            XmlDocument doc = null;
-            try
-            {
-                doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("getting MTG expansions for wantlist editor, editor will be disabled", eError.Message, true);
-                addButton.Enabled = false;
-                deleteItemButton.Enabled = false;
-                return;
-            }
-
-            var node = doc.GetElementsByTagName("expansion");
-
-            foreach (XmlNode nExpansion in node)
-            {
-                eS.Rows.Add(nExpansion["idExpansion"].InnerText, nExpansion["abbreviation"].InnerText,
-                    nExpansion["enName"].InnerText);
-            }
-
-            foreach (XmlNode nExpansion in node)
-            {
-                var item = new MKMHelpers.ComboboxItem();
-
-                item.Text = nExpansion["enName"].InnerText;
-                item.Value = nExpansion["abbreviation"].InnerText;
-
-                editionBox.Items.Add(item);
-            }
+            MKMDatabaseManager.Instance.PopulateExpansionsComboBox(ref editionBox);
             editionBox.Sorted = true;
 
             initWantLists();
@@ -156,7 +120,7 @@ namespace MKMTool
 
             dj = new DataTable();
 
-            dj = MKMHelpers.JoinDataTables(dt, eS,
+            dj = MKMDatabaseManager.JoinDataTables(MKMDatabaseManager.Instance.Inventory, MKMDatabaseManager.Instance.Expansions,
                 (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
             foreach (DataRow row in dj.Rows)
@@ -226,7 +190,6 @@ namespace MKMTool
                 wantsView.Refresh();
 
                 wantsView.Columns["idProduct"].Visible = false;
-                wantsView.Columns["Category ID"].Visible = false;
                 wantsView.Columns["Expansion ID"].Visible = false;
                 wantsView.Columns["Date Added"].Visible = false;
                 wantsView.Columns["idExpansion"].Visible = false;

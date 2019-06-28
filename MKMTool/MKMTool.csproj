@@ -103,6 +103,7 @@
     <Compile Include="CheckWantsView.Designer.cs">
       <DependentUpon>CheckWantsView.cs</DependentUpon>
     </Compile>
+    <Compile Include="MKMDatabaseManager.cs" />
     <Compile Include="SettingPresetStore.cs">
       <SubType>Form</SubType>
     </Compile>
