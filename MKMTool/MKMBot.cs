@@ -429,25 +429,30 @@ namespace MKMTool
             XmlNodeList result;
             var start = 1;
             // load file with lowest prices
-            Dictionary<string, List<XmlNode>> myStock = new Dictionary<string, List<XmlNode>>();
-            try
+            Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>();
+            if (File.Exists(@".//myStock.csv"))
             {
-                XmlDocument st = new XmlDocument();
-                st.Load(@".//myStock.xml");
                 MainView.Instance.LogMainWindow("Found list of minimal prices...");
-                foreach (XmlNode n in st["stock"].ChildNodes)
+                try
                 {
-                    string nameLower = n.Attributes["name"].InnerText.ToLower();
-                    if (!myStock.ContainsKey(nameLower))
-                        myStock.Add(nameLower, new List<XmlNode>());
-                    myStock[nameLower].Add(n);
+                    DataTable stock = MKMDatabaseManager.ConvertCSVtoDataTable(@".//myStock.csv");
+                    foreach (DataRow dr in stock.Rows)
+                    {
+                        MKMMetaCard card = new MKMMetaCard(dr);
+                        if (card.GetAttribute(MKMMetaCardAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
+                        {
+                            string name = card.GetAttribute(MKMMetaCardAttribute.Name);
+                            if (!myStock.ContainsKey(name))
+                                myStock.Add(name, new List<MKMMetaCard>());
+                            myStock[name].Add(card);
+                        }
+                    }
+                }
+                catch (Exception eError)
+                {
+                    MKMHelpers.LogError("reading list of minimal prices, continuing price update without it", eError.Message, false);
                 }
             }
-            catch (Exception)
-            {
-                myStock = null;
-            }
-
             try
             {
                 do
@@ -570,7 +575,7 @@ namespace MKMTool
 
         }
 
-        private string checkArticle(XmlNode article, ref Dictionary<string, List<XmlNode>> myStock)
+        private string checkArticle(XmlNode article, ref Dictionary<string, List<MKMMetaCard>> myStock)
         {
             var sUrl = "http://not.initilaized";
             bool changeMT = false;
@@ -742,30 +747,31 @@ namespace MKMTool
                 && Math.Abs(priceEstimation - dOldPrice) != Double.Epsilon // don't update if it did not change - clearer log
                 )
             {
-                    // check against minimum price from local stock database
-                    if (myStock != null && myStock.ContainsKey(article["product"]["enName"].InnerText.ToLower()))
+                // check against minimum price from local stock database
+                List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
+                if (myStock.ContainsKey(""))
+                    listArticles.AddRange(myStock[""]); // special treatment for entries that are not for a specific card name
+                if (myStock.ContainsKey(article["product"]["enName"].InnerText))
+                    listArticles.AddRange(myStock[article["product"]["enName"].InnerText]);
+                if (listArticles.Count > 0)
+                {
+                    MKMMetaCard curArticle = new MKMMetaCard(article);
+                    foreach (MKMMetaCard card in listArticles)
                     {
-                        List<XmlNode> listArticles = myStock[article["product"]["enName"].InnerText.ToLower()];
-                        foreach (XmlNode n in listArticles)
+                        if (card.Equals(curArticle))
                         {
-                            if (n.Attributes["set"].InnerText.ToLower() == article["product"]["expansion"].InnerText.ToLower()
-                                && n.Attributes["language"].InnerText == article["language"]["languageName"].InnerText
-                                && n.Attributes["condition"].InnerText == article["condition"].InnerText
-                                && n.Attributes["isFoil"].InnerText == article["isFoil"].InnerText
-                                && n.Attributes["isPlayset"].InnerText == article["isPlayset"].InnerText
-                                )
+                            string minPrice = card.GetAttribute(MKMMetaCardAttribute.MinPrice);
+                            double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
+                            if (curArticle.GetAttribute(MKMMetaCardAttribute.Playset) == "true")
+                                dminPrice /= 4;
+                            if (priceEstimation < dminPrice)
                             {
-                                string minPrice = n.Attributes["minPrice"].InnerText;
-                                double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
-                                if (priceEstimation < dminPrice)
-                                {
-                                    priceEstimation = dminPrice;
-                                    sNewPrice = minPrice;
-                                }
-                                break;
+                                priceEstimation = dminPrice;
+                                sNewPrice = minPrice;
                             }
                         }
                     }
+                }
                 // log large change or small change when enabled
                 if (settings.logUpdated && (settings.logSmallPriceChange ||
                     (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))

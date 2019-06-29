@@ -104,6 +104,7 @@
       <DependentUpon>CheckWantsView.cs</DependentUpon>
     </Compile>
     <Compile Include="MKMDatabaseManager.cs" />
+    <Compile Include="MKMMetaCard.cs" />
     <Compile Include="SettingPresetStore.cs">
       <SubType>Form</SubType>
     </Compile>
