@@ -235,10 +235,10 @@ namespace MKMTool
                     MainView.Instance.LogMainWindow("Database created.");
                 else return;// updateDatabaseFiles reported the error
             }
-            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalDays > 120 ||
-                (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalDays > 120)
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalDays > 100 ||
+                (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalDays > 100)
             {
-                MainView.Instance.LogMainWindow("Local inventory database is more than 120 days old, updating...");
+                MainView.Instance.LogMainWindow("Local inventory database is more than 100 days old, updating...");
                 if (UpdateDatabaseFiles())
                     MainView.Instance.LogMainWindow("Database updated.");
                 else return;// updateDatabaseFiles reported the error
@@ -456,10 +456,18 @@ namespace MKMTool
         /// Returns all cards in the specified expansions.
         /// </summary>
         /// <param name="idExpansion">Expansion's ID.</param>
-        /// <returns>Array of card records, each record has the following entries: "idProduct","Name", "Expansion ID","Metacard ID","Date Added".</returns>
+        /// <returns>Array of card records, each record has the following entries: "idProduct","Name", "Expansion ID","Metacard ID","Date Added".
+        /// Empty if idExpansion is invalid.</returns>
         public DataRow[] GetCardsInExpansion(string idExpansion)
         {
-            return inventory.Select(string.Format("[Expansion ID] = '{0}'", idExpansion));
+            DataRow[] ret = inventory.Select(string.Format("[Expansion ID] = '{0}'", idExpansion));
+            if (ret.Length == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Expansion id " + idExpansion + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                ret = inventory.Select(string.Format("[Expansion ID] = '{0}'", idExpansion));
+            }
+            return ret;
         }
 
         /// <summary>
@@ -473,7 +481,15 @@ namespace MKMTool
             DataRow[] ret = expansions.Select(string.Format("[enName] = '{0}'", expansionName));
             if (ret.Length == 1)
                 return ret[0]["idExpansion"].ToString();
-            else return "";
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Expansion " + expansionName + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                ret = expansions.Select(string.Format("[enName] = '{0}'", expansionName));
+                if (ret.Length == 1)
+                    return ret[0]["idExpansion"].ToString();
+            }
+            return "";
         }
 
         /// <summary>
@@ -486,7 +502,15 @@ namespace MKMTool
             DataRow[] ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
             if (ret.Length == 1)
                 return ret[0]["enName"].ToString();
-            else return "";
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
+                if (ret.Length == 1)
+                    return ret[0]["enName"].ToString();
+            }
+            return "";
         }
 
         /// <summary>
@@ -513,7 +537,15 @@ namespace MKMTool
             DataRow[] ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
             if (ret.Length == 1)
                 return ret[0];
-            else return null;
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
+                if (ret.Length == 1)
+                    return ret[0];
+            }
+            return null;
         }
 
         #endregion

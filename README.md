@@ -229,7 +229,7 @@ Does what it says, shows you the info stack of your account in raw data.
 Pretty much just shows you a list of your currently listed item – nothing special here.
 
 ### Update Local MKM Product List
-Updates the local offline database provided from MKM. This csv is usually maintained by the program, the option is just for debug purpose.
+Updates the local offline database provided from MKM. This csv is usually maintained by the program, it automatically updated if it is older than 100 days or when some module attempts fails to find the data it is asking for (and the database is more than 1 day old). So most of the time, you should not need to click this button, except in cases when for example new expansion just comes out and you want to use the "Check for Cheap Deals" option, updating the database will make the new expansion appear in the list of expansions.
 
 ### Resource URLS
 
