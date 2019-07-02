@@ -65,9 +65,9 @@ namespace MKMTool
             MKMDatabaseManager.Instance.PopulateExpansionsComboBox(ref editionBox);
             editionBox.Sorted = true;
 
+            initCardView();
             initWantLists();
 
-            initCardView();
 
             conditionCombo.SelectedIndex = 3;
         }
@@ -114,7 +114,7 @@ namespace MKMTool
 
             cardView.BackColor = Color.WhiteSmoke;
 
-            cardView.Columns.Add("ProduktID", 60);
+            cardView.Columns.Add("ProductID", 60);
             cardView.Columns.Add("Card Name", 220);
             cardView.Columns.Add("Edition", 120);
 
@@ -179,27 +179,66 @@ namespace MKMTool
             var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
             wantsView.Columns.Clear();
+            DataTable dv = null;
+            try
+            {
 
-            var ds = MainView.Instance.Bot.buildProperWantsList(sListId);
+                var doc = MKMInteract.RequestHelper.getWantsListByID(sListId);
 
-            if (ds.Select().Length > 0)
+                var xmlReader = new XmlNodeReader(doc);
+
+                var ds = new DataSet();
+
+                ds.ReadXml(xmlReader);
+
+                if (!ds.Tables.Contains("item"))
+                    return;
+
+                dv = ds.Tables["item"];
+                dv.Columns.Add("enName");
+                dv.Columns.Add("expansionName");
+                dv.Columns["enName"].SetOrdinal(0); // put the name and expansion at the beggining of the table
+                dv.Columns["expansionName"].SetOrdinal(1);
+                int itemCounter = 0;
+                foreach (XmlNode child in doc["response"]["wantslist"].ChildNodes)
+                {
+                    if (child.Name == "item")
+                    {
+                        if (child["type"].InnerText == "product")
+                        {
+                            dv.Rows[itemCounter]["enName"] = child["product"]["enName"].InnerText;
+                            dv.Rows[itemCounter]["expansionName"] = child["product"]["expansionName"].InnerText;
+                        }
+                        else // it is a metaproduct
+                        {
+                            dv.Rows[itemCounter]["enName"] = child["metaproduct"]["enName"].InnerText; // we don't care which child is the first, the name is the same for all
+                            // we would have to do an additional API call to get the list of expansions
+                            // given that the current code refreshes this view everytime an item is added to wantlist, it is not very practical
+                            dv.Rows[itemCounter]["expansionName"] = "<any>";
+                        }
+                        itemCounter++;
+                    }
+                }
+                dv = ds.Tables["item"];
+            }
+            catch (Exception eError)
+            {
+                MKMHelpers.LogError("processing wantlist " + sListId + ", it will be ignored", eError.Message, true);
+                return;
+            }
+            if (dv.Select().Length > 0)
             {
                 wantsView.AutoGenerateColumns = true;
-                wantsView.DataSource = ds;
+                wantsView.DataSource = dv;
 
                 wantsView.Refresh();
 
-                wantsView.Columns["idProduct"].Visible = false;
-                wantsView.Columns["Expansion ID"].Visible = false;
-                wantsView.Columns["Date Added"].Visible = false;
-                wantsView.Columns["idExpansion"].Visible = false;
-                wantsView.Columns["abbreviation"].Visible = false;
+                if (wantsView.Columns.Contains("idProduct")) // if the wantlist has only metaproducts, there will be no idProduct entry
+                    wantsView.Columns["idProduct"].Visible = false;
                 wantsView.Columns["idWant"].Visible = false;
-                wantsView.Columns["item_Id"].Visible = false;
-                wantsView.Columns["wantslist_Id"].Visible = false;
                 wantsView.Columns["type"].Visible = false;
                 wantsView.Columns["wishPrice"].Visible = false;
-                wantsView.Columns["count"].Visible = false;
+                wantsView.Columns["count"].Visible = false;          
 
                 wantsView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
                 wantsView.ReadOnly = true;
@@ -249,28 +288,31 @@ namespace MKMTool
         private void deleteItemButton_Click(object sender, EventArgs e)
         {
             var iCellIndex = wantsView.Columns["idWant"].Index;
-
-            if (wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString() == "")
+            if (wantsView.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Please select the row you want to delete!");
                 return;
             }
-            var idWant = wantsView.SelectedRows[0].Cells[iCellIndex].Value.ToString();
 
-            var sRequestXML = MKMInteract.RequestHelper.deleteWantsListBody(idWant);
-            sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
-            var sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+            foreach (DataGridViewRow selectedRow in wantsView.SelectedRows)
+            {
+                string idWant = selectedRow.Cells[iCellIndex].Value.ToString();
 
-            try
-            {
-                MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sListId, "PUT",
-                    sRequestXML);
-                wantsListBoxReload();
+                string sRequestXML = MKMInteract.RequestHelper.deleteWantsListBody(idWant);
+                sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
+                string sListId = (wantListsBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+
+                try
+                {
+                    MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sListId, "PUT",
+                        sRequestXML);
+                }
+                catch (Exception eError)
+                {
+                    MKMHelpers.LogError("deleting from wantlist item #" + idWant, eError.Message, true, sRequestXML);
+                }
             }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("deleting from wantlist item #" + idWant, eError.Message, true, sRequestXML);
-            }
+            wantsListBoxReload();
         }
 
         private void cardView_ColumnClick(object sender, ColumnClickEventArgs e)

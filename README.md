@@ -7,6 +7,8 @@ Bugfixes:
 + Fixed "Check Display Value" using locale-dependent number parsing, which caused the decimal delimiter be ignored if you are using '.' instead of ',', leading to 100x higher prices.
 + Error logging is now more systematic, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
 + Local database is updated after pressing the update button even when the files already exist on hard drive
++ Want list editor now also displays "metaproducts", that is cards for which you have set the expansion to "any" (it will show "<any>" in the expansion name column). In line with that, it will no longer crash if you open a want list that has only metaproducts.
++ Fixed behaviour of the delete function in Want List editor: when no line is selected, message is displayed; when multiple lines are selected, all of the selected items are deleted.
 
 New/improved features:
 + The main window can now be enlarged
@@ -216,7 +218,7 @@ This is more of an experimental feature, I written it to roughly calculate the e
 
 ![screenshot](http://www.alexander-pick.com/github/tool4.PNG)
 
-Easy Editor for MKM want list, I written this since the MKM features to build a list were too unhandy for me. This works well with the check for cheap deals feature.
+Easy Editor for MKM want list, I written this since the MKM features to build a list were too unhandy for me. This works well with the check for cheap deals feature. However, the functionality is (in the current version) limited: for language, you have to choose either all, or one specific language, not a combination of several languages; you have to choose one precise condition; for boolean flag as foil, signed etc., you can choose only yes or no, not "any"; for expansions, you have to choose a specific one, you can't choose "any"; similarly, if you have chosen "any" expansion in the MKM's want list editor, MKMTool will display it only as "<any>", it won't list all the possible expansions.
 
 ## Other Features / Options
 

@@ -88,8 +88,6 @@ namespace MKMTool
 
                 dj.Columns.Remove("article_Id");
                 dj.Columns.Remove("Date Added");
-                dj.Columns.Remove("Category ID");
-                dj.Columns.Remove("Category");
                 dj.Columns.Remove("Metacard ID");
                 dj.Columns.Remove("idArticle");
                 dj.Columns.Remove("idProduct");

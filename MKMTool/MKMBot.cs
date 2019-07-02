@@ -380,39 +380,6 @@ namespace MKMTool
             return double.MaxValue;
         }
 
-        public DataTable buildProperWantsList(string sListId)
-        {
-            try
-            {
-
-                var doc = MKMInteract.RequestHelper.getWantsListByID(sListId);
-
-                var xmlReader = new XmlNodeReader(doc);
-
-                var ds = new DataSet();
-
-                ds.ReadXml(xmlReader);
-
-                if (!ds.Tables.Contains("item"))
-                {
-                    return new DataTable();
-                }
-               
-                var dv = MKMDatabaseManager.JoinDataTables(MKMDatabaseManager.Instance.Inventory, MKMDatabaseManager.Instance.Expansions,
-                    (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
-
-                dv = MKMDatabaseManager.JoinDataTables(dv, ds.Tables["item"],
-                    (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
-
-                return dv;
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("processing wantlist " + sListId + ", it will be ignored", eError.Message, true);
-                return new DataTable();
-            }
-        }
-
         public void updatePrices()
         {
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
