@@ -77,6 +77,7 @@
             // 
             this.wantListsBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.wantListsBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.wantListsBox2.FormattingEnabled = true;
             this.wantListsBox2.Location = new System.Drawing.Point(20, 19);
             this.wantListsBox2.Name = "wantListsBox2";
@@ -142,6 +143,7 @@
             // editionBox
             // 
             this.editionBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.editionBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.editionBox.FormattingEnabled = true;
             this.editionBox.Location = new System.Drawing.Point(6, 154);
             this.editionBox.Name = "editionBox";
@@ -307,6 +309,7 @@
             // conditionCombo
             // 
             this.conditionCombo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.conditionCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.conditionCombo.FormattingEnabled = true;
             this.conditionCombo.Items.AddRange(new object[] {
             "MT",
@@ -337,6 +340,7 @@
             // langCombo
             // 
             this.langCombo.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.langCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.langCombo.FormattingEnabled = true;
             this.langCombo.Location = new System.Drawing.Point(6, 29);
             this.langCombo.Margin = new System.Windows.Forms.Padding(2);

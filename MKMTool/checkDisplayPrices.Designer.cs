@@ -48,6 +48,7 @@
             // 
             // editionBox
             // 
+            this.editionBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.editionBox.FormattingEnabled = true;
             this.editionBox.Location = new System.Drawing.Point(12, 12);
             this.editionBox.Name = "editionBox";
