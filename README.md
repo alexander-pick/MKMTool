@@ -5,6 +5,7 @@
 version 0.7.0, x.x.2019 (by Tomas Janak)
 Bugfixes:
 + Fixed "Check Display Value" using locale-dependent number parsing, which caused the decimal delimiter be ignored if you are using '.' instead of ',', leading to 100x higher prices.
++ Fixed numerous issues in "Check cheap deals", now it works as intended for all three modes (expansion check, user check, want list check)
 + Error logging is now more systematic, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
 + Local database is updated after pressing the update button even when the files already exist on hard drive
 + Want list editor now also displays "metaproducts", that is cards for which you have set the expansion to "any" (it will show "<any>" in the expansion name column). In line with that, it will no longer crash if you open a want list that has only metaproducts.
@@ -102,7 +103,7 @@ The base part of the algorithm is finding "similar items". This is a sequence of
 
 The following figure shows the settings window. Each of the parameters will now be described in details, going from top to bottom, left to right:
 
-![screenshot](updatePriceSettings.png)
+![Update Price Settings](MKMTool/updatePriceSettings.png)
 
 + **Minimum price of rares:** This is the minimum price that will ever be assigned to your rares (and mythics) no matter what price is computed.
 + **Minimum # of similar items:** if by the end the sequence of similar items is smaller than this number, no price update will be performed.
@@ -199,7 +200,7 @@ As was mentioned several times in the list above, the format is done in such a w
 
 ### Check for cheap deals
 
-![screenshot](checkCheapDeals.png)
+![Check Cheap Deals](MKMTool/checkCheapDeals.png)
 
 For the fun of it – with this feature you can find cheap deals with X percent cheaper (the first parameter, see figure above) than other vendors and cheaper than the Trend if selected. You can specify a shipping addition to be added to the lowest found price to ensure a good deal. If cards are found they are directly added to your cart on MKM, just log in and check your cart. Use the parameters on the right side of the window to specify what kind of cards you are looking for and how it should be priced. There are three ways to check cheap deals:
 + Whole expansion check: all cards from a given expansion will be checked for cheap deals.
