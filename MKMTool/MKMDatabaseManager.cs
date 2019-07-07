@@ -627,7 +627,7 @@ namespace MKMTool
             }
             catch (Exception Ex)
             {
-                MKMHelpers.LogError("bulk-inserting data into the SQL database", Ex.Message, true);
+                LogError("bulk-inserting data into the SQL database (MKMTool will still function correctly)", Ex.Message, false);
             }
         }
 
