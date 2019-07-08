@@ -577,7 +577,10 @@ namespace MKMTool
             int lastMatch = -1;
             bool ignoreSellersCountry = false;
             TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
-            if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars) // if there isn't enough similar items being sold in seller's country, check other countries as well
+            if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
+                || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
+                // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
+                )
             {
                 ignoreSellersCountry = true;
                 prices.Clear();

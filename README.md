@@ -10,6 +10,7 @@ Bugfixes:
 + Local database is updated after pressing the update button even when the files already exist on hard drive
 + Want list editor now also displays "metaproducts", that is cards for which you have set the expansion to "any" (it will show "<any>" in the expansion name column). In line with that, it will no longer crash if you open a want list that has only metaproducts.
 + Fixed behaviour of the delete function in Want List editor: when no line is selected, message is displayed; when multiple lines are selected, all of the selected items are deleted.
++ Fixed a minor bug in update price when using worldwide search: if the condition setting "Accept better only if there is at least one more expensive match" was turned and it would cause not enough cards to be found among domestic items, the worldwide search would not happen, now it does.
 
 New/improved features:
 + The main window can now be enlarged
