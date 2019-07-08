@@ -314,7 +314,7 @@ namespace MKMTool
                 }
                 if (quoteEnclosed)
                     columnValue = columnValue.Substring(1, columnValue.Length - 2);
-                columnValue.Replace("\"\"", "\""); // un-escape double quotes
+                columnValue = columnValue.Replace("\"\"", "\""); // un-escape double quotes
                 // let's handle one corner case: if somebody is exporting a list from excel and says "enclose each field in double quotes",
                 // empty fields will have the value "". Since that is an even number of double quotes, our algorithm will evaluate it as 
                 // not being quoteEnclosed even though it actually is an enclosed empty string. After the above replacement, we will now
