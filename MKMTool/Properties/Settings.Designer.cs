@@ -34,5 +34,17 @@ namespace MKMTool.Properties {
                 this["LastSettingsPreset"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastSettingsPresetExtList {
+            get {
+                return ((string)(this["LastSettingsPresetExtList"]));
+            }
+            set {
+                this["LastSettingsPresetExtList"] = value;
+            }
+        }
     }
 }

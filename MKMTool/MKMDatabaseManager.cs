@@ -40,6 +40,7 @@ using System.Xml;
 using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using static MKMTool.MKMHelpers;
 
 namespace MKMTool
 {
@@ -66,12 +67,35 @@ namespace MKMTool
         }
 
         /// <summary>
+        /// A "string enum" for fields of the Inventory DataTable.
+        /// </summary>
+        public class InventoryFields
+        {
+            public static string ProductID { get { return "idProduct"; } }
+            public static string Name { get { return "Name"; } }
+            public static string ExpansionID { get { return "Expansion ID"; } }
+            public static string MetaproductID { get { return "Metacard ID"; } }
+            public static string DateAdded { get { return "Date Added"; } }
+        }
+
+        /// <summary>
         /// DataTable with all expansions of MtG in the MKM's inventory.
         /// Each row is a record for one card with the following entries: "idExpansion","abbreviation","enName"
         /// </summary>
         public DataTable Expansions
         {
             get { return expansions; }
+        }
+
+        /// <summary>
+        /// A "string enum" for fields of the Expansions DataTable.
+        /// </summary>
+        public class ExpansionsFields
+        {
+            public static string ExpansionID { get { return "idExpansion"; } }
+            public static string Abbreviation { get { return "abbreviation"; } }
+            public static string Name { get { return "enName"; } }
+            public static string ReleaseDate { get { return "releaseDate"; } }
         }
 
         // Explicit static constructor to tell C# compiler
@@ -122,7 +146,7 @@ namespace MKMTool
                     }
                     
                 var file = File.ReadAllBytes(zipPath);
-                var aDecompressed = MKMHelpers.gzDecompress(file);
+                var aDecompressed = gzDecompress(file);
 
                 File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
 
@@ -134,18 +158,19 @@ namespace MKMTool
 
                 using (StreamWriter exp = new StreamWriter(@".\\mkmexpansions.csv"))
                 {
-                    exp.WriteLine("\"idExpansion\",\"abbreviation\",\"enName\"");
+                    exp.WriteLine("\"idExpansion\",\"abbreviation\",\"enName\",\"releaseDate\"");
                     foreach (XmlNode nExpansion in node)
                     {
-                        exp.WriteLine("\"" + nExpansion["idExpansion"].InnerText + "\",\"" // put commas around each, in case wizards ever decide to do set with a comma in the name
-                            + nExpansion["abbreviation"].InnerText + "\",\"" + nExpansion["enName"].InnerText + "\"");
+                        exp.WriteLine("\"" + nExpansion[ExpansionsFields.ExpansionID].InnerText + "\",\"" // put commas around each, in case wizards ever decide to do set with a comma in the name
+                            + nExpansion[ExpansionsFields.Abbreviation].InnerText + "\",\"" + nExpansion[ExpansionsFields.Name].InnerText + "\",\""
+                            + nExpansion[ExpansionsFields.ReleaseDate].InnerText + "\"");
                     }
                 }
                 MainView.Instance.LogMainWindow("MKM expansion database updated.");
             }
             catch (Exception eError)
             {
-                MKMHelpers.LogError("downloading MKM inventory", eError.Message, true);
+                LogError("downloading MKM inventory", eError.Message, true);
                 File.Delete(@".\\mkminventory.csv");
                 File.Delete(@".\\mkmexpansions.csv");
                 return false;
@@ -160,7 +185,7 @@ namespace MKMTool
             }
             catch (Exception eError)
             {
-                MKMHelpers.LogError("parsing mkm inventory, product list cannot be obtained", eError.Message, true);
+                LogError("parsing mkm inventory, product list cannot be obtained", eError.Message, true);
                 return false;
             }
 
@@ -186,7 +211,7 @@ namespace MKMTool
 
                 command.ExecuteNonQuery();
 
-                sql = "CREATE TABLE expansions (idExpansion, abbreviation, enName)";
+                sql = "CREATE TABLE expansions (idExpansion, abbreviation, enName, releaseDate)";
 
                 command = new SQLiteCommand(sql, m_dbConnection);
 
@@ -255,7 +280,7 @@ namespace MKMTool
                 }
                 catch (Exception eError)
                 {
-                    MKMHelpers.LogError("reading local database files", eError.Message, true);
+                    LogError("reading local database files", eError.Message, true);
                 }
             }
         }
@@ -327,6 +352,37 @@ namespace MKMTool
                 ret.Add(columnValue);
             }
             return ret;
+        }
+
+        /// <summary>
+        /// Writes the table as CSV.
+        /// </summary>
+        /// <param name="filePath">Path to the file as which to write the table.</param>
+        /// <param name="dt">The data table to write.</param>
+        public static void WriteTableAsCSV(string filePath, DataTable dt)
+        {
+            try
+            {
+                using (StreamWriter exp = new StreamWriter(filePath))
+                {
+                    // we know there will be at least one column, otherwise there would be no valid imported items and therefore no export enabled
+                    string row = "\"" + dt.Columns[0].ColumnName + "\"";
+                    for (int i = 1; i < dt.Columns.Count; i++)
+                        row += ",\"" + dt.Columns[i].ColumnName + "\"";
+                    exp.WriteLine(row);
+                    foreach (DataRow card in dt.Rows)
+                    {
+                        row = "\"" + card[0] + "\"";
+                        for (int i = 1; i < dt.Columns.Count; i++)
+                            row += ",\"" + card[i] + "\"";
+                        exp.WriteLine(row);
+                    }
+                }
+            }
+            catch (Exception eError)
+            {
+                LogError("writing CSV file " + filePath, eError.Message, true);
+            }
         }
 
         /// <summary>
@@ -420,7 +476,7 @@ namespace MKMTool
         {
             foreach (DataRow nExpansion in expansions.Rows)
             {
-                MKMHelpers.ComboboxItem item = new MKMHelpers.ComboboxItem();
+                ComboboxItem item = new ComboboxItem();
 
                 item.Text = nExpansion["enName"].ToString();
                 item.Value = nExpansion["idExpansion"].ToString();
@@ -434,7 +490,7 @@ namespace MKMTool
         /// </summary>
         /// <param name="idProduct">Product ID of the card - it must be a single MtG cards, other products will not be found. If the card has not been
         /// found, it will attempt to update the local database if it is more than 24 hours old.</param>
-        /// <returns>The card info with the following entries: "idProduct","Name", "Expansion ID","Metacard ID","Date Added".
+        /// <returns>The card info with the entries from the Inventory (use InventoryFields to get names of columns).
         /// Returns null in case the product ID is invalid.</returns>
         public DataRow GetSingleCard(string idProduct)
         {
@@ -453,10 +509,31 @@ namespace MKMTool
         }
 
         /// <summary>
+        /// Gets all card entires with a given name.
+        /// </summary>
+        /// <param name="enName">English name of the card.</param>
+        /// <returns>For each expansion the card has been printed in, one entry from the Inventory is returned (use InventoryFields to get names of columns).
+        /// Empty if nothing found.</returns>
+        public DataRow[] GetCardByName(string enName)
+        {
+            enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
+            DataRow[] ret = inventory.Select(string.Format("[Name] = '{0}'", enName));
+            if (ret.Length > 0) // should always be either 0 or 1 as idProduct is unique
+                return ret;
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Card " + enName + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                return inventory.Select(string.Format("[Name] = '{0}'", enName));
+            }
+            return new DataRow[0];
+        }
+
+        /// <summary>
         /// Returns all cards in the specified expansions.
         /// </summary>
         /// <param name="idExpansion">Expansion's ID.</param>
-        /// <returns>Array of card records, each record has the following entries: "idProduct","Name", "Expansion ID","Metacard ID","Date Added".
+        /// <returns>Array of card records, each record has the entries from the Inventory (use InventoryFields to get names of columns).
         /// Empty if idExpansion is invalid.</returns>
         public DataRow[] GetCardsInExpansion(string idExpansion)
         {
@@ -514,10 +591,33 @@ namespace MKMTool
         }
 
         /// <summary>
+        /// Gets the product ID based on expansionID and name.
+        /// </summary>
+        /// <param name="enName">English name of the card.</param>
+        /// <param name="expansionID">ID of the expansion.</param>
+        /// <returns>String with the ID or empty string if such product was not found.</returns>
+        public string GetProductID(string enName, string expansionID)
+        {
+            enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
+            DataRow[] ret = inventory.Select(string.Format("[Expansion ID] = '{0}' AND [Name] = '{1}'", expansionID, enName));
+            if (ret.Length == 1)
+                return ret[0]["idProduct"].ToString();
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Product " + enName + " from " + expansionID + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                ret = inventory.Select(string.Format("[Expansion ID] = '{0}' AND [Name] = '{1}'", expansionID, enName));
+                if (ret.Length == 1)
+                    return ret[0]["idProduct"].ToString();
+            }
+            return "";
+        }
+
+        /// <summary>
         /// Gets the expansion based on its name.
         /// </summary>
         /// <param name="expansionName">Name of the expansion in English with capitalized first letters.</param>
-        /// <returns>Data row with the fields "idExpansion", "abbreviation" and "enName". Null in case the expansion is not found.</returns>
+        /// <returns>Data row from the Expansions, use ExpansionsFields to get the names of the columns. Null in case the expansion is not found.</returns>
         public DataRow GetExpansionByName(string expansionName)
         {
             expansionName = expansionName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
@@ -531,7 +631,7 @@ namespace MKMTool
         /// Gets the expansion based on its ID.
         /// </summary>
         /// <param name="expansionID">ID of the expansion.</param>
-        /// <returns>Data row with the fields "idExpansion", "abbreviation" and "enName". Null in case the expansion is not found.</returns>
+        /// <returns>Data row from the Expansions, use ExpansionsFields to get the names of the columns. Null in case the expansion is not found.</returns>
         public DataRow GetExpansionByID(string expansionID)
         {
             DataRow[] ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));

@@ -50,7 +50,7 @@ namespace MKMTool
         {
             InitializeComponent();
 
-            foreach (var Lang in MKMHelpers.dLanguages)
+            foreach (var Lang in MKMHelpers.languagesNames)
             {
                 var item = new MKMHelpers.ComboboxItem();
 

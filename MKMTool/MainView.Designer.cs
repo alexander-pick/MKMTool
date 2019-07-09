@@ -46,13 +46,14 @@
             this.downloadBuysToExcel = new System.Windows.Forms.Button();
             this.buttonSettings = new System.Windows.Forms.Button();
             this.labelRequestCounter = new System.Windows.Forms.Label();
+            this.buttonPriceExternal = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // loginButton
             // 
             this.loginButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.loginButton.Location = new System.Drawing.Point(532, 347);
+            this.loginButton.Location = new System.Drawing.Point(532, 392);
             this.loginButton.Margin = new System.Windows.Forms.Padding(2);
             this.loginButton.Name = "loginButton";
             this.loginButton.Size = new System.Drawing.Size(102, 22);
@@ -64,7 +65,7 @@
             // readStockButton
             // 
             this.readStockButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.readStockButton.Location = new System.Drawing.Point(638, 347);
+            this.readStockButton.Location = new System.Drawing.Point(638, 392);
             this.readStockButton.Margin = new System.Windows.Forms.Padding(2);
             this.readStockButton.Name = "readStockButton";
             this.readStockButton.Size = new System.Drawing.Size(102, 22);
@@ -83,7 +84,7 @@
             this.logBox.Multiline = true;
             this.logBox.Name = "logBox";
             this.logBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.logBox.Size = new System.Drawing.Size(631, 324);
+            this.logBox.Size = new System.Drawing.Size(631, 369);
             this.logBox.TabIndex = 4;
             // 
             // updatePriceButton
@@ -108,7 +109,7 @@
             // 
             // getProductListButton
             // 
-            this.getProductListButton.Location = new System.Drawing.Point(3, 249);
+            this.getProductListButton.Location = new System.Drawing.Point(3, 294);
             this.getProductListButton.Margin = new System.Windows.Forms.Padding(2);
             this.getProductListButton.Name = "getProductListButton";
             this.getProductListButton.Size = new System.Drawing.Size(102, 41);
@@ -120,7 +121,7 @@
             // runtimeIntervall
             // 
             this.runtimeIntervall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.runtimeIntervall.Location = new System.Drawing.Point(3, 347);
+            this.runtimeIntervall.Location = new System.Drawing.Point(3, 392);
             this.runtimeIntervall.Name = "runtimeIntervall";
             this.runtimeIntervall.Size = new System.Drawing.Size(34, 20);
             this.runtimeIntervall.TabIndex = 10;
@@ -131,7 +132,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(41, 350);
+            this.label1.Location = new System.Drawing.Point(41, 395);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(44, 13);
             this.label1.TabIndex = 11;
@@ -141,7 +142,7 @@
             // 
             this.autoUpdateCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.autoUpdateCheck.AutoSize = true;
-            this.autoUpdateCheck.Location = new System.Drawing.Point(85, 349);
+            this.autoUpdateCheck.Location = new System.Drawing.Point(85, 394);
             this.autoUpdateCheck.Name = "autoUpdateCheck";
             this.autoUpdateCheck.Size = new System.Drawing.Size(87, 17);
             this.autoUpdateCheck.TabIndex = 12;
@@ -165,13 +166,13 @@
             this.checkWants.Name = "checkWants";
             this.checkWants.Size = new System.Drawing.Size(102, 41);
             this.checkWants.TabIndex = 14;
-            this.checkWants.Text = "Check for cheap deals";
+            this.checkWants.Text = "Check for Cheap Deals";
             this.checkWants.UseVisualStyleBackColor = true;
             this.checkWants.Click += new System.EventHandler(this.checkWants_Click);
             // 
             // wantlistEditButton
             // 
-            this.wantlistEditButton.Location = new System.Drawing.Point(3, 204);
+            this.wantlistEditButton.Location = new System.Drawing.Point(3, 249);
             this.wantlistEditButton.Margin = new System.Windows.Forms.Padding(2);
             this.wantlistEditButton.Name = "wantlistEditButton";
             this.wantlistEditButton.Size = new System.Drawing.Size(102, 41);
@@ -203,7 +204,7 @@
             // 
             // downloadBuysToExcel
             // 
-            this.downloadBuysToExcel.Location = new System.Drawing.Point(3, 294);
+            this.downloadBuysToExcel.Location = new System.Drawing.Point(3, 339);
             this.downloadBuysToExcel.Margin = new System.Windows.Forms.Padding(2);
             this.downloadBuysToExcel.Name = "downloadBuysToExcel";
             this.downloadBuysToExcel.Size = new System.Drawing.Size(102, 41);
@@ -215,7 +216,7 @@
             // buttonSettings
             // 
             this.buttonSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSettings.Location = new System.Drawing.Point(426, 347);
+            this.buttonSettings.Location = new System.Drawing.Point(426, 392);
             this.buttonSettings.Margin = new System.Windows.Forms.Padding(2);
             this.buttonSettings.Name = "buttonSettings";
             this.buttonSettings.Size = new System.Drawing.Size(102, 22);
@@ -229,17 +230,29 @@
             this.labelRequestCounter.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.labelRequestCounter.AutoSize = true;
             this.labelRequestCounter.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.labelRequestCounter.Location = new System.Drawing.Point(178, 350);
+            this.labelRequestCounter.Location = new System.Drawing.Point(178, 395);
             this.labelRequestCounter.Name = "labelRequestCounter";
             this.labelRequestCounter.Size = new System.Drawing.Size(243, 13);
             this.labelRequestCounter.TabIndex = 20;
             this.labelRequestCounter.Text = "API Requests made/allowed: ??????? / ???????";
             // 
+            // buttonPriceExternal
+            // 
+            this.buttonPriceExternal.Location = new System.Drawing.Point(3, 204);
+            this.buttonPriceExternal.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonPriceExternal.Name = "buttonPriceExternal";
+            this.buttonPriceExternal.Size = new System.Drawing.Size(102, 41);
+            this.buttonPriceExternal.TabIndex = 21;
+            this.buttonPriceExternal.Text = "Price External List";
+            this.buttonPriceExternal.UseVisualStyleBackColor = true;
+            this.buttonPriceExternal.Click += new System.EventHandler(this.buttonPriceExternal_Click);
+            // 
             // MainView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(744, 379);
+            this.ClientSize = new System.Drawing.Size(744, 424);
+            this.Controls.Add(this.buttonPriceExternal);
             this.Controls.Add(this.labelRequestCounter);
             this.Controls.Add(this.buttonSettings);
             this.Controls.Add(this.downloadBuysToExcel);
@@ -259,7 +272,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(760, 417);
+            this.MinimumSize = new System.Drawing.Size(760, 462);
             this.Name = "MainView";
             this.Text = "MKMTool 0.6 - Alexander Pick 2017 - Licensed under GPL v3 ";
             this.groupBox1.ResumeLayout(false);
@@ -288,6 +301,7 @@
         private System.Windows.Forms.Button downloadBuysToExcel;
         private System.Windows.Forms.Button buttonSettings;
         private System.Windows.Forms.Label labelRequestCounter;
+        private System.Windows.Forms.Button buttonPriceExternal;
     }
 }
 

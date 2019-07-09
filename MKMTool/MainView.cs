@@ -48,7 +48,7 @@ namespace MKMTool
 
         private static readonly Timer timer = new Timer();
 
-        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
+        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
 
         internal MKMBot bot;
 
@@ -317,6 +317,12 @@ namespace MKMTool
             labelRequestCounter.Text = "API Requests made/allowed: " + requestsPerformed + "/" + requestsLimit;
             if (requestsLimit - requestsPerformed < 50)
                 labelRequestCounter.ForeColor = System.Drawing.Color.Red;
+        }
+
+        private void buttonPriceExternal_Click(object sender, EventArgs e)
+        {
+            PriceExternalList pxl = new PriceExternalList();
+            pxl.ShowDialog();
         }
     }
 }

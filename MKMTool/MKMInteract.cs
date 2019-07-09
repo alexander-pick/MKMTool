@@ -29,6 +29,7 @@
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
+using System;
 using System.IO;
 using System.Net;
 using System.Xml;
@@ -66,6 +67,7 @@ namespace MKMTool
                     else
                         denyAdditionalRequests = false;
                 }
+                XmlDocument doc = new XmlDocument();
                 var request = WebRequest.CreateHttp(url);
                 request.Method = method;
 
@@ -86,15 +88,15 @@ namespace MKMTool
                 }
 
                 var response = request.GetResponse() as HttpWebResponse;
-                var doc = new XmlDocument();
-                StreamReader s = new StreamReader(response.GetResponseStream()); // just for checking EoF, it is not accessible directly from the Stream object
+
+                // just for checking EoF, it is not accessible directly from the Stream object
                 // Empty streams can be returned for example for article fetches that result in 0 matches (happens regularly when e.g. seeking nonfoils in foil-only promo sets). 
                 // Passing empty stream to doc.Load causes exception and also sometimes seems to screw up the XML parser 
                 // even when the exception is handled and it then causes problems for subsequent calls => first check if the stream is empty
+                StreamReader s = new StreamReader(response.GetResponseStream());
                 if (!s.EndOfStream)
                     doc.Load(s);
                 s.Close();
-
                 int requestCount = int.Parse(response.Headers.Get("X-Request-Limit-Count"));
                 int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));
                 if (requestCount >= requestLimit)
@@ -150,6 +152,54 @@ namespace MKMTool
                 return XMLContent;
             }
 
+            /// <summary>
+            /// Generates a XML entry for PUT STOCK for a given article.
+            /// </summary>
+            /// <param name="card">The card. Must have idArticle, price, idLanguage, count and condition set.</param>
+            /// <param name="sNewPrice">The new price to set.</param>
+            /// <returns>The body of the API request.</returns>
+            public static string changeStockArticleBody(MKMMetaCard card, string sNewPrice)
+            {
+                var XMLContent = "<article>" +
+                                 "<idArticle>" + card.GetAttribute(MKMMetaCardAttribute.ArticleID) + "</idArticle>" +
+                                 "<price>" + sNewPrice + "</price>" +
+                                 "<idLanguage>" + card.GetAttribute(MKMMetaCardAttribute.LanguageID) + "</idLanguage>" +
+                                 "<comments>" + card.GetAttribute(MKMMetaCardAttribute.Comments) + " </comments>" +
+                                 "<count>" + card.GetAttribute(MKMMetaCardAttribute.Count) + "</count>" +
+                                 "<condition>" + card.GetAttribute(MKMMetaCardAttribute.Condition) + "</condition>" +
+                                 "</article>";
+
+                return XMLContent;
+            }
+
+            /// <summary>
+            /// Generates a XML entry for POST STOCK for a given article, i.e. uploading a new article to stock.
+            /// </summary>
+            /// <param name="card">The card. Must have idProduct, MKMPrice, LanguageID, Count and Condition set.</param>
+            /// <param name="sNewPrice">The new price to set.</param>
+            /// <returns>The body of the API request.</returns>
+            public static string postStockArticleBody(MKMMetaCard card)
+            {
+                string isFoil = card.GetAttribute(MKMMetaCardAttribute.Foil);
+                string isSigned = card.GetAttribute(MKMMetaCardAttribute.Signed);
+                string isPlayset = card.GetAttribute(MKMMetaCardAttribute.Playset);
+                string isAltered = card.GetAttribute(MKMMetaCardAttribute.Altered);
+                var XMLContent = "<article>" +
+                                "<idProduct>" + card.GetAttribute(MKMMetaCardAttribute.ProductID) + "</idProduct>" +
+                                "<idLanguage>" + card.GetAttribute(MKMMetaCardAttribute.LanguageID) + "</idLanguage>" +
+                                "<comments>" + card.GetAttribute(MKMMetaCardAttribute.Comments) + " </comments>" +
+                                "<count>" + card.GetAttribute(MKMMetaCardAttribute.Count) + "</count>" +
+                                "<price>" + card.GetAttribute(MKMMetaCardAttribute.MKMPrice) + "</price>" +
+                                "<condition>" + card.GetAttribute(MKMMetaCardAttribute.Condition) + "</condition>" +
+                                (isFoil == "" ? "" : ("<isFoil>" + isFoil + "</isFoil>")) +
+                                (isSigned == "" ? "" : ("<isSigned>" + isSigned + "</isSigned>")) +
+                                (isPlayset == "" ? "" : ("<isPlayset>" + isPlayset + "</isPlayset>")) +
+                                (isAltered == "" ? "" : ("<isAltered>" + isAltered + "</isAltered>")) +
+                                "</article>";
+
+                return XMLContent;
+            }
+
             public static string deleteWantsListBody(string idWant)
             {
                 var XMLContent = "<action>deleteItem</action>" +
@@ -179,6 +229,71 @@ namespace MKMTool
                                  "</article>";
 
                 return XMLContent;
+            }
+
+            /// <summary>
+            /// Sends stock update to MKM.
+            /// </summary>
+            /// <param name="sRequestXML">The raw (= not as an API request yet) XML with all article updates. Check that it is not empty before calling this.
+            /// Also, it must match the used method - PUT requires to know articleID for each article, POST productID.</param>
+            /// <param name="method">"PUT" to update articles already in stock, "POST" to upload new articles</param>
+            public static void SendStockUpdate(string sRequestXML, string method)
+            {
+                sRequestXML = getRequestBody(sRequestXML);
+                
+                try
+                {
+                    XmlDocument rdoc = makeRequest("https://api.cardmarket.com/ws/v2.0/stock", method,
+                        sRequestXML);
+                    int iUpdated = 0, iFailed = 0;
+                    if (method == "PUT")
+                    {
+                        var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
+                        var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
+
+                        iUpdated = xUpdatedArticles.Count;
+                        iFailed = xNotUpdatedArticles.Count;
+                    }
+                    else if (method == "POST")
+                    {
+                        // this is mostly guessing, I've seen how the response object looks when it is successful, bot when it is not
+                        XmlNodeList inserted = rdoc.GetElementsByTagName("inserted");
+                        foreach (XmlNode x in inserted)
+                        {
+                            if (x["success"].InnerText == "true")
+                                iUpdated++;
+                            else
+                                iFailed++;
+                        }
+                    }
+
+                    if (iFailed == 1)
+                    {
+                        iFailed = 0;
+                    }
+
+                    MainView.Instance.LogMainWindow(
+                        iUpdated + " articles updated successfully, " + iFailed + " failed");
+
+                    if (iFailed > 1)
+                    {
+                        try
+                        {
+                            File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
+                        }
+                        catch (Exception eError)
+                        {
+                            MKMHelpers.LogError("logging failed stock update articles", eError.Message, false);
+                        }
+                        MainView.Instance.LogMainWindow(
+                            "Failed articles logged in " + @".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log");
+                    }
+                }
+                catch (Exception eError)
+                {
+                    // for now this does not break the price update, i.e. the bot will attempt to update the following items - maybe it shouldn't as it is likely to fail again?
+                    MKMHelpers.LogError("sending stock update to MKM", eError.Message, false, sRequestXML);
+                }
             }
 
             /// <summary>
@@ -257,14 +372,41 @@ namespace MKMTool
             }
 
             /// <summary>
+            /// Gets the specified product (detailed, i.e. including price guides).
+            /// </summary>
+            /// <param name="idProduct">MKM's ID of the product.</param>
+            /// <returns>From MKM documentation: <i>Returns a product specified by its ID.</i></returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
+            public static XmlDocument getProduct(string idProduct)
+            {
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/products/" + idProduct, "GET");
+            }
+
+            /// <summary>
             /// Gets the specified metaproduct.
             /// </summary>
-            /// <param name="idMetaproduct">ID stored in product->metaproduct->idMetaproduct of wantlist items.</param>
+            /// <param name="idMetaproduct">ID stored for example in product->metaproduct->idMetaproduct of wantlist items.</param>
             /// <returns>From MKM documentation: <i>Returns the metaproduct specified by its ID.</i></returns>
             /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
             public static XmlDocument getMetaproduct(string idMetaproduct)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/metaproducts/" + idMetaproduct, "GET");
+            }
+
+            /// <summary>
+            /// Gets all product matching the provided name and language.
+            /// </summary>
+            /// <param name="cardname">Name of the card in the language specified by languageID. Can be only partial,
+            /// i.e. "force of n" will return product objects for both "force of nature" and "force of negation".</param>
+            /// <param name="languageID">ID of the language in which the card name is. Use MKMHelpers.languagesIds to get the correct ID.</param>
+            /// <param name="start">How many first items in the stock to skip.</param>
+            /// <returns>A list of products (without "details", such as price guide) matching the specified name. At most 100 products is grabbed,
+            /// increase the "start" parameter to and query again for the rest.</returns>
+            /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
+            public static XmlDocument findProducts(string cardname, string languageID, int start = 0)
+            {
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/products/find?search=" 
+                    + cardname + "&idGame=1&maxResults=100&idLanguage=" + languageID + "&start=" + start, "GET");
             }
         }
     }

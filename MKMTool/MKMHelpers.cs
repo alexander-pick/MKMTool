@@ -50,7 +50,66 @@ namespace MKMTool
         // My userId (to disregard items listed by myself when setting a new price)
         public static string sMyId = "0";
 
-        private static DataTable dt = new DataTable();
+        // key = language ID, value = language name
+        public static Dictionary<string, string> languagesNames = new Dictionary<string, string>
+        {
+            { "", "All" }, { "1", "English" }, { "2", "French" }, { "3", "German" },
+            { "4", "Spanish" }, { "5", "Italian" }, { "6", "Simplified Chinese" },
+            { "7", "Japanese" }, { "8", "Portuguese" }, { "9", "Russian" },
+            { "10", "Korean" }, { "11", "Traditional Chinese" }
+        };
+
+        // key = language name, value = language ID
+        public static Dictionary<string, string> languagesIds = new Dictionary<string, string>
+        {
+            { "All", "" }, { "English", "1" }, { "French", "2" }, { "German", "3" },
+            { "Spanish", "4" }, { "Italian", "5" }, { "Simplified Chinese", "6" },
+            { "Japanese", "7" }, { "Portuguese", "8" }, { "Russian", "9" },
+            { "Korean", "10" }, { "Traditional Chinese", "11" }
+        };
+
+
+        /// <summary>
+        /// A three-state boolean allowing "any" as the third state.
+        /// </summary>
+        public enum Bool3 { False = 0, True = 1, Any = 2 }
+
+        /// <summary>
+        /// Parses the given string as a 3-state bool value.
+        /// </summary>
+        /// <param name="val">The value. Will be transformed to lowercase.</param>
+        /// <returns>True if the value of the string is "true", False if it is "false" and Any if it is anything else.</returns>
+        public static Bool3 ParseBool3(string val)
+        {
+            val = val.ToLower();
+            switch (val)
+            {
+                case "true":
+                    return Bool3.True;
+                case "false":
+                    return Bool3.False;
+                default:
+                    return Bool3.Any;
+            }
+        }
+
+        /// <summary>
+        /// Converts a specified Bool3 value to string.
+        /// </summary>
+        /// <param name="val">The value.</param>
+        /// <returns>"false" for False, "true" for True, "" for Any.</returns>
+        public static string Bool3ToString(Bool3 val)
+        {
+            switch(val)
+            {
+                case Bool3.False:
+                    return "false";
+                case Bool3.True:
+                    return "true";
+                default:
+                    return "";
+            }
+        }
 
         /// <summary>
         /// Converts the condition from string to int so that it can be numerically compared.
@@ -87,58 +146,6 @@ namespace MKMTool
             return convertCondition(itemCond) >= convertCondition(reference);
 
         }
-
-        public static Dictionary<string, string> dLanguages = new Dictionary<string, string>
-        {
-            {
-                "",
-                "All"
-            },
-            {
-                "1",
-                "English"
-            },
-            {
-                "3",
-                "German"
-            },
-            {
-                "2",
-                "French"
-            },
-            {
-                "4",
-                "Spanish"
-            },
-            {
-                "5",
-                "Italian"
-            },
-            {
-                "6",
-                "Simplified Chinese"
-            },
-            {
-                "7",
-                "Japanese"
-            },
-            {
-                "8",
-                "Portuguese"
-            },
-            {
-                "9",
-                "Russian"
-            },
-            {
-                "10",
-                "Korean"
-            },
-            {
-                "11",
-                "Traditional Chinese"
-            }
-        };
 
         public static string PrettyXml(string xml)
         {

@@ -380,6 +380,41 @@ namespace MKMTool
             return double.MaxValue;
         }
 
+        /// <summary>
+        /// Generates new prices for a provided list of cards using the current settings, except it ignores the
+        /// max change price limits as the assumption is that there is not yet any user-set price.
+        /// </summary>
+        /// <param name="cardList">List of all the cards to appraise. Upon exiting, each card will gain two new attributes:
+        /// KMTool Price and Price - Cheapest Similar. The first has the price computed, the second has the price of the item that
+        /// is currently on sale and has the lowest price and is the same condition, language etc. 
+        /// and also from domestic seller if worldwide search is not enabled in the settings.</param>
+        public void generatePrices(List<MKMMetaCard> cardList)
+        {
+            settings.priceMaxChangeLimits.Clear();
+            settings.logLargePriceChangeTooHigh = false;
+            settings.logLargePriceChangeTooLow = false;
+
+            MainView.Instance.LogMainWindow("Appraising card list...");
+            Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>(); // just an empty dummy myStock lists
+            foreach (MKMMetaCard mc in cardList)
+            {
+                XmlNodeList similarItems = getSimilarItems(mc);
+                if (similarItems != null)
+                {
+                    string backupMKMPrice = mc.GetAttribute(MKMMetaCardAttribute.MKMPrice);
+                    mc.SetAttribute(MKMMetaCardAttribute.MKMPrice, "-9999");
+                    appraiseArticle(mc, similarItems, myStock);
+                    if (backupMKMPrice != "")
+                        mc.SetAttribute(MKMMetaCardAttribute.MKMPrice, backupMKMPrice);
+                    else
+                        mc.RemoveAttribute(MKMMetaCardAttribute.MKMPrice);
+                }
+            }
+
+            MainView.Instance.LogMainWindow("List appraised.");
+        }
+
+
         public void updatePrices()
         {
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
@@ -399,21 +434,26 @@ namespace MKMTool
             Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>();
             if (File.Exists(@".//myStock.csv"))
             {
-                MainView.Instance.LogMainWindow("Found list of minimal prices...");
+                MainView.Instance.LogMainWindow("Found myStock.csv, parsing minimal prices...");
                 try
                 {
                     DataTable stock = MKMDatabaseManager.ConvertCSVtoDataTable(@".//myStock.csv");
-                    foreach (DataRow dr in stock.Rows)
+                    if (stock.Columns.Contains(MKMMetaCardAttribute.MinPrice))
                     {
-                        MKMMetaCard card = new MKMMetaCard(dr);
-                        if (card.GetAttribute(MKMMetaCardAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
+                        foreach (DataRow dr in stock.Rows)
                         {
-                            string name = card.GetAttribute(MKMMetaCardAttribute.Name);
-                            if (!myStock.ContainsKey(name))
-                                myStock.Add(name, new List<MKMMetaCard>());
-                            myStock[name].Add(card);
+                            MKMMetaCard card = new MKMMetaCard(dr);
+                            if (card.GetAttribute(MKMMetaCardAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
+                            {
+                                string name = card.GetAttribute(MKMMetaCardAttribute.Name);
+                                if (!myStock.ContainsKey(name))
+                                    myStock.Add(name, new List<MKMMetaCard>());
+                                myStock[name].Add(card);
+                            }
                         }
                     }
+                    else
+                        MainView.Instance.LogMainWindow("myStock.csv does not contain MinPrice column, will be ignored.");
                 }
                 catch (Exception eError)
                 {
@@ -441,7 +481,7 @@ namespace MKMTool
             }
 
             MainView.Instance.LogMainWindow("Updating Prices...");
-            int putCounter = 0; 
+            int putCounter = 0;
             foreach (XmlNode article in articles)
             {
 #if (DEBUG)
@@ -456,30 +496,35 @@ namespace MKMTool
                 // -> check if condition exists to see if this is a single card or something else
                 if (article["condition"] != null && article["idArticle"].InnerText != null && article["price"].InnerText != null)
                 {
-                    string update = checkArticle(article, ref myStock);
-                    if (update != null)
+                    MKMMetaCard MKMCard = new MKMMetaCard(article);
+                    XmlNodeList similarItems = getSimilarItems(MKMCard);
+                    if (similarItems != null)
                     {
-                        sRequestXML += update;
-                        // max 100 articles is allowed to be part of a PUT call - if we are there, call it
-                        if (putCounter > 98 && !settings.testMode)
+                        appraiseArticle(MKMCard, similarItems, myStock);
+                        string newPrice = MKMCard.GetAttribute(MKMMetaCardAttribute.MKMToolPrice);
+                        if (newPrice != "")
                         {
-                            sendPriceUpdate(sRequestXML);
-                            putCounter = 0;
-                            sRequestXML = "";
+                            sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
+                            // max 100 articles is allowed to be part of a PUT call - if we are there, call it
+                            if (putCounter > 98 && !settings.testMode)
+                            {
+                                MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
+                                putCounter = 0;
+                                sRequestXML = "";
+                            }
+                            else
+                                putCounter++;
                         }
-                        else
-                            putCounter++;
                     }
                 }
             }
-
             if (settings.testMode)
             {
                 MainView.Instance.LogMainWindow("Done. Prices NOT SENT to MKM - running in test mode finished.");
             }
             else if (sRequestXML.Length > 0)
             {
-                sendPriceUpdate(sRequestXML);
+                MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
             }
             else
             {
@@ -492,91 +537,63 @@ namespace MKMTool
         }
 
         /// <summary>
-        /// Sends the price update to MKM.
+        /// For a specified card, makes an API request and gets articles on sale with the same product ID
+        /// and if specified also the same: languageID, condition (same or better as the card), foil, signed and altered flags.
         /// </summary>
-        /// <param name="sRequestXML">The raw (= not as an API request yet) XML with all article updates. Check that it is not empty before calling this.</param>
-        private void sendPriceUpdate(string sRequestXML)
+        /// <param name="card">The card template for which to get similar articles on sale on MKM.</param>
+        /// <param name="maxNbItems">Maximum amount of items fetched from MKM. The larger the longer it usually takes MKM to process the request.</param>
+        /// <returns>List with MKM "article" nodes, one for each similar items.</returns>
+        private XmlNodeList getSimilarItems(MKMMetaCard card, int maxNbItems = 150)
         {
-            sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
-            
-            XmlDocument rdoc = null;
-
+            string sUrl = "http://not.initilaized";
+            string condition = card.GetAttribute(MKMMetaCardAttribute.Condition);
+            if (condition == "MT") // treat mint cards as near mint for pricing purposes, but do not actually change the value in article
+                condition = "NM";
+            string productID = card.GetAttribute(MKMMetaCardAttribute.ProductID);
+            string languageID = card.GetAttribute(MKMMetaCardAttribute.LanguageID);
+            string isFoil = card.GetAttribute(MKMMetaCardAttribute.Foil);
+            string isSigned = card.GetAttribute(MKMMetaCardAttribute.Signed);
+            string isAltered = card.GetAttribute(MKMMetaCardAttribute.Altered);
+            string articleName = card.GetAttribute(MKMMetaCardAttribute.Name);
             try
             {
-                rdoc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/stock", "PUT",
-                    sRequestXML);
-                var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
-                var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
+                sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
+                            (languageID != "" ? "?idLanguage=" + card.GetAttribute(MKMMetaCardAttribute.LanguageID) : "") +
+                            (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
+                            (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
+                            "&start=0&maxResults=" + maxNbItems;
 
-                var iUpdated = xUpdatedArticles.Count;
-                var iFailed = xNotUpdatedArticles.Count;
-
-                if (iFailed == 1)
-                {
-                    iFailed = 0;
-                }
-
-                MainView.Instance.LogMainWindow(
-                    iUpdated + " articles updated successfully, " + iFailed + " failed");
-
-                if (iFailed > 1)
-                {
-                    try
-                    {
-                        File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
-                    }
-                    catch (Exception eError)
-                    {
-                        MKMHelpers.LogError("logging failed price update articles", eError.Message, false);
-                    }
-                    MainView.Instance.LogMainWindow(
-                        "Failed articles logged in " + @".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log");
-                }
+                return MKMInteract.RequestHelper.makeRequest(sUrl, "GET").GetElementsByTagName("article");
             }
             catch (Exception eError)
             {
-                // for now this does not break the price update, i.e. the bot will attempt to update the following items - maybe it shouldn't as it is likely to fail again?
-                MKMHelpers.LogError("sending price update to MKM", eError.Message, false, sRequestXML);
-                return;
-            }
-
-        }
-
-        private string checkArticle(XmlNode article, ref Dictionary<string, List<MKMMetaCard>> myStock)
-        {
-            var sUrl = "http://not.initilaized";
-            bool changeMT = false;
-            if (article["condition"].InnerText == "MT") // treat mint cards as near mint for pricing purposes
-            {
-                article["condition"].InnerText = "NM";
-                changeMT = true;
-            }
-            XmlDocument doc2 = null;
-            var sArticleID = article["idProduct"].InnerText;
-            try
-            {
-
-                sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + sArticleID +
-                            "?idLanguage=" + article["language"]["idLanguage"].InnerText +
-                            "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
-                            + article["isFoil"].InnerText +
-                            "&isSigned=" + article["isSigned"].InnerText +
-                            "&isAltered=" + article["isAltered"].InnerText;
-
-                doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("updating price of " + article["product"]["enName"].InnerText, eError.Message, false, sUrl);
+                MKMHelpers.LogError("updating price of " + articleName, eError.Message, false, sUrl);
                 return null;
             }
+        }
 
-            XmlNodeList similarItems = doc2.GetElementsByTagName("article");
+
+        /// <summary>
+        /// Sets a price to the specified article based on the current bot settings.
+        /// </summary>
+        /// <param name="article">An initialized MKMMetaCard describing the articles. Must have productID set - ideally initialize
+        /// using the constructor from XMLNode. Upon exiting this method, the attributes MKMTool Price and Price - Cheapest Similar will be set
+        /// for it: the first has the price computed, the second has the price of the item that
+        /// is currently on sale and has the lowest price and is the same condition, language etc. 
+        /// and also from domestic seller if worldwide search is not enabled in the settings. If price cannot be computed, the attribute will be empty.</param>
+        /// <param name="myStock">A list of cards with minPrice set to compare with the computed price - MKMToolPrice will never be lower 
+        /// then the highest minPrice among all matching cards in this list. Hashed by the card name.</param>
+        private void appraiseArticle(MKMMetaCard article, XmlNodeList similarItems, Dictionary<string, List<MKMMetaCard>> myStock)
+        {
+            string productID = article.GetAttribute(MKMMetaCardAttribute.ProductID);
+            string articleName = article.GetAttribute(MKMMetaCardAttribute.Name);
+            article.SetAttribute(MKMMetaCardAttribute.MKMToolPrice, "");
+            article.SetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar, "");
 
             List<double> prices = new List<double>();
             int lastMatch = -1;
             bool ignoreSellersCountry = false;
-            TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
+            TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
             if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
                 || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
                 // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
@@ -585,10 +602,13 @@ namespace MKMTool
                 ignoreSellersCountry = true;
                 prices.Clear();
                 lastMatch = -1;
-                res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
+                res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
             }
             double priceEstimation = 0;
             double priceFactor = ignoreSellersCountry ? settings.priceFactorWorldwide : settings.priceFactor;
+            string articleExpansion = article.GetAttribute(MKMMetaCardAttribute.Expansion);
+            string articleLanguage = article.GetAttribute(MKMMetaCardAttribute.Language);
+            string articlePrice = article.GetAttribute(MKMMetaCardAttribute.MKMPrice);
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
             {
                 priceEstimation = prices[0] * priceFactor;
@@ -597,33 +617,34 @@ namespace MKMTool
             {
                 if (settings.logLessThanMinimum)
                     MainView.Instance.LogMainWindow(
-                            sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                            " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                            "Current Price: " + article["price"].InnerText + ", unchanged, only " +
+                            productID + ">>> " + articleName +
+                            " (" + articleExpansion + ", " +
+                            (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                            "Current Price: " + articlePrice + ", unchanged, only " +
                             (lastMatch + 1) + " similar items found (but some outliers were culled)" +
                             (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return null;
+                return;
             }
             else if (res == TraverseResult.HighVariance)
             {
                 if (settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
                     MainView.Instance.LogMainWindow(
-                        sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                        " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
                         "NOT UPDATED - variance of prices among cheapest similar items is too high" +
                         (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return null;
+                return;
             }
             else if (res == TraverseResult.NotEnoughSimilars)
             {
                 if (settings.logLessThanMinimum)
                     MainView.Instance.LogMainWindow(
-                        sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                        " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                        "Current Price: " + article["price"].InnerText + ", unchanged, only " +
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items found" +
                         (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return null;
+                return;
             }
             else if (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
             // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
@@ -631,12 +652,12 @@ namespace MKMTool
             {
                 if (settings.logLessThanMinimum)
                     MainView.Instance.LogMainWindow(
-                        sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                        " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                        "Current Price: " + article["price"].InnerText + ", unchanged, only " +
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items with an item with matching condition above them were found" +
                         (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return null;
+                return;
             }
             else
             {
@@ -661,32 +682,34 @@ namespace MKMTool
 
             // increase the estimate based on how many of those articles do we have in stock
             double markupValue = 0;
-            if (settings.priceIgnorePlaysets && article["isPlayset"].InnerText == "true")
+            string isPlayset = article.GetAttribute(MKMMetaCardAttribute.Playset);
+            string count = article.GetAttribute(MKMMetaCardAttribute.Count);
+            int iCount;
+            if (settings.priceIgnorePlaysets && isPlayset == "true")
                 markupValue = priceEstimation * settings.priceMarkup4;
-            else
+            else if (int.TryParse(article.GetAttribute(MKMMetaCardAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
             {
-                int count = Convert.ToInt32(article["count"].InnerText, CultureInfo.InvariantCulture);
-                if (count == 2)
+                if (iCount == 2)
                     markupValue = priceEstimation * settings.priceMarkup2;
-                else if (count == 3)
+                else if (iCount == 3)
                     markupValue = priceEstimation * settings.priceMarkup3;
-                else if (count > 3)
+                else if (iCount > 3)
                     markupValue = priceEstimation * settings.priceMarkup4;
             }
             if (markupValue > settings.priceMarkupCap)
                 markupValue = settings.priceMarkupCap;
             priceEstimation += markupValue;
 
+            string articleRarity = article.GetAttribute(MKMMetaCardAttribute.Rarity);
             if (priceEstimation < settings.priceMinRarePrice
-                && (article["product"]["rarity"].InnerText == "Rare" || article["product"]["rarity"].InnerText == "Mythic"))
+                && (articleRarity == "Rare" || articleRarity == "Mythic"))
                 priceEstimation = settings.priceMinRarePrice;
 
             // check the estimation is OK
-            string sOldPrice = article["price"].InnerText;
-            double dOldPrice = Convert.ToDouble(sOldPrice, CultureInfo.InvariantCulture);
+            double dOldPrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
             string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
             // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
-            if (settings.priceIgnorePlaysets && article["isPlayset"].InnerText == "true")
+            if (settings.priceIgnorePlaysets && isPlayset == "true")
             {
                 dOldPrice /= 4;
                 sNewPrice = (priceEstimation * 4).ToString("f2", CultureInfo.InvariantCulture);
@@ -703,10 +726,10 @@ namespace MKMTool
                         if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
                             settings.logLargePriceChangeTooLow && priceDif < 0)
                             MainView.Instance.LogMainWindow(
-                                sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                                " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
+                                productID + ">>> " + articleName +
+                                " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
                                 "NOT UPDATED - change too large: Current Price: "
-                                + sOldPrice + ", Calculated Price:" + sNewPrice +
+                                + articlePrice + ", Calculated Price:" + sNewPrice +
                                 (ignoreSellersCountry ? " - worldwide search!" : ""));
 
                     }
@@ -721,18 +744,17 @@ namespace MKMTool
                 List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
                 if (myStock.ContainsKey(""))
                     listArticles.AddRange(myStock[""]); // special treatment for entries that are not for a specific card name
-                if (myStock.ContainsKey(article["product"]["enName"].InnerText))
-                    listArticles.AddRange(myStock[article["product"]["enName"].InnerText]);
+                if (myStock.ContainsKey(articleName))
+                    listArticles.AddRange(myStock[articleName]);
                 if (listArticles.Count > 0)
                 {
-                    MKMMetaCard curArticle = new MKMMetaCard(article);
                     foreach (MKMMetaCard card in listArticles)
                     {
-                        if (card.Equals(curArticle))
+                        if (card.Equals(article))
                         {
                             string minPrice = card.GetAttribute(MKMMetaCardAttribute.MinPrice);
                             double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
-                            if (curArticle.GetAttribute(MKMMetaCardAttribute.Playset) == "true")
+                            if (isPlayset == "true")
                                 dminPrice /= 4;
                             if (priceEstimation < dminPrice)
                             {
@@ -746,43 +768,44 @@ namespace MKMTool
                 if (settings.logUpdated && (settings.logSmallPriceChange ||
                     (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
                     MainView.Instance.LogMainWindow(
-                        sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                        " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                        "Current Price: " + sOldPrice + ", Calculated Price:" + sNewPrice +
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
                         ", based on " + (lastMatch + 1) + " items" +
                         (ignoreSellersCountry ? " - worldwide search!" : ""));
 
-                if (changeMT)
-                    article["condition"].InnerText = "MT";
-
-                return MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
+                article.SetAttribute(MKMMetaCardAttribute.MKMToolPrice, sNewPrice);
             }
-            return null;
         }
 
-        private TraverseResult traverseSimilarItems(XmlNodeList similarItems, XmlNode article, bool ignoreSellersCountry,
-            ref int lastMatch, ref List<double> prices)
+        private TraverseResult traverseSimilarItems(XmlNodeList similarItems, MKMMetaCard article, bool ignoreSellersCountry,
+            ref int lastMatch, List<double> prices)
         {
             bool minNumberNotYetFound = true;
+            string articleCondition = article.GetAttribute(MKMMetaCardAttribute.Condition);
+            string isPlayset = article.GetAttribute(MKMMetaCardAttribute.Playset);
+            bool ignorePlaysets = settings.priceIgnorePlaysets || (isPlayset == "");
             foreach (XmlNode offer in similarItems)
             {
                 if ((ignoreSellersCountry || offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry)
-                    && (settings.priceIgnorePlaysets || (offer["isPlayset"].InnerText == article["isPlayset"].InnerText))
+                    && (ignorePlaysets || (offer["isPlayset"].InnerText == isPlayset))
                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                     )
                 {
-                    if (offer["condition"].InnerText != article["condition"].InnerText && settings.condAcceptance == AcceptedCondition.OnlyMatching)
+                    if (offer["condition"].InnerText != articleCondition && settings.condAcceptance == AcceptedCondition.OnlyMatching)
                         continue;
 
                     float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
-                    if (settings.priceIgnorePlaysets && offer["isPlayset"].InnerText == "true") // if we are ignoring playsets, work with the price of a single
+                    if (ignorePlaysets && offer["isPlayset"].InnerText == "true") // if we are ignoring playsets, work with the price of a single
                         price /= 4;
 
                     if (minNumberNotYetFound)
                     {
-                        if (offer["condition"].InnerText == article["condition"].InnerText)
+                        if (offer["condition"].InnerText == articleCondition)
                             lastMatch = prices.Count;
                         prices.Add(price);
+                        if (article.GetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar) == "")
+                            article.SetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar, "" + price);
                         if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
                         {
                             lastMatch = 0; // so that it is correctly counted that 1 item was used to estimate the price
@@ -825,7 +848,7 @@ namespace MKMTool
                                 else return TraverseResult.SequenceFound;
                             }
                         }
-                        if (offer["condition"].InnerText == article["condition"].InnerText)
+                        if (offer["condition"].InnerText == articleCondition)
                             lastMatch = prices.Count;
                         prices.Add(price);
                     }

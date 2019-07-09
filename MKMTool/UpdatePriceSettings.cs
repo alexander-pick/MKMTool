@@ -46,13 +46,20 @@ namespace MKMTool
         // min price and average (0-0.5) or average and highest price (0.5-1)
         private double priceByAvg = 0.5;
         private Dictionary<string, MKMBotSettings> presets;
-        
-        public UpdatePriceSettings()
+        private string lastPresetName; // name of the last preset under which it is stored in Properties.Settings.Default
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdatePriceSettings"/> class.
+        /// </summary>
+        /// <param name="lastPresetName">The last preset used by this settings windows under which it is stored in Properties.Settings.Default</param>
+        /// <param name="title">Title of the window</param>
+        public UpdatePriceSettings(string lastPresetName, string title)
         {
             InitializeComponent();
             loadPresets();
-            // load the last previously used preset
-            string lastPreset = Properties.Settings.Default.LastSettingsPreset;
+            this.Text = title;
+            this.lastPresetName = lastPresetName;
+            string lastPreset = Properties.Settings.Default[lastPresetName].ToString();
             if (comboBoxPresets.Items.Contains(lastPreset))
             {
                 comboBoxPresets.SelectedIndex = comboBoxPresets.Items.IndexOf(lastPreset);
@@ -79,7 +86,7 @@ namespace MKMTool
         /// <summary>
         /// Gathers data from the gui and creates their appropriate representation as the MKMBotSettings object.
         /// </summary>
-        /// <param name="s">The settings object after the method succesfully executes.</param>
+        /// <param name="s">The settings object after the method successfully executes.</param>
         /// <returns>True if all settings were read, false in case of parsing error.</returns>
         public bool GenerateBotSettings(out MKMBotSettings s)
         {
@@ -417,7 +424,7 @@ namespace MKMTool
         {
             string name = comboBoxPresets.SelectedItem.ToString();
             UpdateSettingsGUI(presets[name]);
-            Properties.Settings.Default.LastSettingsPreset = name;
+            Properties.Settings.Default[lastPresetName] = name;
             Properties.Settings.Default.Save();
         }
 
@@ -435,7 +442,7 @@ namespace MKMTool
                         labelPresetsDescr.Text = settings.description; // so just rewrite the description
                     else
                         comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add(name);
-                    Properties.Settings.Default.LastSettingsPreset = name;
+                    Properties.Settings.Default[lastPresetName] = name;
                     Properties.Settings.Default.Save();
                 }
             }

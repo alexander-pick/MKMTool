@@ -45,7 +45,7 @@ namespace MKMTool
         {
             InitializeComponent();
 
-            foreach (var Lang in MKMHelpers.dLanguages)
+            foreach (var Lang in MKMHelpers.languagesNames)
             {
                 var item = new MKMHelpers.ComboboxItem();
 
@@ -53,9 +53,9 @@ namespace MKMTool
                 item.Value = Lang.Key;
 
                 langCombo.Items.Add(item);
-
-                langCombo.SelectedIndex = 0;
             }
+
+            langCombo.SelectedIndex = 0;
 
             MKMDatabaseManager.Instance.PopulateExpansionsComboBox(ref editionBox);
             if (editionBox.Items.Count > 0)
@@ -152,7 +152,7 @@ namespace MKMTool
                         (article["isFoil"].InnerText == "false" && foils == total)) // there are only foils and we want non-foil
                         continue;
 
-                    MainView.Instance.LogMainWindow("checking:" + product["enName"].InnerText + " from  " + product["expansionName"].InnerText + "...");
+                    MainView.Instance.LogMainWindow("checking:" + product["enName"].InnerText + " from " + product["expansionName"].InnerText + "...");
 
                     // a wantlist item can have more idLanguage entries, one for each wanted language
                     System.Collections.Generic.List<string> selectedLanguages = new System.Collections.Generic.List<string>();

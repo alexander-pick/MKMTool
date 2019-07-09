@@ -105,6 +105,12 @@
     </Compile>
     <Compile Include="MKMDatabaseManager.cs" />
     <Compile Include="MKMMetaCard.cs" />
+    <Compile Include="PriceExternalList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PriceExternalList.Designer.cs">
+      <DependentUpon>PriceExternalList.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingPresetStore.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -149,6 +155,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CheckWantsView.resx">
       <DependentUpon>CheckWantsView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PriceExternalList.resx">
+      <DependentUpon>PriceExternalList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingPresetStore.resx">
       <DependentUpon>SettingPresetStore.cs</DependentUpon>

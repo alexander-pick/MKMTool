@@ -2,13 +2,15 @@
 using System.Data;
 using System.Collections.Generic;
 using System.Xml;
+using static MKMTool.MKMHelpers;
 
 namespace MKMTool
 {
+
     /// <summary>
-    /// A three-state boolean allowing "any" as the third state.
+    /// Different formats that can be used to export the meta card.
     /// </summary>
-    public enum Bool3 { False = 0, True = 1, Any = 2}
+    public enum MCFormat { MKM, Deckbox}
 
     /// <summary>
     /// A "string enum" of all attributes MKMMetaCard uses for comparisons, exports etc.
@@ -43,11 +45,16 @@ namespace MKMTool
         public static string Language { get { return "Language"; } }
 
         /// <summary>
+        /// MKM's ID of the language (based on MKMHelpers.languagesNames)
+        /// </summary>
+        public static string LanguageID { get { return "LanguageID"; } }
+
+        /// <summary>
         /// Condition of the card as a two-letter abbreviation used by MKM:
         /// MT for Mint, NM for Near Mint, EX for Excellent, GD for Good, LP for Light Played, PL for Played, PO for Poor.
         /// </summary>
         public static string Condition { get { return "Condition"; } }
-
+        
         /// <summary>
         /// The worst condition this card can be in, see Condition for possible values.
         /// </summary>
@@ -79,6 +86,16 @@ namespace MKMTool
         public static string ProductID { get { return "idProduct"; } }
 
         /// <summary>
+        /// The MKM's article ID.
+        /// </summary>
+        public static string ArticleID { get { return "idArticle"; } }
+
+        /// <summary>
+        /// The MKM's metaproduct ID.
+        /// </summary>
+        public static string MetaproductID { get { return "idMetaproduct"; } }
+
+        /// <summary>
         /// An integer number indicating number of the given card in stock.
         /// </summary>
         public static string Count { get { return "Count"; } }
@@ -97,7 +114,12 @@ namespace MKMTool
         /// <summary>
         /// Price generated for this card by MKMTool (relevant only for exact card article).
         /// </summary>
-        public static string MKMToolPrice { get { return "MKMTool price"; } }
+        public static string MKMToolPrice { get { return "MKMTool Price"; } }
+
+        /// <summary>
+        /// Price of the cheapest card with the same attributes as this card.
+        /// </summary>
+        public static string PriceCheapestSimilar { get { return "Price - Cheapest Similar"; } }
 
         /// <summary>
         /// The price of the card on MKM (relevant only for exact card article).
@@ -108,6 +130,46 @@ namespace MKMTool
         /// For MKM articles, this is what is inside the "comments" field.
         /// </summary>
         public static string Comments { get { return "Comments"; } }
+
+        /// <summary>
+        /// Number of product within the expansion.
+        /// </summary>
+        public static string CardNumber { get { return "Card Number"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Average price of articles ever sold of this product.
+        /// </summary>
+        public static string PriceGuideSELL { get { return "SELL - MKM Price Guide"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Current lowest non-foil price (all conditions).
+        /// </summary>
+        public static string PriceGuideLOW { get { return "LOW - MKM Price Guide"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Current lowest non-foil price (condition EX and better).
+        /// </summary>
+        public static string PriceGuideLOWEX { get { return "LOWEX - MKM Price Guide"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Current lowest foil price.
+        /// </summary>
+        public static string PriceGuideLOWFOIL { get { return "LOWFOIL - MKM Price Guide"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Current average non-foil price of all available articles of this product.
+        /// </summary>
+        public static string PriceGuideAVG { get { return "AVG - MKM Price Guide"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Current trend price.
+        /// </summary>
+        public static string PriceGuideTREND { get { return "TREND - MKM Price Guide"; } }
+
+        /// <summary>
+        /// The MKM's price guide. Current foil trend price.
+        /// </summary>
+        public static string PriceGuideTRENDFOIL { get { return "TRENDFOIL - MKM Price Guide"; } }
     }
 
     /// <summary>
@@ -125,15 +187,33 @@ namespace MKMTool
     /// </summary>
     public class MKMMetaCard
     {
-        // A map of all recognized attributes and the one name we internally use for each. Essentially some attributes (=keys to this dictionary)
-        // are synonyms and the dictionary says which is the one name to use for these synonyms
-        private static Dictionary<string, string> recognizedAttributes = new Dictionary<string, string>();
+        // If a recognized attribute has a synonym, add it to this dictionary, key == synonym, value == the recognized attribute to which this synonym maps.
+        private static Dictionary<string, string> synonyms = new Dictionary<string, string>
+        {
+            { "enName", MKMMetaCardAttribute.Name }, { "Edition", MKMMetaCardAttribute.Expansion }, { "Altered Art", MKMMetaCardAttribute.Altered }
+        };
 
-        // list of attribute names that are comparable directly, e.g. Name, Expansion etc. 
-        // attributes not in this list require custom implementation of comparison
-        private static HashSet<string> comparableAttributes = new HashSet<string>();
-
-        private static HashSet<string> Conditions = new HashSet<string>();
+        // literal dictionary of conditions - translates any supported condition denomination to its equivalent in the two-letter format MKM uses
+        // all capitals! transform your string toUpper before checking against this dictionary
+        private static Dictionary<string, string> conditionsDictionary = new Dictionary<string, string>
+        {
+            { "MT", "MT" }, { "NM", "NM" }, { "EX", "EX" }, { "GD", "GD" }, { "LP", "LP" }, { "PL", "PL" }, { "PO", "PO" },
+            { "MINT", "MT" }, { "NEAR MINT", "NM" }, { "EXCELLENT", "EX" }, { "GOOD", "GD" }, 
+            { "LIGHTLY PLAYED", "LP" }, { "POOR", "PO" }, { "GOOD (LIGHTLY PLAYED)", "EX" },
+            // for the following the European (MKM) and American (deckbox.org) grades are the same word but different meaning
+            // we will assume that if it is the entire word, it is exported from deckbox.org and therefore uses the American grading
+            { "PLAYED", "GD" }, 
+            { "HEAVILY PLAYED", "LP" }// this could be either LP or PL, we will never know...let's set it to LP
+        };
+        // key == any recognized condition in upper case, value == case sensitive deckbox format
+        private static Dictionary<string, string> conditionsDeckboxDictionary = new Dictionary<string, string>
+        {
+            { "MT", "Mint" }, { "NM", "Near Mint" }, { "EX", "Good (Lightly Played)" }, { "GD", "Played" },
+            { "LP", "Heavily Played" }, { "PL", "Heavily Played" }, { "PO", "Poor" },
+            { "MINT", "Mint" }, { "NEAR MINT", "Near Mint" }, { "EXCELLENT", "Good (Lightly Played)" }, { "GOOD", "Played" },
+            { "LIGHTLY PLAYED", "Heavily Played" }, { "POOR", "Poor" }, { "GOOD (LIGHTLY PLAYED)", "Good (Lightly Played)" },
+            { "PLAYED", "Played" }, { "HEAVILY PLAYED", "Heavily Played" }// this could be either LP or PL, we will never know...let's set it to LP
+        };
 
         /// <summary>
         /// Used to set-up the dictionary of recognized attributes. If you are extending the class to internally handle some additional attribute,
@@ -141,81 +221,28 @@ namespace MKMTool
         /// </summary>
         static MKMMetaCard()
         {
-            recognizedAttributes["Name"] = MKMMetaCardAttribute.Name;
-            recognizedAttributes["enName"] = MKMMetaCardAttribute.Name;
-
-            recognizedAttributes["LocName"] = MKMMetaCardAttribute.LocName;
-
-            recognizedAttributes["Expansion"] = MKMMetaCardAttribute.Expansion;
-            recognizedAttributes["Edition"] = MKMMetaCardAttribute.Expansion;
-
-            recognizedAttributes["Expansion ID"] = MKMMetaCardAttribute.ExpansionID; // MKM's ID
-
-            recognizedAttributes["Language"] = MKMMetaCardAttribute.Language;
-
-            recognizedAttributes["Condition"] = MKMMetaCardAttribute.Condition;
-
-            recognizedAttributes["MinCondition"] = MKMMetaCardAttribute.MinCondition;
-
-            recognizedAttributes["Foil"] = MKMMetaCardAttribute.Foil;
-
-            recognizedAttributes["Signed"] = MKMMetaCardAttribute.Signed;
-
-            recognizedAttributes["Altered"] = MKMMetaCardAttribute.Altered;
-            recognizedAttributes["Altered Art"] = MKMMetaCardAttribute.Altered;
-
-            recognizedAttributes["Playset"] = MKMMetaCardAttribute.Playset;
-
-            recognizedAttributes["idProduct"] = MKMMetaCardAttribute.ProductID; // MKM's ID
-
-
-            recognizedAttributes["Count"] = MKMMetaCardAttribute.Count;
-
-            recognizedAttributes["Rarity"] = MKMMetaCardAttribute.Rarity;
-
-            recognizedAttributes["MinPrice"] = MKMMetaCardAttribute.MinPrice;
-
-            recognizedAttributes["MKMTool price"] = MKMMetaCardAttribute.MKMToolPrice;
-
-            recognizedAttributes["Price"] = MKMMetaCardAttribute.MKMPrice;
-
-            recognizedAttributes["Comments"] = MKMMetaCardAttribute.Comments;
-
-            Conditions.Add("MT");
-            Conditions.Add("NM");
-            Conditions.Add("EX");
-            Conditions.Add("GD");
-            Conditions.Add("LP");
-            Conditions.Add("PL");
-            Conditions.Add("PO");
-
-            comparableAttributes.Add(MKMMetaCardAttribute.Name);
-            comparableAttributes.Add(MKMMetaCardAttribute.LocName);
-            comparableAttributes.Add(MKMMetaCardAttribute.Expansion);
-            comparableAttributes.Add(MKMMetaCardAttribute.ExpansionID);
-            comparableAttributes.Add(MKMMetaCardAttribute.Language);
-            comparableAttributes.Add(MKMMetaCardAttribute.Condition);
-            comparableAttributes.Add(MKMMetaCardAttribute.Foil);
-            comparableAttributes.Add(MKMMetaCardAttribute.Signed);
-            comparableAttributes.Add(MKMMetaCardAttribute.Altered);
-            comparableAttributes.Add(MKMMetaCardAttribute.Playset);
-            comparableAttributes.Add(MKMMetaCardAttribute.ProductID);
-            comparableAttributes.Add(MKMMetaCardAttribute.Count);
-            comparableAttributes.Add(MKMMetaCardAttribute.Rarity);
-            comparableAttributes.Add(MKMMetaCardAttribute.MinPrice);
-            comparableAttributes.Add(MKMMetaCardAttribute.MKMToolPrice);
-            comparableAttributes.Add(MKMMetaCardAttribute.MKMPrice);
-            comparableAttributes.Add(MKMMetaCardAttribute.Comments);
-
-            // not comparable: MinCondition
         }
 
         private Dictionary<string, string> data = new Dictionary<string, string>();
-        private List<string> importedColumns = new List<string>(); // stores the unmodified names of columns used to initialize this card in the order they were in the input DataRow
 
+        private bool hasPriceGuides = false; // is set to true 
+
+        /// <summary>
+        /// Gets a value indicating whether this instance has recent MKM's price guides,
+        /// i.e. if a product entry with price guides is used to fill this card, see FillProductInfo.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance has price guides; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasPriceGuides
+        {
+            get { return hasPriceGuides; }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MKMMetaCard"/> class based on a database entry.
+        /// It will use the local database to fill in name, expansion and expansion ID if the input contains product id
+        /// and vice versa will get the product id if the input contains name and expansion/expansion ID.
         /// </summary>
         /// <param name="card">The card.</param>
         public MKMMetaCard(DataRow card)
@@ -223,118 +250,59 @@ namespace MKMTool
             for (int i = 0; i < card.Table.Columns.Count; i++)
             {
                 string columnVal = card[i].ToString();
-                importedColumns.Add(card.Table.Columns[i].ColumnName);
-                string attName;
-                if (!recognizedAttributes.TryGetValue(card.Table.Columns[i].ColumnName, out attName))
-                    attName = card.Table.Columns[i].ColumnName;
-                string attValue;
-                if (data.TryGetValue(attName, out attValue) && attValue != columnVal) // it's already in, but is not the same
+                if (columnVal != "") // having an attribute at "any" is the same as not having it at all - no need to process it
                 {
-                    // if this attribute has already been set, but to a different value, it means a synonym for this column has been processed
-                    // in that case, store each of them as a separate variable so that it can be exported unchanged
-                    if (attName != card.Table.Columns[i].ColumnName)
-                        attName = card.Table.Columns[i].ColumnName; // we just write this column using the original name without the translation
-                   else // this is the "main" name -> we should use this column -> rename the previously written one to its original name
-                    {
-                        // find the original name - it will be the first column that translates as the "main" name
-                        foreach (string colName in importedColumns)
-                        {
-                            string temp;
-                            if (recognizedAttributes.TryGetValue(colName, out temp) && temp == attName)
-                            {
-                                data[colName] = temp;
-                                break;
-                            }
-                        }
-                    }
+                    // if this is a synonym, store the original input value under the synonym, 
+                    // but continue the rest of the processing with the "main" name
+                    string attName;
+                    if (synonyms.TryGetValue(card.Table.Columns[i].ColumnName, out attName))
+                        data[card.Table.Columns[i].ColumnName] = columnVal;
+                    else
+                        attName = card.Table.Columns[i].ColumnName;
+                    // for attributes for which we have custom setters, use them to perform all kinds of checks
+                    if (attName == MKMMetaCardAttribute.Condition)
+                        SetCondition(columnVal);
+                    else if (attName == MKMMetaCardAttribute.MinCondition)
+                        SetMinCondition(columnVal);
+                    else if (attName == MKMMetaCardAttribute.Language)
+                        SetLanguage(columnVal);
+                    else if (attName == MKMMetaCardAttribute.LanguageID)
+                        SetLanguageID(columnVal);
+                    else if (attName == MKMMetaCardAttribute.Foil || attName == MKMMetaCardAttribute.Signed
+                        || attName == MKMMetaCardAttribute.Altered || attName == MKMMetaCardAttribute.Playset)
+                        SetBoolAttribute(attName, columnVal);
+                    // all other attributes
+                    else
+                        data[attName] = columnVal;
                 }
-                // do translations of some attributes
-                if (attName == MKMMetaCardAttribute.Condition)
-                {
-                    columnVal = columnVal.ToUpper(); // MKM API is returning the conditions always as capital letters
-                    if (!Conditions.Contains(columnVal))
-                    {
-                        switch (columnVal)
-                        {
-                            case "MINT":
-                                columnVal = "MT";
-                                break;
-                            case "NEAR MINT":
-                                columnVal = "NM";
-                                break;
-                            case "EXCELLENT":
-                                columnVal = "EX";
-                                break;
-                            case "GOOD":
-                                columnVal = "GD";
-                                break;
-                            case "LIGHTLY PLAYED":
-                                columnVal = "LP";
-                                break;
-                            case "POOR":
-                                columnVal = "PO";
-                                break;
-                            // for the following the European (MKM) and American (deckbox.org) grades are the same word but different meaning
-                            // we will assume that if it is the entire word, it is exported from deckbox.org and therefore uses the American grading
-                            case "GOOD (LIGHTLY PLAYED)":
-                                columnVal = "EX";
-                                break;
-                            case "PLAYED":
-                                columnVal = "GD";
-                                break;
-                            case "HEAVILY PLAYED": // this could be either LP or PL, we will never know...let's set it to LP
-                                columnVal = "LP";
-                                break;
-                        }
-                    }
-                }
-                else if (attName == MKMMetaCardAttribute.Foil || attName == MKMMetaCardAttribute.Signed
-                    || attName == MKMMetaCardAttribute.Altered || attName == MKMMetaCardAttribute.Playset)
-                {
-                    columnVal = columnVal.ToLower(); // MKM API is returning boolean values always as "false/true/null"
-                    switch (columnVal)
-                    {
-                        case "null": // means "any"
-                            columnVal = "";
-                            break;
-                        // deckbox.org says the word if it is true and leaves the field blank if it is false
-                        // note that we are deviating for the empty field case from their system because it is wrong:
-                        // for example, they leave blank foil field even for cards that are available only in foil like all kinds of promos
-                        // therefore we understand empty string or "null" as meaning "Any"
-                        case "foil":
-                            columnVal = "true";
-                            break;
-                        case "signed":
-                            columnVal = "true";
-                            break;
-                        case "altered":
-                            columnVal = "true";
-                            break;
-                    }
-                }
-                if (columnVal != "") // having an attribute at "any" is the same as not having it at all
-                    data[attName] = columnVal;
             }
 
             // fill in missing data that we know from our local database (and have them be "any" would make no sense)
-            string val = GetAttribute(MKMMetaCardAttribute.ProductID);
-            if (val != "") // if we know product ID, we can use the inventory database to get expansion ID and Name
+            string productId = GetAttribute(MKMMetaCardAttribute.ProductID);
+            if (productId != "") // if we know product ID, we can use the inventory database to get expansion ID and Name
             {
-                DataRow row = MKMDatabaseManager.Instance.GetSingleCard(val);
+                DataRow row = MKMDatabaseManager.Instance.GetSingleCard(productId);
                 if (row != null)
                 {
-                    data[MKMMetaCardAttribute.ExpansionID] = row[MKMMetaCardAttribute.ExpansionID].ToString();
-                    data[MKMMetaCardAttribute.Name] = row[MKMMetaCardAttribute.Name].ToString();
+                    data[MKMMetaCardAttribute.ExpansionID] = row[MKMDatabaseManager.InventoryFields.ExpansionID].ToString();
+                    data[MKMMetaCardAttribute.Name] = row[MKMDatabaseManager.InventoryFields.Name].ToString();
+                    data[MKMMetaCardAttribute.MetaproductID] = row[MKMDatabaseManager.InventoryFields.MetaproductID].ToString();
                 }
             }
-            val = GetAttribute(MKMMetaCardAttribute.Expansion);
-            if (val != "")
-                data[MKMMetaCardAttribute.ExpansionID] = MKMDatabaseManager.Instance.GetExpansionID(val);
-            else
+            string expID = GetAttribute(MKMMetaCardAttribute.ExpansionID);
+            string expansion = GetAttribute(MKMMetaCardAttribute.Expansion);
+            if (expID != "")
+                data[MKMMetaCardAttribute.Expansion] = expansion = MKMDatabaseManager.Instance.GetExpansionName(expID);
+            else if (expansion != "")
             {
-                val = GetAttribute(MKMMetaCardAttribute.ExpansionID);
-                if (val != "")
-                    data[MKMMetaCardAttribute.Expansion] = MKMDatabaseManager.Instance.GetExpansionName(val);
+                data[MKMMetaCardAttribute.ExpansionID] = expID = MKMDatabaseManager.Instance.GetExpansionID(expansion);
+            }
+            // if we don't know product ID, but we know expansion and name, we can get it
+            if (productId == "" && expID != "")
+            {
+                string name = GetAttribute(MKMMetaCardAttribute.Name);
+                if (name != "")
+                    data[MKMMetaCardAttribute.ProductID] = MKMDatabaseManager.Instance.GetProductID(name, expID);
             }
         }
 
@@ -358,43 +326,276 @@ namespace MKMTool
                 comments:                           // Comments
                 price:                              // Price of the article
                 count:                              // Count (see notes)
-                inShoppingCart:                     // Flag, if that article is currently in a shopping cart
+NOT STORED      inShoppingCart:                     // Flag, if that article is currently in a shopping cart
                 product: {                          // Short Product entity
                     enName:                         // English name
                     locName:                        // Localized name (according to the language of the article)
-                    image:                          // path to the product's image
+NOT STORED          image:                          // path to the product's image
                     expansion:                      // expansion name in English, if applicable
                     nr:                             // Number of single within the expansion, if applicable
-                    expIcon:                        // index to the expansion's icon, if applicable
+NOT STORED          expIcon:                        // index to the expansion's icon, if applicable
                     rarity:                         // product's rarity if applicable
                 }
-                seller: { }                          // Seller's user entity
-                lastEdited:                         // Date, the article was last updated
+NOT STORED      seller: { }                          // Seller's user entity
+NOT STORED      lastEdited:                         // Date, the article was last updated
                 condition:                          // Product's condition, if applicable
                 isFoil:                             // Foil flag, if applicable
                 isSigned:                           // Signed flag, if applicable
                 isAltered:                          // Altered flag, if applicable
                 isPlayset:                          // Playset flag, if applicable
-                links: { }                           // HATEOAS links
+NOT STORED      links: { }                           // HATEOAS links
             }
             */
+            data[MKMMetaCardAttribute.ArticleID] = MKMArticle["idArticle"].InnerText;
             data[MKMMetaCardAttribute.ProductID] = MKMArticle["idProduct"].InnerText;
+            data[MKMMetaCardAttribute.LanguageID] = MKMArticle["language"]["idLanguage"].InnerText;
             data[MKMMetaCardAttribute.Language] = MKMArticle["language"]["languageName"].InnerText;
             data[MKMMetaCardAttribute.Comments] = MKMArticle["comments"].InnerText;
             data[MKMMetaCardAttribute.MKMPrice] = MKMArticle["price"].InnerText;
+            data[MKMMetaCardAttribute.Count] = MKMArticle["count"].InnerText;
             if (MKMArticle["product"] != null) // based on which API call was used, this can be null
             {
                 data[MKMMetaCardAttribute.Name] = MKMArticle["product"]["enName"].InnerText;
                 data[MKMMetaCardAttribute.LocName] = MKMArticle["product"]["locName"].InnerText;
                 data[MKMMetaCardAttribute.Expansion] = MKMArticle["product"]["expansion"].InnerText;
+                data[MKMMetaCardAttribute.CardNumber] = MKMArticle["product"]["nr"].InnerText;
                 data[MKMMetaCardAttribute.Rarity] = MKMArticle["product"]["rarity"].InnerText;
             }
-            data[MKMMetaCardAttribute.Count] = MKMArticle["count"].InnerText;
             data[MKMMetaCardAttribute.Condition] = MKMArticle["condition"].InnerText;
             data[MKMMetaCardAttribute.Foil] = MKMArticle["isFoil"].InnerText;
             data[MKMMetaCardAttribute.Signed] = MKMArticle["isSigned"].InnerText;
             data[MKMMetaCardAttribute.Altered] = MKMArticle["isAltered"].InnerText;
             data[MKMMetaCardAttribute.Playset] = MKMArticle["isPlayset"].InnerText;
+        }
+
+        /// <summary>
+        /// Fills the attributes of this metacard based on a provided MKM product entry. All entries set in this
+        /// will be used - if previous values existed, they will be overwritten.
+        /// Only attributes that are among the "recognized" ones (have an entry in MKMMetaCardAttribute) will be stored.
+        /// If the entry has price guides, the HasPriceGuides will be set to true and all price guides will be stored - even
+        /// foil ones for non-foil cards and vice versa.
+        /// </summary>
+        /// <param name="MKMProduct">A XML node with the product entry. Can be either the detailed or non-detailed version.
+        /// No validity checks are performed - it is assumed that this is a correct XMLNode obtained from a MKM API call.</param>
+        public void FillProductInfo(XmlNode MKMProduct)
+        {
+            /*From MKM documentation 6.7.2019
+             * product: {
+                idProduct:                  // Product ID
+                idMetaproduct:              // Metaproduct ID
+NOT STORED      countReprints:              // Number of total products bundled by the metaproduct
+                enName:                     // Product's English name
+NOT STORED      localization: {}            // localization entities for the product's name
+NOT STORED      category: {                 // Category entity the product belongs to
+                    idCategory:             // Category ID
+                    categoryName:           // Category's name
+                }
+NOT STORED      website:                    // URL to the product (relative to MKM's base URL)
+NOT STORED      image:                      // Path to the product's image
+NOT STORED      gameName:                   // the game's name
+NOT STORED      categoryName:               // the category's name
+                number:                     // Number of product within the expansion (where applicable)
+                rarity:                     // Rarity of product (where applicable)
+IT IS NOT THERE IF expansion IS       expansionName:              // Expansion's name 
+NOT STORED      links: {}                   // HATEOAS links
+                // The following information is only returned for responses that return the detailed product entity 
+                    expansion:
+                    {                // detailed expansion information (where applicable)
+                        idExpansion:
+                        enName:
+ NOT STORED             expansionIcon:
+                }
+                    priceGuide:
+                    {               // Price guide entity '''(ATTN: not returned for expansion requests)'''
+                        SELL:                   // Average price of articles ever sold of this product
+                        LOW:                    // Current lowest non-foil price (all conditions)
+THE + is not there!     LOWEX+:                 // Current lowest non-foil price (condition EX and better)
+                        LOWFOIL:                // Current lowest foil price
+                        AVG:                    // Current average non-foil price of all available articles of this product
+                        TREND:                  // Current trend price
+                        TRENDFOIL:              // Current foil trend price
+                }
+NOT STORED          reprint: [                  // Reprint entities for each similar product bundled by the metaproduct
+                    {
+                        idProduct:
+                        expansion:
+                        expIcon:
+                    }
+                ]
+            }*/
+            data[MKMMetaCardAttribute.ProductID] = MKMProduct["idProduct"].InnerText;
+            data[MKMMetaCardAttribute.MetaproductID] = MKMProduct["idMetaproduct"].InnerText;
+            data[MKMMetaCardAttribute.Name] = MKMProduct["enName"].InnerText;
+            data[MKMMetaCardAttribute.CardNumber] = MKMProduct["number"].InnerText;
+            data[MKMMetaCardAttribute.Rarity] = MKMProduct["rarity"].InnerText;
+            if (MKMProduct["expansionName"] != null)
+            {
+                data[MKMMetaCardAttribute.ExpansionID] = MKMDatabaseManager.Instance.GetExpansionID(MKMProduct["expansionName"].InnerText);
+                data[MKMMetaCardAttribute.Expansion] = MKMProduct["expansionName"].InnerText;
+            }
+            else
+            {
+                if (MKMProduct["expansion"] != null)
+                    data[MKMMetaCardAttribute.ExpansionID] = MKMProduct["expansion"]["idExpansion"].InnerText;
+                else
+                    data[MKMMetaCardAttribute.ExpansionID] = MKMDatabaseManager.Instance.GetSingleCard(
+                        data[MKMMetaCardAttribute.ProductID])[MKMDatabaseManager.InventoryFields.ExpansionID].ToString();
+                data[MKMMetaCardAttribute.Expansion] = MKMDatabaseManager.Instance.GetExpansionName(data[MKMMetaCardAttribute.ExpansionID]);
+            }
+
+            if (MKMProduct["priceGuide"] != null)
+            {
+                hasPriceGuides = true;
+                data[MKMMetaCardAttribute.PriceGuideSELL] = MKMProduct["priceGuide"]["SELL"].InnerText;
+                data[MKMMetaCardAttribute.PriceGuideLOW] = MKMProduct["priceGuide"]["LOW"].InnerText;
+                data[MKMMetaCardAttribute.PriceGuideLOWEX] = MKMProduct["priceGuide"]["LOWEX"].InnerText;
+                data[MKMMetaCardAttribute.PriceGuideLOWFOIL] = MKMProduct["priceGuide"]["LOWFOIL"].InnerText;
+                data[MKMMetaCardAttribute.PriceGuideAVG] = MKMProduct["priceGuide"]["AVG"].InnerText;
+                data[MKMMetaCardAttribute.PriceGuideTREND] = MKMProduct["priceGuide"]["TREND"].InnerText;
+                data[MKMMetaCardAttribute.PriceGuideTRENDFOIL] = MKMProduct["priceGuide"]["TRENDFOIL"].InnerText;
+            }
+        }
+
+        /// <summary>
+        /// Performs checks whether the specified language is valid and if so, sets it and also sets the appropriate languageID.
+        /// </summary>
+        /// <param name="language">The language.
+        /// Allowed values (case sensitive): English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese.</param>
+        public void SetLanguage(string language)
+        {
+            string languageID;
+            if (languagesIds.TryGetValue(language, out languageID))
+            {
+                data[MKMMetaCardAttribute.LanguageID] = languageID;
+                data[MKMMetaCardAttribute.Language] = language;
+            }
+            else// if it is an unknown language, report it and ignore it
+            {
+                LogError("setting card language", "Unknown language \"" + language +
+                    "\". Allowed values (case sensitive): English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese."
+                    + " Language of the current item will be ignored.", false);
+                data[MKMMetaCardAttribute.Language] = "";
+                data[MKMMetaCardAttribute.LanguageID] = "";
+            }
+        }
+
+        /// <summary>
+        /// Performs checks whether the language ID is valid (number 1-11) and if so, sets it and also appropriate Language.
+        /// </summary>
+        /// <param name="languageID">The language identifier. Must be an integer 1-11</param>
+        public void SetLanguageID(string languageID)
+        {
+            string language;
+            if (languagesNames.TryGetValue(languageID, out language))
+            {
+                data[MKMMetaCardAttribute.LanguageID] = languageID;
+                data[MKMMetaCardAttribute.Language] = language;
+            }
+            else// if it is an unknown language ID, report it and ignore it
+            {
+                LogError("setting card language ID", "Unknown language ID \"" + languageID +
+                    "\", Allowed values are integer numbers from 1 to 12. Language of the current item will be ignored.", false);
+                data[MKMMetaCardAttribute.Language] = "";
+                data[MKMMetaCardAttribute.LanguageID] = "";
+            }
+        }
+
+        /// <summary>
+        /// Transform the condition to two-letter abbreviation style used by MKM and sets it as the Condition.
+        /// If the condition is unrecognized, it will not be stored.
+        /// </summary>
+        /// <param name="condition">The condition in any supported format.</param>
+        public void SetCondition(string condition)
+        {
+            condition = condition.ToUpper(); // MKM API is returning the conditions always as capital letters
+            string conditionOut;
+            if (!conditionsDictionary.TryGetValue(condition, out conditionOut))
+            {
+                LogError("setting card condition", "Unrecognized condition \"" + condition +
+                    "\", condition of the current item will be ignored.", false);
+                return;
+            }
+            data[MKMMetaCardAttribute.Condition] = conditionOut;
+        }
+
+        /// <summary>
+        /// Transform the condition to two-letter abbreviation style used by MKM and sets it as the minimal condition of the card.
+        /// If the condition is unrecognized, it will not be stored.
+        /// </summary>
+        /// <param name="condition">The condition in any supported format.</param>
+        public void SetMinCondition(string condition)
+        {
+            condition = condition.ToUpper(); // MKM API is returning the conditions always as capital letters
+            string conditionOut;
+            if (!conditionsDictionary.TryGetValue(condition, out conditionOut))
+            {
+                LogError("setting card minCondition", "Unrecognized condition \"" + condition +
+                    "\", condition of the current item will be ignored.", false);
+                return;
+            }
+            data[MKMMetaCardAttribute.MinCondition] = conditionOut;
+        }
+
+        /// <summary>
+        /// Sets an attribute that has boolean value.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="value">The value. Can be in any recognized format, any capitalization, it will be transformed to lowercase true/false/"".
+        /// Recognized values: empty string always == "any"; true/false/null; yes/no/any; foil/signed/altered all equal true.</param>
+        public void SetBoolAttribute(string name, string value)
+        {
+
+            value = value.ToLower(); // MKM API is returning boolean values always as "false/true/null"
+            switch (value)
+            {
+                case "null": // means "any"
+                    data[name] = "";
+                    break;
+                case "yes":
+                    data[name] = "true";
+                    break;
+                case "no":
+                    data[name] = "false";
+                    break;
+                case "any":
+                    data[name] = "";
+                    break;
+                // deckbox.org says the word if it is true and leaves the field blank if it is false
+                // note that we are deviating for the empty field case from their system because it is wrong:
+                // for example, they leave blank foil field even for cards that are available only in foil like all kinds of promos
+                // therefore we understand empty string or "null" as meaning "Any"
+                case "foil":
+                    data[name] = "true";
+                    break;
+                case "signed":
+                    data[name] = "true";
+                    break;
+                case "altered":
+                    data[name] = "true";
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Sets the specified attribute to the specified value.
+        /// DOES NOT PERFORM ANY CHECKS ON VALIDITY - if there is a Set*** method available for a particular attribute (like language, condition),
+        /// use that instead of this method to perform a check that the value is valid and that all related attributes will be set to correct values.
+        /// Use SetBoolAttribute where applicable: foil, playset, signed, altered...
+        /// </summary>
+        /// <param name="name">The name of the attribute.</param>
+        /// <param name="value">The value.</param>
+        public void SetAttribute(string name, string value)
+        {
+            data[name] = value;
+        }
+
+        /// <summary>
+        /// Removes the specified attribute entirely.
+        /// </summary>
+        /// <param name="name">The name of the attribute.</param>
+        public void RemoveAttribute(string name)
+        {
+            data.Remove(name);
         }
 
         /// <summary>
@@ -427,11 +628,73 @@ namespace MKMTool
                 string otherC = otherCard.GetAttribute(MKMMetaCardAttribute.Condition);
                 if (otherC != "")
                 {
-                    bool res = MKMHelpers.IsBetterOrSameCondition(otherC, minC);
+                    bool res = IsBetterOrSameCondition(otherC, minC);
                     return res ? Bool3.True : Bool3.False;
                 }
             }
             return Bool3.Any;
+        }
+
+        /// <summary>
+        /// Writes all attributes of this card into the provided table.
+        /// </summary>
+        /// <param name="table">The table to which a new row will be appended with the attributes of this card.</param>
+        /// <param name="writeAllAttributes">If set to false, only attributes that already have their respective columns (attributeName == columnName)
+        /// in the table will be written. If this card does not have a value for that attribute, an empty string will be set as the value.
+        /// If set to true, all attributes will be written - new columns will be added if they are missing.</param>
+        /// <param name="format">Specific format - if not set to MKM, some fields will have reformatted output.</param>
+        public void WriteItselfIntoTable(DataTable table, bool writeAllAttributes, MCFormat format)
+        {
+            List<string> attributes = new List<string>();
+            foreach (DataColumn dc in table.Columns) // first we collect all attributes that are already in the table
+            {
+                attributes.Add(GetAttribute(dc.ColumnName));
+            }
+            if (writeAllAttributes)
+            {
+                // if we are supposed to write even attributes that are not in the table yet,
+                // for each such attribute create a new column and add the current value
+                foreach (var att in data)
+                {
+                    if (att.Value != "" && !table.Columns.Contains(att.Key))
+                    {
+                        DataColumn newColumn = new DataColumn(att.Key, typeof(string));
+                        newColumn.DefaultValue = "";
+                        table.Columns.Add(newColumn);
+                        attributes.Add(att.Value);
+                    }
+                }
+            }
+            DataRow dr = table.Rows.Add(attributes.ToArray());
+
+            // do format-specific conversions
+            if (format == MCFormat.Deckbox)
+            {
+                if (table.Columns.Contains(MKMMetaCardAttribute.Condition))
+                {
+                    string temp = dr[MKMMetaCardAttribute.Condition].ToString();
+                    if (temp != "")
+                        dr[MKMMetaCardAttribute.Condition] = conditionsDeckboxDictionary[temp];
+                }
+                if (table.Columns.Contains(MKMMetaCardAttribute.Foil))
+                {
+                    string temp = dr[MKMMetaCardAttribute.Foil].ToString();
+                    if (temp != "")
+                        dr[MKMMetaCardAttribute.Foil] = (temp == "true" ? "Foil" : "");
+                }
+                if (table.Columns.Contains(MKMMetaCardAttribute.Signed))
+                {
+                    string temp = dr[MKMMetaCardAttribute.Signed].ToString();
+                    if (temp != "")
+                        dr[MKMMetaCardAttribute.Signed] = (temp == "true" ? "Signed" : "");
+                }
+                if (table.Columns.Contains(MKMMetaCardAttribute.Altered))
+                {
+                    string temp = dr[MKMMetaCardAttribute.Altered].ToString();
+                    if (temp != "")
+                        dr[MKMMetaCardAttribute.Altered] = (temp == "true" ? "Altered" : "");
+                }
+            }
         }
 
 
@@ -449,22 +712,27 @@ namespace MKMTool
         {
             if (card2 is MKMMetaCard)
             {
-                string att1, att2;
-                foreach (string att in comparableAttributes)
+                foreach (var att in data)
                 {
-                    att1 = GetAttribute(att);
-                    if (att1 != "")
+                    if (att.Key == MKMMetaCardAttribute.MinCondition && att.Value != "")
                     {
-                        att2 = ((MKMMetaCard)card2).GetAttribute(att);
-                        if (att2 != "" && att1 != att2)
+                        // comparing minCondition requires custom handling
+                        if (IsOfMinCondition((MKMMetaCard)card2) == Bool3.False)
+                            return false;
+                        if (((MKMMetaCard)card2).IsOfMinCondition(this) == Bool3.False)
                             return false;
                     }
+                    else
+                    {
+                        // all other attributes are compared directly
+                        if (att.Value != "")
+                        {
+                            string att2 = ((MKMMetaCard)card2).GetAttribute(att.Key);
+                            if (att2 != "" && att.Value != att2)
+                                return false;
+                        }
+                    }
                 }
-                // now non-directly comparable
-                if (IsOfMinCondition((MKMMetaCard)card2) == Bool3.False)
-                    return false;
-                if (((MKMMetaCard)card2).IsOfMinCondition(this) == Bool3.False)
-                    return false;
                 return true;
             }
             return false;
@@ -475,7 +743,6 @@ namespace MKMTool
         {
             var hashCode = -373259831;
             hashCode = hashCode * -1521134295 + EqualityComparer<Dictionary<string, string>>.Default.GetHashCode(data);
-            hashCode = hashCode * -1521134295 + EqualityComparer<List<string>>.Default.GetHashCode(importedColumns);
             return hashCode;
         }
     }
