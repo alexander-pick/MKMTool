@@ -548,6 +548,10 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
             value = value.ToLower(); // MKM API is returning boolean values always as "false/true/null"
             switch (value)
             {
+                case "false":
+                case "true":
+                    data[name] = value;
+                    break;
                 case "null": // means "any"
                     data[name] = "";
                     break;
