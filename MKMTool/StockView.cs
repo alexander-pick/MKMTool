@@ -81,10 +81,10 @@ namespace MKMTool
                 }
 
                 var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Inventory,
-                    (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
+                    (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ProductID) == row2.Field<string>(MKMDbManager.InventoryFields.ProductID));
 
                 dj = MKMDbManager.JoinDataTables(dj, MKMDbManager.Instance.Expansions,
-                    (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
+                    (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
 
                 dj.Columns.Remove("article_Id");
                 dj.Columns.Remove("Date Added");
@@ -94,7 +94,7 @@ namespace MKMTool
                 dj.Columns.Remove("Expansion ID");
                 dj.Columns.Remove("idExpansion");
 
-                dj.Columns[dj.Columns.IndexOf("Name")].SetOrdinal(0);
+                dj.Columns[dj.Columns.IndexOf(MKMDbManager.InventoryFields.Name)].SetOrdinal(0);
 
                 stockGridView.DataSource = dj;
             }

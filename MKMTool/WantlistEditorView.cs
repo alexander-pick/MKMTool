@@ -121,14 +121,14 @@ namespace MKMTool
             dj = new DataTable();
 
             dj = MKMDbManager.JoinDataTables(MKMDbManager.Instance.Inventory, MKMDbManager.Instance.Expansions,
-                (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
+                (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
 
             foreach (DataRow row in dj.Rows)
             {
-                var item = new ListViewItem(row["idProduct"].ToString());
+                var item = new ListViewItem(row[MKMDbManager.InventoryFields.ProductID].ToString());
 
-                item.SubItems.Add(row["Name"].ToString());
-                item.SubItems.Add(row["enName"].ToString());
+                item.SubItems.Add(row[MKMDbManager.InventoryFields.Name].ToString());
+                item.SubItems.Add(row[MKMDbManager.ExpansionsFields.Name].ToString());
 
                 cardView.Items.Add(item);
             }
@@ -146,21 +146,21 @@ namespace MKMTool
 
                 foreach (DataRow row in dj.Rows)
                 {
-                    var item = new ListViewItem(row["idProduct"].ToString());
+                    var item = new ListViewItem(row[MKMDbManager.InventoryFields.ProductID].ToString());
 
-                    if (row["Name"].ToString().Contains(searchBox.Text))
+                    if (row[MKMDbManager.InventoryFields.Name].ToString().Contains(searchBox.Text))
                     {
                         //check editon Dropdown
                         if (editionBox.Text != "")
                         {
-                            if (row["enName"].ToString() != editionBox.Text)
+                            if (row[MKMDbManager.ExpansionsFields.Name].ToString() != editionBox.Text)
                             {
                                 continue;
                             }
                         }
 
-                        item.SubItems.Add(row["Name"].ToString());
-                        item.SubItems.Add(row["enName"].ToString());
+                        item.SubItems.Add(row[MKMDbManager.InventoryFields.Name].ToString());
+                        item.SubItems.Add(row[MKMDbManager.ExpansionsFields.Name].ToString());
 
                         cardView.Items.Add(item);
                     }

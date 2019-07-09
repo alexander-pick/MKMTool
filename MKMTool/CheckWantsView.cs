@@ -242,9 +242,9 @@ namespace MKMTool
                 {
                     if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
                     {
-                        DataRow card = MKMDbManager.Instance.GetSingleCard(article["idProduct"].InnerText);
+                        DataRow card = MKMDbManager.Instance.GetSingleCard(article[MKMDbManager.InventoryFields.ProductID].InnerText);
 
-                        if (card == null || card.Field<string>("Expansion ID") != selectedExpansionID) // compare
+                        if (card == null || card.Field<string>(MKMDbManager.InventoryFields.ExpansionID) != selectedExpansionID) // compare
                             continue;
                     }
 
@@ -283,8 +283,8 @@ namespace MKMTool
             MainView.Instance.LogMainWindow("Checking for cheap deals from selected expansion...");
             foreach (DataRow oRecord in sT)
             {
-                MainView.Instance.LogMainWindow("Checking: " + oRecord["Name"]);
-                checkArticle(oRecord["idProduct"].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
+                MainView.Instance.LogMainWindow("Checking: " + oRecord[MKMDbManager.InventoryFields.Name]);
+                checkArticle(oRecord[MKMDbManager.InventoryFields.ProductID].ToString(), selectedLanguage, minCondition, isFoil, isSigned,
                     isAltered, isPlayset, "", maxPrice, shippingAddition, percentBelowOthers, checkTrend);
             }
             MainView.Instance.LogMainWindow("Check finished.");

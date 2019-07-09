@@ -158,7 +158,8 @@ namespace MKMTool
 
                 using (StreamWriter exp = new StreamWriter(@".\\mkmexpansions.csv"))
                 {
-                    exp.WriteLine("\"idExpansion\",\"abbreviation\",\"enName\",\"releaseDate\"");
+                    exp.WriteLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\"",
+                        ExpansionsFields.ExpansionID, ExpansionsFields.Abbreviation, ExpansionsFields.Name, ExpansionsFields.ReleaseDate));
                     foreach (XmlNode nExpansion in node)
                     {
                         exp.WriteLine("\"" + nExpansion[ExpansionsFields.ExpansionID].InnerText + "\",\"" // put commas around each, in case wizards ever decide to do set with a comma in the name
@@ -211,7 +212,8 @@ namespace MKMTool
 
                 command.ExecuteNonQuery();
 
-                sql = "CREATE TABLE expansions (idExpansion, abbreviation, enName, releaseDate)";
+                sql = string.Format("CREATE TABLE expansions ({0}, {1}, {2}, {3})",
+                    ExpansionsFields.ExpansionID, ExpansionsFields.Abbreviation, ExpansionsFields.Name, ExpansionsFields.ReleaseDate);
 
                 command = new SQLiteCommand(sql, m_dbConnection);
 
@@ -494,14 +496,14 @@ namespace MKMTool
         /// Returns null in case the product ID is invalid.</returns>
         public DataRow GetSingleCard(string idProduct)
         {
-            DataRow[] result = inventory.Select(string.Format("[idProduct] = '{0}'", idProduct));
+            DataRow[] result = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ProductID, idProduct));
             if (result.Length == 1) // should always be either 0 or 1 as idProduct is unique
                 return result[0];
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                result = inventory.Select(string.Format("[idProduct] = '{0}'", idProduct));
+                result = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ProductID, idProduct));
                 if (result.Length == 1) // should always be either 0 or 1 as idProduct is unique
                     return result[0];
             }
@@ -517,14 +519,14 @@ namespace MKMTool
         public DataRow[] GetCardByName(string enName)
         {
             enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = inventory.Select(string.Format("[Name] = '{0}'", enName));
+            DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.Name, enName));
             if (ret.Length > 0) // should always be either 0 or 1 as idProduct is unique
                 return ret;
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card " + enName + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                return inventory.Select(string.Format("[Name] = '{0}'", enName));
+                return inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.Name, enName));
             }
             return new DataRow[0];
         }
@@ -537,12 +539,12 @@ namespace MKMTool
         /// Empty if idExpansion is invalid.</returns>
         public DataRow[] GetCardsInExpansion(string idExpansion)
         {
-            DataRow[] ret = inventory.Select(string.Format("[Expansion ID] = '{0}'", idExpansion));
+            DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ExpansionID, idExpansion));
             if (ret.Length == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion id " + idExpansion + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = inventory.Select(string.Format("[Expansion ID] = '{0}'", idExpansion));
+                ret = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ExpansionID, idExpansion));
             }
             return ret;
         }
@@ -555,16 +557,16 @@ namespace MKMTool
         public string GetExpansionID(string expansionName)
         {
             expansionName = expansionName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = expansions.Select(string.Format("[enName] = '{0}'", expansionName));
+            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.Name, expansionName));
             if (ret.Length == 1)
-                return ret[0]["idExpansion"].ToString();
+                return ret[0][ExpansionsFields.ExpansionID].ToString();
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion " + expansionName + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = expansions.Select(string.Format("[enName] = '{0}'", expansionName));
+                ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.Name, expansionName));
                 if (ret.Length == 1)
-                    return ret[0]["idExpansion"].ToString();
+                    return ret[0][ExpansionsFields.ExpansionID].ToString();
             }
             return "";
         }
@@ -576,16 +578,16 @@ namespace MKMTool
         /// <returns>String with the ID or empty string if the expansion was not found.</returns>
         public string GetExpansionName(string expansionID)
         {
-            DataRow[] ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
+            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
             if (ret.Length == 1)
-                return ret[0]["enName"].ToString();
+                return ret[0][ExpansionsFields.Name].ToString();
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
+                ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
                 if (ret.Length == 1)
-                    return ret[0]["enName"].ToString();
+                    return ret[0][ExpansionsFields.Name].ToString();
             }
             return "";
         }
@@ -599,16 +601,16 @@ namespace MKMTool
         public string GetProductID(string enName, string expansionID)
         {
             enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = inventory.Select(string.Format("[Expansion ID] = '{0}' AND [Name] = '{1}'", expansionID, enName));
+            DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}' AND [Name] = '{2}'", InventoryFields.ExpansionID, expansionID, enName));
             if (ret.Length == 1)
-                return ret[0]["idProduct"].ToString();
+                return ret[0][InventoryFields.ProductID].ToString();
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Product " + enName + " from " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = inventory.Select(string.Format("[Expansion ID] = '{0}' AND [Name] = '{1}'", expansionID, enName));
+                ret = inventory.Select(string.Format("[{0}] = '{1}' AND [Name] = '{2}'", InventoryFields.ExpansionID, expansionID, enName));
                 if (ret.Length == 1)
-                    return ret[0]["idProduct"].ToString();
+                    return ret[0][InventoryFields.ProductID].ToString();
             }
             return "";
         }
@@ -621,7 +623,7 @@ namespace MKMTool
         public DataRow GetExpansionByName(string expansionName)
         {
             expansionName = expansionName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = expansions.Select(string.Format("[enName] = '{0}'", expansionName));
+            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.Name, expansionName));
             if (ret.Length == 1)
                 return ret[0];
             else return null;
@@ -634,14 +636,14 @@ namespace MKMTool
         /// <returns>Data row from the Expansions, use ExpansionsFields to get the names of the columns. Null in case the expansion is not found.</returns>
         public DataRow GetExpansionByID(string expansionID)
         {
-            DataRow[] ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
+            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
             if (ret.Length == 1)
                 return ret[0];
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = expansions.Select(string.Format("[idExpansion] = '{0}'", expansionID));
+                ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
                 if (ret.Length == 1)
                     return ret[0];
             }
