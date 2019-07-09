@@ -94,9 +94,22 @@ namespace MKMTool
                 dj.Columns.Remove("Expansion ID");
                 dj.Columns.Remove("idExpansion");
 
+                // rename the columns to the names used by MKMMetaCard
+                dj.Columns[MKMDbManager.ExpansionsFields.Name].ColumnName = MCAttribute.Expansion;
+                dj.Columns["isFoil"].ColumnName = MCAttribute.Foil;
+                dj.Columns["isAltered"].ColumnName = MCAttribute.Altered;
+                dj.Columns["isSigned"].ColumnName = MCAttribute.Signed;
+                dj.Columns["isPlayset"].ColumnName = MCAttribute.Playset;
+                dj.Columns["condition"].ColumnName = MCAttribute.Condition;
+                dj.Columns["comments"].ColumnName = MCAttribute.Comments;
+                dj.Columns["price"].ColumnName = MCAttribute.MKMPrice;
+                dj.Columns["count"].ColumnName = MCAttribute.Count;
+
                 dj.Columns[dj.Columns.IndexOf(MKMDbManager.InventoryFields.Name)].SetOrdinal(0);
 
                 stockGridView.DataSource = dj;
+
+                buttonExport.Enabled = true;
             }
             catch (Exception eError)
             {
@@ -117,6 +130,18 @@ namespace MKMTool
                 MKMHelpers.LogError("searching for " + searchString + " in Stock View", eError.Message, true);
             }
 
+        }
+
+        private void buttonExport_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sf = new SaveFileDialog();
+            sf.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+            if (sf.ShowDialog() == DialogResult.OK)
+            {
+                MainView.Instance.LogMainWindow("Exporting inventory...");
+                MKMDbManager.WriteTableAsCSV(sf.FileName, (DataTable)stockGridView.DataSource);
+                MainView.Instance.LogMainWindow("Inventory exported.");
+            }
         }
     }
 }

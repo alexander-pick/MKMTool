@@ -24,6 +24,7 @@ New/improved features:
 + Added the option to "ignore" the playset flag when updating prices - when turned on, all articles marked as playset will be treated as 4x single card
 + Separated "log non-updated if price change too large" log option into two - you can now select if you want to log these non-updates only when your price is higher or only when it is lower (also fixed it as the non-updates due to high variance was actually checked when this one should have been checked, so the this checkbox wasn't doing anything). Note that this is not backwards compatible with previous presets - when you load your own preset, you need to check the logging options you like and save it again.
 + Added the option to load a list of cards with minimal prices that the Update Price module uses to not go below specified prices for any card you want (see details in the documentation below)
++ Added the option to export your entire inventory to CSV file from the [View Inventory](#View-Inventory) screen.
 
 9.2.2019 (by Tomas Janak)
 + Fixed "Bad Request 400" error when working with more than 100 items (partially by Ramiro Aparicio) after API changes announced on 6.2.2019
