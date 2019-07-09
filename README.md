@@ -4,7 +4,7 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Last changes
 
-**version 0.7.0, x.x.2019 (by @tomasjanak)**
+**version 0.7.0, x.x.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
 Bugfixes:
 + Fixed [Check Display Value](#Check-Display-Value) using locale-dependent number parsing, which caused the decimal delimiter to be ignored if you are using '.' instead of ',', leading to 100x higher prices.
 + Fixed numerous issues in [Check for Cheap Deals](#Check-for-Cheap-Deals), now it works as intended for all three modes (expansion check, user check, want list check)
@@ -26,15 +26,15 @@ New/improved features:
 + Added the option to load a list of cards with minimal prices that the [Price Update](#Price-Update) module uses to not go below specified prices for any card you want (see details in the [documentation](#Price-Update) below)
 + Added the option to export your entire inventory to CSV file from the [View Inventory](#View-Inventory) screen.
 
-**9.2.2019 (by @tomasjanak)**
-+ Fixed "Bad Request 400" error when working with more than 100 items (partially by Ramiro Aparicio) after API changes announced on 6.2.2019
+**9.2.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
++ Fixed "Bad Request 400" error when working with more than 100 items (partially by [Ramiro Aparicio](https://github.com/friscoMad)) after API changes announced on 6.2.2019
 + Mint condition is treated as Near Mint when looking for similar items
 + Added an option to search for similar items worldwide (ignoring your country) if there aren't enough similar items in your country
 + Fixed a bug causing in some cases the last added item to not be considered as matching condition even when it was
 + Comments are no longer removed from the article upon update
 + Added a "check for cheap deals from user" option
 
-**27.01.2018 (by @tomasjanak)**
+**27.01.2018 (by [Tomas Janak](https://github.com/tomasjanak))**
 + Added customizable settings for Update Price (see documentation below)
 + Price update no longer uses your own items when calculating the price
 + Richer log options
