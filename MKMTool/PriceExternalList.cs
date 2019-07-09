@@ -389,14 +389,66 @@ namespace MKMTool
                         // TODO - determine whether the expansion is foil only / cannot be foil and based on the isFoil flag of the current article choose the correct set
                     }
                     // now we have expID and English name -> we can determine the product ID
-                    productID = MKMDbManager.Instance.GetProductID(name, mc.GetAttribute(MCAttribute.ExpansionID));
-                    if (productID == "")
+                    string[] ids = MKMDbManager.Instance.GetProductID(name, mc.GetAttribute(MCAttribute.ExpansionID));
+                    if (ids.Length == 0)
                     {
                         LogError("importing line #" + (counter + 1) + ", article will be ignored",
                             "The specified " + name + " and expansion ID " + expID + " do not match - product cannot be identified.", false);
                         failed++;
                         continue;
                     }
+                    else if (ids.Length > 1)
+                    {
+                        string cardNumber = mc.GetAttribute(MCAttribute.CardNumber);
+                        if (cardNumber == "")
+                        {
+                            LogError("importing line #" + (counter + 1) + ", article will be ignored", "The specified " + name +
+                                " and expansion ID " + expID + " match multiple products - please provide Card Number to identify which one it is.", false);
+                            failed++;
+                            continue;
+                        }
+                        // search for the matching item
+                        int start = 0;
+                        try
+                        {
+                            XmlNodeList products;
+                            do
+                            {
+                                XmlDocument doc = MKMInteract.RequestHelper.findProducts(name, "1", start);
+                                products = doc.GetElementsByTagName("product");
+                                string expansion = mc.GetAttribute(MCAttribute.Expansion);
+                                foreach (XmlNode product in products)
+                                {
+                                    if (product["number"].InnerText == cardNumber && product["expansionName"].InnerText == expansion)
+                                    {
+                                        productID = product["idProduct"].InnerText;
+                                        // since we already have it, why not fill the product info in the MetaCard
+                                        mc.FillProductInfo(product);
+                                        break;
+                                    }
+                                }
+                                start += products.Count;
+                            } while (products.Count == 100 && productID == "");
+
+                        }
+                        catch (Exception eError)
+                        {
+                            LogError("importing line #" + (counter + 1) + ", trying to find product ID for "
+                                + name + " based on its card number and expansion, article will be ignored", eError.Message, false);
+                            failed++;
+                            continue;
+                        }
+                        if (productID == "")
+                        {
+                            LogError("importing line #" + (counter + 1) + ", article will be ignored", "The specified " + name +
+                                " and expansion ID " + expID 
+                                + " match multiple products, Card Number was used to find the correct article, but no match was found, verify the data is correct.", false);
+                            failed++;
+                            continue;
+                        }
+                    }
+                    else
+                        productID = ids[0];
                     mc.SetAttribute(MCAttribute.ProductID, productID);
                 }
 

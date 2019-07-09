@@ -597,22 +597,22 @@ namespace MKMTool
         /// </summary>
         /// <param name="enName">English name of the card.</param>
         /// <param name="expansionID">ID of the expansion.</param>
-        /// <returns>String with the ID or empty string if such product was not found.</returns>
-        public string GetProductID(string enName, string expansionID)
+        /// <returns>Strings of all matching products. Usually it will be exactly one, but can be empty if nothing is found,
+        /// and in some cases there can be multiple products of the same name in a single expansion, e.g. basic lands.</returns>
+        public string[] GetProductID(string enName, string expansionID)
         {
             enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
             DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}' AND [Name] = '{2}'", InventoryFields.ExpansionID, expansionID, enName));
-            if (ret.Length == 1)
-                return ret[0][InventoryFields.ProductID].ToString();
-            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            if (ret.Length == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Product " + enName + " from " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
                 ret = inventory.Select(string.Format("[{0}] = '{1}' AND [Name] = '{2}'", InventoryFields.ExpansionID, expansionID, enName));
-                if (ret.Length == 1)
-                    return ret[0][InventoryFields.ProductID].ToString();
             }
-            return "";
+            string[] retStrings = new string[ret.Length];
+            for (int i = 0; i < ret.Length; i++)
+                retStrings[i] = ret[i][InventoryFields.ProductID].ToString();
+            return retStrings;
         }
 
         /// <summary>

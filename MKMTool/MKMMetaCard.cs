@@ -302,7 +302,12 @@ namespace MKMTool
             {
                 string name = GetAttribute(MCAttribute.Name);
                 if (name != "")
-                    data[MCAttribute.ProductID] = MKMDbManager.Instance.GetProductID(name, expID);
+                {
+                    string[] ids = MKMDbManager.Instance.GetProductID(name, expID);
+                    if (ids.Length == 1)
+                        data[MCAttribute.ProductID] = ids[0];
+                    // else we are unable to determine the product ID
+                }
             }
         }
 
