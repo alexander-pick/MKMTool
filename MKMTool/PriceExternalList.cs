@@ -122,7 +122,7 @@ namespace MKMTool
             DataTable dt;
             try
             {
-                 dt = MKMDatabaseManager.ConvertCSVtoDataTable(filePath);
+                 dt = MKMDbManager.ConvertCSVtoDataTable(filePath);
             }
             catch (Exception eError)
             {
@@ -142,9 +142,9 @@ namespace MKMTool
                 MKMMetaCard mc = new MKMMetaCard(row);
                 importedAll.Add(mc); // add it no matter if it can be correctly processed or not so that we can export it
                 counter++;
-                string productID = mc.GetAttribute(MKMMetaCardAttribute.ProductID);
-                string name = mc.GetAttribute(MKMMetaCardAttribute.Name);
-                string languageID = mc.GetAttribute(MKMMetaCardAttribute.LanguageID);
+                string productID = mc.GetAttribute(MCAttribute.ProductID);
+                string name = mc.GetAttribute(MCAttribute.Name);
+                string languageID = mc.GetAttribute(MCAttribute.LanguageID);
                 if (languageID == "" && defaultLanguageID != "")
                 {
                     languageID = defaultLanguageID;
@@ -152,7 +152,7 @@ namespace MKMTool
                 }
                 if (name == "" && productID == "") // we have neither name or productID - we have to hope we have locName and language
                 {
-                    string locName = mc.GetAttribute(MKMMetaCardAttribute.LocName);
+                    string locName = mc.GetAttribute(MCAttribute.LocName);
                     if (locName == "" || languageID == "")
                     {
                         LogError("importing line #" + (counter + 1) + ", article will be ignored",
@@ -200,15 +200,15 @@ namespace MKMTool
                         {
                             LogError("importing line #" + (counter + 1) + ", trying to find product by its localized name "
                                 + locName + ", article will be ignored", "No article called " + locName + " in "
-                                + mc.GetAttribute(MKMMetaCardAttribute.Language) + " language found on MKM.", false);
+                                + mc.GetAttribute(MCAttribute.Language) + " language found on MKM.", false);
                             failed++;
                             continue;
                         }
                         locNameProducts[hash] = name = found[0]["enName"].InnerText;
-                        mc.SetAttribute(MKMMetaCardAttribute.Name, name);
+                        mc.SetAttribute(MCAttribute.Name, name);
                     }
                     else if (name != "")
-                        mc.SetAttribute(MKMMetaCardAttribute.Name, name);
+                        mc.SetAttribute(MCAttribute.Name, name);
                     else
                     {
                         LogError("importing line #" + (counter + 1) + ", trying to find product by its localized name "
@@ -218,17 +218,17 @@ namespace MKMTool
                     }
                 }
                 // process foil and condition now as it can be useful in determining expansion
-                string temp = mc.GetAttribute(MKMMetaCardAttribute.Foil);
+                string temp = mc.GetAttribute(MCAttribute.Foil);
                 Bool3 isFoil;
                 if (temp == "")
                 {
-                    mc.SetBoolAttribute(MKMMetaCardAttribute.Foil, defaultFoil);
-                    isFoil = ParseBool3(mc.GetAttribute(MKMMetaCardAttribute.Foil));
+                    mc.SetBoolAttribute(MCAttribute.Foil, defaultFoil);
+                    isFoil = ParseBool3(mc.GetAttribute(MCAttribute.Foil));
                 }
                 else
                     isFoil = ParseBool3(temp);
 
-                string condition = mc.GetAttribute(MKMMetaCardAttribute.Condition);
+                string condition = mc.GetAttribute(MCAttribute.Condition);
                 if (condition == "")
                 {
                     condition = defaultCondition;
@@ -237,10 +237,10 @@ namespace MKMTool
 
                 if (productID == "") // we now know we have the name, but we have to find out which expansion it is from to get the productID
                 {
-                    string expID = mc.GetAttribute(MKMMetaCardAttribute.ExpansionID); // if the Expansion would be set, ExpansionID would be set as well in constructor of MKMMetaCard
+                    string expID = mc.GetAttribute(MCAttribute.ExpansionID); // if the Expansion would be set, ExpansionID would be set as well in constructor of MKMMetaCard
                     if (expID == "") // we have to determine the expansion
                     {
-                        DataRow[] all = MKMDatabaseManager.Instance.GetCardByName(name);
+                        DataRow[] all = MKMDbManager.Instance.GetCardByName(name);
                         // options are: Latest, Oldest, Cheapest, Median Price, Most Expensive
                         if (all.Length > 0)
                         {
@@ -265,9 +265,9 @@ namespace MKMTool
                                     DateTime latestTime = new DateTime(0);
                                     foreach (DataRow dr in all)
                                     {
-                                        string tempExpID = dr[MKMDatabaseManager.InventoryFields.ExpansionID].ToString();
-                                        string releaseDate = MKMDatabaseManager.Instance.GetExpansionByID(
-                                            tempExpID)[MKMDatabaseManager.ExpansionsFields.ReleaseDate].ToString();
+                                        string tempExpID = dr[MKMDbManager.InventoryFields.ExpansionID].ToString();
+                                        string releaseDate = MKMDbManager.Instance.GetExpansionByID(
+                                            tempExpID)[MKMDbManager.ExpansionsFields.ReleaseDate].ToString();
                                         DateTime rel = DateTime.Parse(releaseDate, CultureInfo.InvariantCulture);
                                         if (latestTime < rel)
                                         {
@@ -275,17 +275,17 @@ namespace MKMTool
                                             expID = tempExpID;
                                         }
                                     }
-                                    mc.SetAttribute(MKMMetaCardAttribute.ExpansionID, expID);
-                                    mc.SetAttribute(MKMMetaCardAttribute.Expansion,
-                                        MKMDatabaseManager.Instance.GetExpansionByID(expID)[MKMDatabaseManager.ExpansionsFields.Name].ToString());
+                                    mc.SetAttribute(MCAttribute.ExpansionID, expID);
+                                    mc.SetAttribute(MCAttribute.Expansion,
+                                        MKMDbManager.Instance.GetExpansionByID(expID)[MKMDbManager.ExpansionsFields.Name].ToString());
                                     break;
                                 case "Oldest":
                                     DateTime oldestTime = DateTime.Now;
                                     foreach (DataRow dr in all)
                                     {
-                                        string tempExpID = dr[MKMDatabaseManager.InventoryFields.ExpansionID].ToString();
-                                        string releaseDate = MKMDatabaseManager.Instance.GetExpansionByID(
-                                            tempExpID)[MKMDatabaseManager.ExpansionsFields.ReleaseDate].ToString();
+                                        string tempExpID = dr[MKMDbManager.InventoryFields.ExpansionID].ToString();
+                                        string releaseDate = MKMDbManager.Instance.GetExpansionByID(
+                                            tempExpID)[MKMDbManager.ExpansionsFields.ReleaseDate].ToString();
                                         DateTime rel = DateTime.Parse(releaseDate, CultureInfo.InvariantCulture);
                                         if (oldestTime > rel)
                                         {
@@ -293,9 +293,9 @@ namespace MKMTool
                                             expID = tempExpID;
                                         }
                                     }
-                                    mc.SetAttribute(MKMMetaCardAttribute.ExpansionID, expID);
-                                    mc.SetAttribute(MKMMetaCardAttribute.Expansion,
-                                        MKMDatabaseManager.Instance.GetExpansionByID(expID)[MKMDatabaseManager.ExpansionsFields.Name].ToString());
+                                    mc.SetAttribute(MCAttribute.ExpansionID, expID);
+                                    mc.SetAttribute(MCAttribute.Expansion,
+                                        MKMDbManager.Instance.GetExpansionByID(expID)[MKMDbManager.ExpansionsFields.Name].ToString());
                                     break;
                                 // for the others we have to do product queries for each possibility
                                 case "Cheapest":
@@ -307,7 +307,7 @@ namespace MKMTool
                                         {
                                             // there should always be exactly one product in the list
                                             XmlNode product = MKMInteract.RequestHelper.getProduct(
-                                                dr[MKMDatabaseManager.InventoryFields.ProductID].ToString()).GetElementsByTagName("product")[0];
+                                                dr[MKMDbManager.InventoryFields.ProductID].ToString()).GetElementsByTagName("product")[0];
                                             double price = double.Parse(product["priceGuide"][priceGuidePrice].InnerText);
                                             if (price < cheapestPrice)
                                             {
@@ -334,7 +334,7 @@ namespace MKMTool
                                         {
                                             // there should always be exactly one product in the list
                                             XmlNode product = MKMInteract.RequestHelper.getProduct(
-                                                dr[MKMDatabaseManager.InventoryFields.ProductID].ToString()).GetElementsByTagName("product")[0];
+                                                dr[MKMDbManager.InventoryFields.ProductID].ToString()).GetElementsByTagName("product")[0];
                                             double price = double.Parse(product["priceGuide"][priceGuidePrice].InnerText);
                                             prices.Add(price, product);
                                         }
@@ -358,7 +358,7 @@ namespace MKMTool
                                         {
                                             // there should always be exactly one product in the list
                                             XmlNode product = MKMInteract.RequestHelper.getProduct(
-                                                dr[MKMDatabaseManager.InventoryFields.ProductID].ToString()).GetElementsByTagName("product")[0];
+                                                dr[MKMDbManager.InventoryFields.ProductID].ToString()).GetElementsByTagName("product")[0];
                                             double price = double.Parse(product["priceGuide"][priceGuidePrice].InnerText);
                                             if (price > highestPrice)
                                             {
@@ -389,7 +389,7 @@ namespace MKMTool
                         // TODO - determine whether the expansion is foil only / cannot be foil and based on the isFoil flag of the current article choose the correct set
                     }
                     // now we have expID and English name -> we can determine the product ID
-                    productID = MKMDatabaseManager.Instance.GetProductID(name, mc.GetAttribute(MKMMetaCardAttribute.ExpansionID));
+                    productID = MKMDbManager.Instance.GetProductID(name, mc.GetAttribute(MCAttribute.ExpansionID));
                     if (productID == "")
                     {
                         LogError("importing line #" + (counter + 1) + ", article will be ignored",
@@ -397,27 +397,27 @@ namespace MKMTool
                         failed++;
                         continue;
                     }
-                    mc.SetAttribute(MKMMetaCardAttribute.ProductID, productID);
+                    mc.SetAttribute(MCAttribute.ProductID, productID);
                 }
 
                 // if the defaults are "Any", there is not point in checking whether that attribute has been set or not
                 if (defaultPlayset != "")
                 {
-                    temp = mc.GetAttribute(MKMMetaCardAttribute.Playset);
+                    temp = mc.GetAttribute(MCAttribute.Playset);
                     if (temp == "")
-                        mc.SetBoolAttribute(MKMMetaCardAttribute.Playset, defaultPlayset);
+                        mc.SetBoolAttribute(MCAttribute.Playset, defaultPlayset);
                 }
                 if (defaultSigned != "")
                 {
-                    temp = mc.GetAttribute(MKMMetaCardAttribute.Signed);
+                    temp = mc.GetAttribute(MCAttribute.Signed);
                     if (temp == "")
-                        mc.SetBoolAttribute(MKMMetaCardAttribute.Signed, defaultSigned);
+                        mc.SetBoolAttribute(MCAttribute.Signed, defaultSigned);
                 }
                 if (defaultAltered != "")
                 {
-                    temp = mc.GetAttribute(MKMMetaCardAttribute.Altered);
+                    temp = mc.GetAttribute(MCAttribute.Altered);
                     if (temp == "")
-                        mc.SetBoolAttribute(MKMMetaCardAttribute.Altered, defaultAltered);
+                        mc.SetBoolAttribute(MCAttribute.Altered, defaultAltered);
                 }
 
                 importedValidOnly.Add(mc);
@@ -495,7 +495,7 @@ namespace MKMTool
                 {
                     if (!mc.HasPriceGuides)
                     {
-                        string productID = mc.GetAttribute(MKMMetaCardAttribute.ProductID);
+                        string productID = mc.GetAttribute(MCAttribute.ProductID);
                         XmlNode product;
                         if (!products.TryGetValue(productID, out product))
                         {
@@ -503,12 +503,12 @@ namespace MKMTool
                             {
                                 // there should always be exactly one product in the list
                                 product = MKMInteract.RequestHelper.getProduct(
-                                    mc.GetAttribute(MKMMetaCardAttribute.ProductID)).GetElementsByTagName("product")[0];
+                                    mc.GetAttribute(MCAttribute.ProductID)).GetElementsByTagName("product")[0];
                                 products[productID] = product;
                             }
                             catch (Exception eError)
                             {
-                                LogError("fetching MKM price guide for " + mc.GetAttribute(MKMMetaCardAttribute.Name) + ", will not have price guides",
+                                LogError("fetching MKM price guide for " + mc.GetAttribute(MCAttribute.Name) + ", will not have price guides",
                                     eError.Message, false);
                                 continue;
                             }
@@ -546,19 +546,19 @@ namespace MKMTool
                 {
                     if (checkBoxExportPriceGuide.Checked)
                     {
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideAVG);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideLOW);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideLOWEX);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideLOWFOIL);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideSELL);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideTREND);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceGuideTRENDFOIL);
+                        export.Columns.Add(MCAttribute.PriceGuideAVG);
+                        export.Columns.Add(MCAttribute.PriceGuideLOW);
+                        export.Columns.Add(MCAttribute.PriceGuideLOWEX);
+                        export.Columns.Add(MCAttribute.PriceGuideLOWFOIL);
+                        export.Columns.Add(MCAttribute.PriceGuideSELL);
+                        export.Columns.Add(MCAttribute.PriceGuideTREND);
+                        export.Columns.Add(MCAttribute.PriceGuideTRENDFOIL);
                         priceGuidesExported = true;
                     }
                     if (checkBoxExportToolPrices.Checked)
                     {
-                        export.Columns.Add(MKMMetaCardAttribute.MKMToolPrice);
-                        export.Columns.Add(MKMMetaCardAttribute.PriceCheapestSimilar);
+                        export.Columns.Add(MCAttribute.MKMToolPrice);
+                        export.Columns.Add(MCAttribute.PriceCheapestSimilar);
                         toolPriceExported = true;
                     }
                 }
@@ -568,7 +568,7 @@ namespace MKMTool
                     {
                         if (toolPriceGenerated)
                         {
-                            bool priceNotSet = mc.GetAttribute(MKMMetaCardAttribute.MKMToolPrice) != "" || mc.GetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar) != "";
+                            bool priceNotSet = mc.GetAttribute(MCAttribute.MKMToolPrice) != "" || mc.GetAttribute(MCAttribute.PriceCheapestSimilar) != "";
                             if (priceNotSet && (!priceGuidesGenerated || !mc.HasPriceGuides))
                                 continue;
                         }
@@ -578,7 +578,7 @@ namespace MKMTool
                     mc.WriteItselfIntoTable(export, checkBoxExportAll.Checked, checkBoxExportFormatDeckbox.Checked ? MCFormat.Deckbox : MCFormat.MKM);
                 }
 
-                MKMDatabaseManager.WriteTableAsCSV(sf.FileName, export);
+                MKMDbManager.WriteTableAsCSV(sf.FileName, export);
 
                 if (toolPriceGenerated && checkBoxExportToolPrices.Checked)
                     toolPriceExported = true;
@@ -641,57 +641,57 @@ namespace MKMTool
             int postCounter = 0;
             foreach (MKMMetaCard mc in importedValidOnly)
             {
-                if (mc.GetAttribute(MKMMetaCardAttribute.LanguageID) == "")
+                if (mc.GetAttribute(MCAttribute.LanguageID) == "")
                 {
                     MainView.Instance.LogMainWindow("Unknown language of "
-                        + mc.GetAttribute(MKMMetaCardAttribute.Name) + " from " + mc.GetAttribute(MKMMetaCardAttribute.Expansion)
+                        + mc.GetAttribute(MCAttribute.Name) + " from " + mc.GetAttribute(MCAttribute.Expansion)
                         + ", cannot upload to MKM.");
                     continue;
                 }
                 string price = "";
-                string foil = mc.GetAttribute(MKMMetaCardAttribute.Foil);
+                string foil = mc.GetAttribute(MCAttribute.Foil);
                 switch (chosenPrice)
                 {
                     case "Price guide - Low":
                         if (foil == "true")
-                            price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideLOWFOIL);
+                            price = mc.GetAttribute(MCAttribute.PriceGuideLOWFOIL);
                         else
                         {
-                            string condition = mc.GetAttribute(MKMMetaCardAttribute.Condition);
+                            string condition = mc.GetAttribute(MCAttribute.Condition);
                             if (IsBetterOrSameCondition(condition, "EX"))
-                                price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideLOWEX);
+                                price = mc.GetAttribute(MCAttribute.PriceGuideLOWEX);
                             else
-                                price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideLOW);
+                                price = mc.GetAttribute(MCAttribute.PriceGuideLOW);
                         }
                         break;
                     case "Price guide - Average":
                         if (foil == "true") // AVG is only for non-foil, SELL includes all -> choose TRENDFOIL
-                            price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideTRENDFOIL);
+                            price = mc.GetAttribute(MCAttribute.PriceGuideTRENDFOIL);
                         else
-                            price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideAVG);
+                            price = mc.GetAttribute(MCAttribute.PriceGuideAVG);
                         break;
                     case "Price guide - Trend":
                         if (foil == "true") 
-                            price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideTRENDFOIL);
+                            price = mc.GetAttribute(MCAttribute.PriceGuideTRENDFOIL);
                         else
-                            price = mc.GetAttribute(MKMMetaCardAttribute.PriceGuideTREND);
+                            price = mc.GetAttribute(MCAttribute.PriceGuideTREND);
                         break;
                     case "MKMTool price":
-                        price = mc.GetAttribute(MKMMetaCardAttribute.MKMToolPrice);
+                        price = mc.GetAttribute(MCAttribute.MKMToolPrice);
                         break;
                     case "Cheapest matching article":
-                        price = mc.GetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar);
+                        price = mc.GetAttribute(MCAttribute.PriceCheapestSimilar);
                         break;
                 }
                 if (price != "")
                 {
 
-                    mc.SetAttribute(MKMMetaCardAttribute.MKMPrice, price);
-                    if (mc.GetAttribute(MKMMetaCardAttribute.Count) == "")
-                        mc.SetAttribute(MKMMetaCardAttribute.Count, "1");
+                    mc.SetAttribute(MCAttribute.MKMPrice, price);
+                    if (mc.GetAttribute(MCAttribute.Count) == "")
+                        mc.SetAttribute(MCAttribute.Count, "1");
                     if (logAll)
-                        MainView.Instance.LogMainWindow("Uploading " + mc.GetAttribute(MKMMetaCardAttribute.Count) + "x " +
-                            mc.GetAttribute(MKMMetaCardAttribute.Name) + " from " + mc.GetAttribute(MKMMetaCardAttribute.Expansion) +
+                        MainView.Instance.LogMainWindow("Uploading " + mc.GetAttribute(MCAttribute.Count) + "x " +
+                            mc.GetAttribute(MCAttribute.Name) + " from " + mc.GetAttribute(MCAttribute.Expansion) +
                             " for " + price + "€ to MKM.");
                     sRequestXML += MKMInteract.RequestHelper.postStockArticleBody(mc);
                     postCounter++;
@@ -704,7 +704,7 @@ namespace MKMTool
                 }
                 else
                     MainView.Instance.LogMainWindow("Selected price not computed for item "
-                        + mc.GetAttribute(MKMMetaCardAttribute.Name) + " from " + mc.GetAttribute(MKMMetaCardAttribute.Expansion)
+                        + mc.GetAttribute(MCAttribute.Name) + " from " + mc.GetAttribute(MCAttribute.Expansion)
                         + ", not uploaded to MKM.");
             }
             if (postCounter > 0)

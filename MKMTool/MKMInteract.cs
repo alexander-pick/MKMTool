@@ -161,12 +161,12 @@ namespace MKMTool
             public static string changeStockArticleBody(MKMMetaCard card, string sNewPrice)
             {
                 var XMLContent = "<article>" +
-                                 "<idArticle>" + card.GetAttribute(MKMMetaCardAttribute.ArticleID) + "</idArticle>" +
+                                 "<idArticle>" + card.GetAttribute(MCAttribute.ArticleID) + "</idArticle>" +
                                  "<price>" + sNewPrice + "</price>" +
-                                 "<idLanguage>" + card.GetAttribute(MKMMetaCardAttribute.LanguageID) + "</idLanguage>" +
-                                 "<comments>" + card.GetAttribute(MKMMetaCardAttribute.Comments) + " </comments>" +
-                                 "<count>" + card.GetAttribute(MKMMetaCardAttribute.Count) + "</count>" +
-                                 "<condition>" + card.GetAttribute(MKMMetaCardAttribute.Condition) + "</condition>" +
+                                 "<idLanguage>" + card.GetAttribute(MCAttribute.LanguageID) + "</idLanguage>" +
+                                 "<comments>" + card.GetAttribute(MCAttribute.Comments) + " </comments>" +
+                                 "<count>" + card.GetAttribute(MCAttribute.Count) + "</count>" +
+                                 "<condition>" + card.GetAttribute(MCAttribute.Condition) + "</condition>" +
                                  "</article>";
 
                 return XMLContent;
@@ -180,17 +180,17 @@ namespace MKMTool
             /// <returns>The body of the API request.</returns>
             public static string postStockArticleBody(MKMMetaCard card)
             {
-                string isFoil = card.GetAttribute(MKMMetaCardAttribute.Foil);
-                string isSigned = card.GetAttribute(MKMMetaCardAttribute.Signed);
-                string isPlayset = card.GetAttribute(MKMMetaCardAttribute.Playset);
-                string isAltered = card.GetAttribute(MKMMetaCardAttribute.Altered);
+                string isFoil = card.GetAttribute(MCAttribute.Foil);
+                string isSigned = card.GetAttribute(MCAttribute.Signed);
+                string isPlayset = card.GetAttribute(MCAttribute.Playset);
+                string isAltered = card.GetAttribute(MCAttribute.Altered);
                 var XMLContent = "<article>" +
-                                "<idProduct>" + card.GetAttribute(MKMMetaCardAttribute.ProductID) + "</idProduct>" +
-                                "<idLanguage>" + card.GetAttribute(MKMMetaCardAttribute.LanguageID) + "</idLanguage>" +
-                                "<comments>" + card.GetAttribute(MKMMetaCardAttribute.Comments) + " </comments>" +
-                                "<count>" + card.GetAttribute(MKMMetaCardAttribute.Count) + "</count>" +
-                                "<price>" + card.GetAttribute(MKMMetaCardAttribute.MKMPrice) + "</price>" +
-                                "<condition>" + card.GetAttribute(MKMMetaCardAttribute.Condition) + "</condition>" +
+                                "<idProduct>" + card.GetAttribute(MCAttribute.ProductID) + "</idProduct>" +
+                                "<idLanguage>" + card.GetAttribute(MCAttribute.LanguageID) + "</idLanguage>" +
+                                "<comments>" + card.GetAttribute(MCAttribute.Comments) + " </comments>" +
+                                "<count>" + card.GetAttribute(MCAttribute.Count) + "</count>" +
+                                "<price>" + card.GetAttribute(MCAttribute.MKMPrice) + "</price>" +
+                                "<condition>" + card.GetAttribute(MCAttribute.Condition) + "</condition>" +
                                 (isFoil == "" ? "" : ("<isFoil>" + isFoil + "</isFoil>")) +
                                 (isSigned == "" ? "" : ("<isSigned>" + isSigned + "</isSigned>")) +
                                 (isPlayset == "" ? "" : ("<isPlayset>" + isPlayset + "</isPlayset>")) +

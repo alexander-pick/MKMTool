@@ -57,7 +57,7 @@ namespace MKMTool
 
             langCombo.SelectedIndex = 0;
 
-            MKMDatabaseManager.Instance.PopulateExpansionsComboBox(ref editionBox);
+            MKMDbManager.Instance.PopulateExpansionsComboBox(ref editionBox);
             if (editionBox.Items.Count > 0)
             {
                 editionBox.Sorted = true;
@@ -242,7 +242,7 @@ namespace MKMTool
                 {
                     if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
                     {
-                        DataRow card = MKMDatabaseManager.Instance.GetSingleCard(article["idProduct"].InnerText);
+                        DataRow card = MKMDbManager.Instance.GetSingleCard(article["idProduct"].InnerText);
 
                         if (card == null || card.Field<string>("Expansion ID") != selectedExpansionID) // compare
                             continue;
@@ -279,7 +279,7 @@ namespace MKMTool
             bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
             System.Collections.Generic.List<string> selectedLanguage)
         {
-            DataRow[] sT = MKMDatabaseManager.Instance.GetCardsInExpansion(selectedExpansionID);
+            DataRow[] sT = MKMDbManager.Instance.GetCardsInExpansion(selectedExpansionID);
             MainView.Instance.LogMainWindow("Checking for cheap deals from selected expansion...");
             foreach (DataRow oRecord in sT)
             {

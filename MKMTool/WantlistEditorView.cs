@@ -62,7 +62,7 @@ namespace MKMTool
                 langCombo.SelectedIndex = 0;
             }
 
-            MKMDatabaseManager.Instance.PopulateExpansionsComboBox(ref editionBox);
+            MKMDbManager.Instance.PopulateExpansionsComboBox(ref editionBox);
             editionBox.Sorted = true;
 
             initCardView();
@@ -120,7 +120,7 @@ namespace MKMTool
 
             dj = new DataTable();
 
-            dj = MKMDatabaseManager.JoinDataTables(MKMDatabaseManager.Instance.Inventory, MKMDatabaseManager.Instance.Expansions,
+            dj = MKMDbManager.JoinDataTables(MKMDbManager.Instance.Inventory, MKMDbManager.Instance.Expansions,
                 (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
             foreach (DataRow row in dj.Rows)

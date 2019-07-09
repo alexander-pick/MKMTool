@@ -49,10 +49,10 @@ namespace MKMTool
     /// Intention is to provide other classes all query methods necessary without having to expose the database code outside this class.
     /// Implemented as singleton as there should be only one, but there is no clear ownership.
     /// </summary>
-    class MKMDatabaseManager
+    class MKMDbManager
     {
 #region initialization
-        private static MKMDatabaseManager instance = new MKMDatabaseManager();
+        private static MKMDbManager instance = new MKMDbManager();
 
         private DataTable inventory = new DataTable();
         private DataTable expansions = new DataTable(); // all expansions of products in inventory
@@ -101,10 +101,10 @@ namespace MKMTool
         // Explicit static constructor to tell C# compiler
         // not to mark type as beforefieldinit.
         // To ensure thead-safety, source: https://csharpindepth.com/articles/singleton
-        static MKMDatabaseManager()
+        static MKMDbManager()
         { }
 
-        public static MKMDatabaseManager Instance
+        public static MKMDbManager Instance
         {
             get
             {
@@ -117,7 +117,7 @@ namespace MKMTool
         /// The singleton instantiation is already lazy so no need to defer the creation further - it is safe to assume that if something
         /// is creating an instance it will use at least one of the databases.
         /// </summary>
-        private MKMDatabaseManager()
+        private MKMDbManager()
         {
             buildDatabase();
         }

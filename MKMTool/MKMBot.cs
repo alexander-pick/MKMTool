@@ -401,13 +401,13 @@ namespace MKMTool
                 XmlNodeList similarItems = getSimilarItems(mc);
                 if (similarItems != null)
                 {
-                    string backupMKMPrice = mc.GetAttribute(MKMMetaCardAttribute.MKMPrice);
-                    mc.SetAttribute(MKMMetaCardAttribute.MKMPrice, "-9999");
+                    string backupMKMPrice = mc.GetAttribute(MCAttribute.MKMPrice);
+                    mc.SetAttribute(MCAttribute.MKMPrice, "-9999");
                     appraiseArticle(mc, similarItems, myStock);
                     if (backupMKMPrice != "")
-                        mc.SetAttribute(MKMMetaCardAttribute.MKMPrice, backupMKMPrice);
+                        mc.SetAttribute(MCAttribute.MKMPrice, backupMKMPrice);
                     else
-                        mc.RemoveAttribute(MKMMetaCardAttribute.MKMPrice);
+                        mc.RemoveAttribute(MCAttribute.MKMPrice);
                 }
             }
 
@@ -437,15 +437,15 @@ namespace MKMTool
                 MainView.Instance.LogMainWindow("Found myStock.csv, parsing minimal prices...");
                 try
                 {
-                    DataTable stock = MKMDatabaseManager.ConvertCSVtoDataTable(@".//myStock.csv");
-                    if (stock.Columns.Contains(MKMMetaCardAttribute.MinPrice))
+                    DataTable stock = MKMDbManager.ConvertCSVtoDataTable(@".//myStock.csv");
+                    if (stock.Columns.Contains(MCAttribute.MinPrice))
                     {
                         foreach (DataRow dr in stock.Rows)
                         {
                             MKMMetaCard card = new MKMMetaCard(dr);
-                            if (card.GetAttribute(MKMMetaCardAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
+                            if (card.GetAttribute(MCAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
                             {
-                                string name = card.GetAttribute(MKMMetaCardAttribute.Name);
+                                string name = card.GetAttribute(MCAttribute.Name);
                                 if (!myStock.ContainsKey(name))
                                     myStock.Add(name, new List<MKMMetaCard>());
                                 myStock[name].Add(card);
@@ -501,7 +501,7 @@ namespace MKMTool
                     if (similarItems != null)
                     {
                         appraiseArticle(MKMCard, similarItems, myStock);
-                        string newPrice = MKMCard.GetAttribute(MKMMetaCardAttribute.MKMToolPrice);
+                        string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
                         if (newPrice != "")
                         {
                             sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
@@ -546,19 +546,19 @@ namespace MKMTool
         private XmlNodeList getSimilarItems(MKMMetaCard card, int maxNbItems = 150)
         {
             string sUrl = "http://not.initilaized";
-            string condition = card.GetAttribute(MKMMetaCardAttribute.Condition);
+            string condition = card.GetAttribute(MCAttribute.Condition);
             if (condition == "MT") // treat mint cards as near mint for pricing purposes, but do not actually change the value in article
                 condition = "NM";
-            string productID = card.GetAttribute(MKMMetaCardAttribute.ProductID);
-            string languageID = card.GetAttribute(MKMMetaCardAttribute.LanguageID);
-            string isFoil = card.GetAttribute(MKMMetaCardAttribute.Foil);
-            string isSigned = card.GetAttribute(MKMMetaCardAttribute.Signed);
-            string isAltered = card.GetAttribute(MKMMetaCardAttribute.Altered);
-            string articleName = card.GetAttribute(MKMMetaCardAttribute.Name);
+            string productID = card.GetAttribute(MCAttribute.ProductID);
+            string languageID = card.GetAttribute(MCAttribute.LanguageID);
+            string isFoil = card.GetAttribute(MCAttribute.Foil);
+            string isSigned = card.GetAttribute(MCAttribute.Signed);
+            string isAltered = card.GetAttribute(MCAttribute.Altered);
+            string articleName = card.GetAttribute(MCAttribute.Name);
             try
             {
                 sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
-                            (languageID != "" ? "?idLanguage=" + card.GetAttribute(MKMMetaCardAttribute.LanguageID) : "") +
+                            (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
                             (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
                             (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
                             "&start=0&maxResults=" + maxNbItems;
@@ -585,10 +585,10 @@ namespace MKMTool
         /// then the highest minPrice among all matching cards in this list. Hashed by the card name.</param>
         private void appraiseArticle(MKMMetaCard article, XmlNodeList similarItems, Dictionary<string, List<MKMMetaCard>> myStock)
         {
-            string productID = article.GetAttribute(MKMMetaCardAttribute.ProductID);
-            string articleName = article.GetAttribute(MKMMetaCardAttribute.Name);
-            article.SetAttribute(MKMMetaCardAttribute.MKMToolPrice, "");
-            article.SetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar, "");
+            string productID = article.GetAttribute(MCAttribute.ProductID);
+            string articleName = article.GetAttribute(MCAttribute.Name);
+            article.SetAttribute(MCAttribute.MKMToolPrice, "");
+            article.SetAttribute(MCAttribute.PriceCheapestSimilar, "");
 
             List<double> prices = new List<double>();
             int lastMatch = -1;
@@ -606,9 +606,9 @@ namespace MKMTool
             }
             double priceEstimation = 0;
             double priceFactor = ignoreSellersCountry ? settings.priceFactorWorldwide : settings.priceFactor;
-            string articleExpansion = article.GetAttribute(MKMMetaCardAttribute.Expansion);
-            string articleLanguage = article.GetAttribute(MKMMetaCardAttribute.Language);
-            string articlePrice = article.GetAttribute(MKMMetaCardAttribute.MKMPrice);
+            string articleExpansion = article.GetAttribute(MCAttribute.Expansion);
+            string articleLanguage = article.GetAttribute(MCAttribute.Language);
+            string articlePrice = article.GetAttribute(MCAttribute.MKMPrice);
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
             {
                 priceEstimation = prices[0] * priceFactor;
@@ -682,12 +682,12 @@ namespace MKMTool
 
             // increase the estimate based on how many of those articles do we have in stock
             double markupValue = 0;
-            string isPlayset = article.GetAttribute(MKMMetaCardAttribute.Playset);
-            string count = article.GetAttribute(MKMMetaCardAttribute.Count);
+            string isPlayset = article.GetAttribute(MCAttribute.Playset);
+            string count = article.GetAttribute(MCAttribute.Count);
             int iCount;
             if (settings.priceIgnorePlaysets && isPlayset == "true")
                 markupValue = priceEstimation * settings.priceMarkup4;
-            else if (int.TryParse(article.GetAttribute(MKMMetaCardAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
+            else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
             {
                 if (iCount == 2)
                     markupValue = priceEstimation * settings.priceMarkup2;
@@ -700,7 +700,7 @@ namespace MKMTool
                 markupValue = settings.priceMarkupCap;
             priceEstimation += markupValue;
 
-            string articleRarity = article.GetAttribute(MKMMetaCardAttribute.Rarity);
+            string articleRarity = article.GetAttribute(MCAttribute.Rarity);
             if (priceEstimation < settings.priceMinRarePrice
                 && (articleRarity == "Rare" || articleRarity == "Mythic"))
                 priceEstimation = settings.priceMinRarePrice;
@@ -752,7 +752,7 @@ namespace MKMTool
                     {
                         if (card.Equals(article))
                         {
-                            string minPrice = card.GetAttribute(MKMMetaCardAttribute.MinPrice);
+                            string minPrice = card.GetAttribute(MCAttribute.MinPrice);
                             double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
                             if (isPlayset == "true")
                                 dminPrice /= 4;
@@ -774,7 +774,7 @@ namespace MKMTool
                         ", based on " + (lastMatch + 1) + " items" +
                         (ignoreSellersCountry ? " - worldwide search!" : ""));
 
-                article.SetAttribute(MKMMetaCardAttribute.MKMToolPrice, sNewPrice);
+                article.SetAttribute(MCAttribute.MKMToolPrice, sNewPrice);
             }
         }
 
@@ -782,8 +782,8 @@ namespace MKMTool
             ref int lastMatch, List<double> prices)
         {
             bool minNumberNotYetFound = true;
-            string articleCondition = article.GetAttribute(MKMMetaCardAttribute.Condition);
-            string isPlayset = article.GetAttribute(MKMMetaCardAttribute.Playset);
+            string articleCondition = article.GetAttribute(MCAttribute.Condition);
+            string isPlayset = article.GetAttribute(MCAttribute.Playset);
             bool ignorePlaysets = settings.priceIgnorePlaysets || (isPlayset == "");
             foreach (XmlNode offer in similarItems)
             {
@@ -804,8 +804,8 @@ namespace MKMTool
                         if (offer["condition"].InnerText == articleCondition)
                             lastMatch = prices.Count;
                         prices.Add(price);
-                        if (article.GetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar) == "")
-                            article.SetAttribute(MKMMetaCardAttribute.PriceCheapestSimilar, "" + price);
+                        if (article.GetAttribute(MCAttribute.PriceCheapestSimilar) == "")
+                            article.SetAttribute(MCAttribute.PriceCheapestSimilar, "" + price);
                         if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
                         {
                             lastMatch = 0; // so that it is correctly counted that 1 item was used to estimate the price

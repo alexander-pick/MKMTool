@@ -80,10 +80,10 @@ namespace MKMTool
                     else break; // document is empty -> end
                 }
 
-                var dj = MKMDatabaseManager.JoinDataTables(articles, MKMDatabaseManager.Instance.Inventory,
+                var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Inventory,
                     (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
 
-                dj = MKMDatabaseManager.JoinDataTables(dj, MKMDatabaseManager.Instance.Expansions,
+                dj = MKMDbManager.JoinDataTables(dj, MKMDbManager.Instance.Expansions,
                     (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
 
                 dj.Columns.Remove("article_Id");

@@ -197,7 +197,7 @@ namespace MKMTool
             logBoxAppend("Updating local database files..." + Environment.NewLine);
             getProductListButton.Text = "Updating...";
             getProductListButton.Enabled = false;
-            if (MKMDatabaseManager.Instance.UpdateDatabaseFiles())
+            if (MKMDbManager.Instance.UpdateDatabaseFiles())
                 logBoxAppend("Database created." + Environment.NewLine);
             getProductListButton.Enabled = true;
             getProductListButton.Text = "Update local MKM Product List";

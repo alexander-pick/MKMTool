@@ -16,7 +16,7 @@ namespace MKMTool
     /// A "string enum" of all attributes MKMMetaCard uses for comparisons, exports etc.
     /// If you are extending functionality of MKMMetaCard by working with some new attribute, don't forget to add it here.
     /// </summary>
-    public class MKMMetaCardAttribute
+    public class MCAttribute
     {
         /// <summary>
         /// The English name of the card.
@@ -190,7 +190,7 @@ namespace MKMTool
         // If a recognized attribute has a synonym, add it to this dictionary, key == synonym, value == the recognized attribute to which this synonym maps.
         private static Dictionary<string, string> synonyms = new Dictionary<string, string>
         {
-            { "enName", MKMMetaCardAttribute.Name }, { "Edition", MKMMetaCardAttribute.Expansion }, { "Altered Art", MKMMetaCardAttribute.Altered }
+            { "enName", MCAttribute.Name }, { "Edition", MCAttribute.Expansion }, { "Altered Art", MCAttribute.Altered }
         };
 
         // literal dictionary of conditions - translates any supported condition denomination to its equivalent in the two-letter format MKM uses
@@ -217,7 +217,7 @@ namespace MKMTool
 
         /// <summary>
         /// Used to set-up the dictionary of recognized attributes. If you are extending the class to internally handle some additional attribute,
-        /// make sure to include it in this method and in the MKMMetaCardAttribute class above.
+        /// make sure to include it in this method and in the MCAttribute class above.
         /// </summary>
         static MKMMetaCard()
         {
@@ -260,16 +260,16 @@ namespace MKMTool
                     else
                         attName = card.Table.Columns[i].ColumnName;
                     // for attributes for which we have custom setters, use them to perform all kinds of checks
-                    if (attName == MKMMetaCardAttribute.Condition)
+                    if (attName == MCAttribute.Condition)
                         SetCondition(columnVal);
-                    else if (attName == MKMMetaCardAttribute.MinCondition)
+                    else if (attName == MCAttribute.MinCondition)
                         SetMinCondition(columnVal);
-                    else if (attName == MKMMetaCardAttribute.Language)
+                    else if (attName == MCAttribute.Language)
                         SetLanguage(columnVal);
-                    else if (attName == MKMMetaCardAttribute.LanguageID)
+                    else if (attName == MCAttribute.LanguageID)
                         SetLanguageID(columnVal);
-                    else if (attName == MKMMetaCardAttribute.Foil || attName == MKMMetaCardAttribute.Signed
-                        || attName == MKMMetaCardAttribute.Altered || attName == MKMMetaCardAttribute.Playset)
+                    else if (attName == MCAttribute.Foil || attName == MCAttribute.Signed
+                        || attName == MCAttribute.Altered || attName == MCAttribute.Playset)
                         SetBoolAttribute(attName, columnVal);
                     // all other attributes
                     else
@@ -278,37 +278,37 @@ namespace MKMTool
             }
 
             // fill in missing data that we know from our local database (and have them be "any" would make no sense)
-            string productId = GetAttribute(MKMMetaCardAttribute.ProductID);
+            string productId = GetAttribute(MCAttribute.ProductID);
             if (productId != "") // if we know product ID, we can use the inventory database to get expansion ID and Name
             {
-                DataRow row = MKMDatabaseManager.Instance.GetSingleCard(productId);
+                DataRow row = MKMDbManager.Instance.GetSingleCard(productId);
                 if (row != null)
                 {
-                    data[MKMMetaCardAttribute.ExpansionID] = row[MKMDatabaseManager.InventoryFields.ExpansionID].ToString();
-                    data[MKMMetaCardAttribute.Name] = row[MKMDatabaseManager.InventoryFields.Name].ToString();
-                    data[MKMMetaCardAttribute.MetaproductID] = row[MKMDatabaseManager.InventoryFields.MetaproductID].ToString();
+                    data[MCAttribute.ExpansionID] = row[MKMDbManager.InventoryFields.ExpansionID].ToString();
+                    data[MCAttribute.Name] = row[MKMDbManager.InventoryFields.Name].ToString();
+                    data[MCAttribute.MetaproductID] = row[MKMDbManager.InventoryFields.MetaproductID].ToString();
                 }
             }
-            string expID = GetAttribute(MKMMetaCardAttribute.ExpansionID);
-            string expansion = GetAttribute(MKMMetaCardAttribute.Expansion);
+            string expID = GetAttribute(MCAttribute.ExpansionID);
+            string expansion = GetAttribute(MCAttribute.Expansion);
             if (expID != "")
-                data[MKMMetaCardAttribute.Expansion] = expansion = MKMDatabaseManager.Instance.GetExpansionName(expID);
+                data[MCAttribute.Expansion] = expansion = MKMDbManager.Instance.GetExpansionName(expID);
             else if (expansion != "")
             {
-                data[MKMMetaCardAttribute.ExpansionID] = expID = MKMDatabaseManager.Instance.GetExpansionID(expansion);
+                data[MCAttribute.ExpansionID] = expID = MKMDbManager.Instance.GetExpansionID(expansion);
             }
             // if we don't know product ID, but we know expansion and name, we can get it
             if (productId == "" && expID != "")
             {
-                string name = GetAttribute(MKMMetaCardAttribute.Name);
+                string name = GetAttribute(MCAttribute.Name);
                 if (name != "")
-                    data[MKMMetaCardAttribute.ProductID] = MKMDatabaseManager.Instance.GetProductID(name, expID);
+                    data[MCAttribute.ProductID] = MKMDbManager.Instance.GetProductID(name, expID);
             }
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MKMMetaCard"/> class based on a MKM API's "article".
-        /// Only attributes that are among the "recognized" ones (have an entry in MKMMetaCardAttribute) will be stored.
+        /// Only attributes that are among the "recognized" ones (have an entry in MCAttribute) will be stored.
         /// </summary>
         /// <param name="MKMArticle">A XML node with the article.</param>
         public MKMMetaCard(XmlNode MKMArticle)
@@ -346,32 +346,32 @@ NOT STORED      lastEdited:                         // Date, the article was las
 NOT STORED      links: { }                           // HATEOAS links
             }
             */
-            data[MKMMetaCardAttribute.ArticleID] = MKMArticle["idArticle"].InnerText;
-            data[MKMMetaCardAttribute.ProductID] = MKMArticle["idProduct"].InnerText;
-            data[MKMMetaCardAttribute.LanguageID] = MKMArticle["language"]["idLanguage"].InnerText;
-            data[MKMMetaCardAttribute.Language] = MKMArticle["language"]["languageName"].InnerText;
-            data[MKMMetaCardAttribute.Comments] = MKMArticle["comments"].InnerText;
-            data[MKMMetaCardAttribute.MKMPrice] = MKMArticle["price"].InnerText;
-            data[MKMMetaCardAttribute.Count] = MKMArticle["count"].InnerText;
+            data[MCAttribute.ArticleID] = MKMArticle["idArticle"].InnerText;
+            data[MCAttribute.ProductID] = MKMArticle["idProduct"].InnerText;
+            data[MCAttribute.LanguageID] = MKMArticle["language"]["idLanguage"].InnerText;
+            data[MCAttribute.Language] = MKMArticle["language"]["languageName"].InnerText;
+            data[MCAttribute.Comments] = MKMArticle["comments"].InnerText;
+            data[MCAttribute.MKMPrice] = MKMArticle["price"].InnerText;
+            data[MCAttribute.Count] = MKMArticle["count"].InnerText;
             if (MKMArticle["product"] != null) // based on which API call was used, this can be null
             {
-                data[MKMMetaCardAttribute.Name] = MKMArticle["product"]["enName"].InnerText;
-                data[MKMMetaCardAttribute.LocName] = MKMArticle["product"]["locName"].InnerText;
-                data[MKMMetaCardAttribute.Expansion] = MKMArticle["product"]["expansion"].InnerText;
-                data[MKMMetaCardAttribute.CardNumber] = MKMArticle["product"]["nr"].InnerText;
-                data[MKMMetaCardAttribute.Rarity] = MKMArticle["product"]["rarity"].InnerText;
+                data[MCAttribute.Name] = MKMArticle["product"]["enName"].InnerText;
+                data[MCAttribute.LocName] = MKMArticle["product"]["locName"].InnerText;
+                data[MCAttribute.Expansion] = MKMArticle["product"]["expansion"].InnerText;
+                data[MCAttribute.CardNumber] = MKMArticle["product"]["nr"].InnerText;
+                data[MCAttribute.Rarity] = MKMArticle["product"]["rarity"].InnerText;
             }
-            data[MKMMetaCardAttribute.Condition] = MKMArticle["condition"].InnerText;
-            data[MKMMetaCardAttribute.Foil] = MKMArticle["isFoil"].InnerText;
-            data[MKMMetaCardAttribute.Signed] = MKMArticle["isSigned"].InnerText;
-            data[MKMMetaCardAttribute.Altered] = MKMArticle["isAltered"].InnerText;
-            data[MKMMetaCardAttribute.Playset] = MKMArticle["isPlayset"].InnerText;
+            data[MCAttribute.Condition] = MKMArticle["condition"].InnerText;
+            data[MCAttribute.Foil] = MKMArticle["isFoil"].InnerText;
+            data[MCAttribute.Signed] = MKMArticle["isSigned"].InnerText;
+            data[MCAttribute.Altered] = MKMArticle["isAltered"].InnerText;
+            data[MCAttribute.Playset] = MKMArticle["isPlayset"].InnerText;
         }
 
         /// <summary>
         /// Fills the attributes of this metacard based on a provided MKM product entry. All entries set in this
         /// will be used - if previous values existed, they will be overwritten.
-        /// Only attributes that are among the "recognized" ones (have an entry in MKMMetaCardAttribute) will be stored.
+        /// Only attributes that are among the "recognized" ones (have an entry in MCAttribute) will be stored.
         /// If the entry has price guides, the HasPriceGuides will be set to true and all price guides will be stored - even
         /// foil ones for non-foil cards and vice versa.
         /// </summary>
@@ -423,36 +423,36 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
                     }
                 ]
             }*/
-            data[MKMMetaCardAttribute.ProductID] = MKMProduct["idProduct"].InnerText;
-            data[MKMMetaCardAttribute.MetaproductID] = MKMProduct["idMetaproduct"].InnerText;
-            data[MKMMetaCardAttribute.Name] = MKMProduct["enName"].InnerText;
-            data[MKMMetaCardAttribute.CardNumber] = MKMProduct["number"].InnerText;
-            data[MKMMetaCardAttribute.Rarity] = MKMProduct["rarity"].InnerText;
+            data[MCAttribute.ProductID] = MKMProduct["idProduct"].InnerText;
+            data[MCAttribute.MetaproductID] = MKMProduct["idMetaproduct"].InnerText;
+            data[MCAttribute.Name] = MKMProduct["enName"].InnerText;
+            data[MCAttribute.CardNumber] = MKMProduct["number"].InnerText;
+            data[MCAttribute.Rarity] = MKMProduct["rarity"].InnerText;
             if (MKMProduct["expansionName"] != null)
             {
-                data[MKMMetaCardAttribute.ExpansionID] = MKMDatabaseManager.Instance.GetExpansionID(MKMProduct["expansionName"].InnerText);
-                data[MKMMetaCardAttribute.Expansion] = MKMProduct["expansionName"].InnerText;
+                data[MCAttribute.ExpansionID] = MKMDbManager.Instance.GetExpansionID(MKMProduct["expansionName"].InnerText);
+                data[MCAttribute.Expansion] = MKMProduct["expansionName"].InnerText;
             }
             else
             {
                 if (MKMProduct["expansion"] != null)
-                    data[MKMMetaCardAttribute.ExpansionID] = MKMProduct["expansion"]["idExpansion"].InnerText;
+                    data[MCAttribute.ExpansionID] = MKMProduct["expansion"]["idExpansion"].InnerText;
                 else
-                    data[MKMMetaCardAttribute.ExpansionID] = MKMDatabaseManager.Instance.GetSingleCard(
-                        data[MKMMetaCardAttribute.ProductID])[MKMDatabaseManager.InventoryFields.ExpansionID].ToString();
-                data[MKMMetaCardAttribute.Expansion] = MKMDatabaseManager.Instance.GetExpansionName(data[MKMMetaCardAttribute.ExpansionID]);
+                    data[MCAttribute.ExpansionID] = MKMDbManager.Instance.GetSingleCard(
+                        data[MCAttribute.ProductID])[MKMDbManager.InventoryFields.ExpansionID].ToString();
+                data[MCAttribute.Expansion] = MKMDbManager.Instance.GetExpansionName(data[MCAttribute.ExpansionID]);
             }
 
             if (MKMProduct["priceGuide"] != null)
             {
                 hasPriceGuides = true;
-                data[MKMMetaCardAttribute.PriceGuideSELL] = MKMProduct["priceGuide"]["SELL"].InnerText;
-                data[MKMMetaCardAttribute.PriceGuideLOW] = MKMProduct["priceGuide"]["LOW"].InnerText;
-                data[MKMMetaCardAttribute.PriceGuideLOWEX] = MKMProduct["priceGuide"]["LOWEX"].InnerText;
-                data[MKMMetaCardAttribute.PriceGuideLOWFOIL] = MKMProduct["priceGuide"]["LOWFOIL"].InnerText;
-                data[MKMMetaCardAttribute.PriceGuideAVG] = MKMProduct["priceGuide"]["AVG"].InnerText;
-                data[MKMMetaCardAttribute.PriceGuideTREND] = MKMProduct["priceGuide"]["TREND"].InnerText;
-                data[MKMMetaCardAttribute.PriceGuideTRENDFOIL] = MKMProduct["priceGuide"]["TRENDFOIL"].InnerText;
+                data[MCAttribute.PriceGuideSELL] = MKMProduct["priceGuide"]["SELL"].InnerText;
+                data[MCAttribute.PriceGuideLOW] = MKMProduct["priceGuide"]["LOW"].InnerText;
+                data[MCAttribute.PriceGuideLOWEX] = MKMProduct["priceGuide"]["LOWEX"].InnerText;
+                data[MCAttribute.PriceGuideLOWFOIL] = MKMProduct["priceGuide"]["LOWFOIL"].InnerText;
+                data[MCAttribute.PriceGuideAVG] = MKMProduct["priceGuide"]["AVG"].InnerText;
+                data[MCAttribute.PriceGuideTREND] = MKMProduct["priceGuide"]["TREND"].InnerText;
+                data[MCAttribute.PriceGuideTRENDFOIL] = MKMProduct["priceGuide"]["TRENDFOIL"].InnerText;
             }
         }
 
@@ -466,16 +466,16 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
             string languageID;
             if (languagesIds.TryGetValue(language, out languageID))
             {
-                data[MKMMetaCardAttribute.LanguageID] = languageID;
-                data[MKMMetaCardAttribute.Language] = language;
+                data[MCAttribute.LanguageID] = languageID;
+                data[MCAttribute.Language] = language;
             }
             else// if it is an unknown language, report it and ignore it
             {
                 LogError("setting card language", "Unknown language \"" + language +
                     "\". Allowed values (case sensitive): English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese."
                     + " Language of the current item will be ignored.", false);
-                data[MKMMetaCardAttribute.Language] = "";
-                data[MKMMetaCardAttribute.LanguageID] = "";
+                data[MCAttribute.Language] = "";
+                data[MCAttribute.LanguageID] = "";
             }
         }
 
@@ -488,15 +488,15 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
             string language;
             if (languagesNames.TryGetValue(languageID, out language))
             {
-                data[MKMMetaCardAttribute.LanguageID] = languageID;
-                data[MKMMetaCardAttribute.Language] = language;
+                data[MCAttribute.LanguageID] = languageID;
+                data[MCAttribute.Language] = language;
             }
             else// if it is an unknown language ID, report it and ignore it
             {
                 LogError("setting card language ID", "Unknown language ID \"" + languageID +
                     "\", Allowed values are integer numbers from 1 to 12. Language of the current item will be ignored.", false);
-                data[MKMMetaCardAttribute.Language] = "";
-                data[MKMMetaCardAttribute.LanguageID] = "";
+                data[MCAttribute.Language] = "";
+                data[MCAttribute.LanguageID] = "";
             }
         }
 
@@ -515,7 +515,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
                     "\", condition of the current item will be ignored.", false);
                 return;
             }
-            data[MKMMetaCardAttribute.Condition] = conditionOut;
+            data[MCAttribute.Condition] = conditionOut;
         }
 
         /// <summary>
@@ -533,7 +533,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
                     "\", condition of the current item will be ignored.", false);
                 return;
             }
-            data[MKMMetaCardAttribute.MinCondition] = conditionOut;
+            data[MCAttribute.MinCondition] = conditionOut;
         }
 
         /// <summary>
@@ -602,7 +602,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         /// Generic method for obtaining values from the data object of this card. Performs a check if the value is assigned.
         /// </summary>
         /// <param name="key">The name of the card attribute to fetch. Note that some attributes might be internally re-named,
-        /// so if there is a MKMMetaCardAttribute accessor that matches the attribute you want, use that.</param>
+        /// so if there is a MCAttribute accessor that matches the attribute you want, use that.</param>
         /// <returns>The value of the attribute or empty string if it has not been set.</returns>
         public string GetAttribute(string key)
         {
@@ -622,10 +622,10 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         /// </returns>
         public Bool3 IsOfMinCondition(MKMMetaCard otherCard)
         {
-            string minC = GetAttribute(MKMMetaCardAttribute.MinCondition);
+            string minC = GetAttribute(MCAttribute.MinCondition);
             if (minC != "")
             {
-                string otherC = otherCard.GetAttribute(MKMMetaCardAttribute.Condition);
+                string otherC = otherCard.GetAttribute(MCAttribute.Condition);
                 if (otherC != "")
                 {
                     bool res = IsBetterOrSameCondition(otherC, minC);
@@ -670,29 +670,29 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
             // do format-specific conversions
             if (format == MCFormat.Deckbox)
             {
-                if (table.Columns.Contains(MKMMetaCardAttribute.Condition))
+                if (table.Columns.Contains(MCAttribute.Condition))
                 {
-                    string temp = dr[MKMMetaCardAttribute.Condition].ToString();
+                    string temp = dr[MCAttribute.Condition].ToString();
                     if (temp != "")
-                        dr[MKMMetaCardAttribute.Condition] = conditionsDeckboxDictionary[temp];
+                        dr[MCAttribute.Condition] = conditionsDeckboxDictionary[temp];
                 }
-                if (table.Columns.Contains(MKMMetaCardAttribute.Foil))
+                if (table.Columns.Contains(MCAttribute.Foil))
                 {
-                    string temp = dr[MKMMetaCardAttribute.Foil].ToString();
+                    string temp = dr[MCAttribute.Foil].ToString();
                     if (temp != "")
-                        dr[MKMMetaCardAttribute.Foil] = (temp == "true" ? "Foil" : "");
+                        dr[MCAttribute.Foil] = (temp == "true" ? "Foil" : "");
                 }
-                if (table.Columns.Contains(MKMMetaCardAttribute.Signed))
+                if (table.Columns.Contains(MCAttribute.Signed))
                 {
-                    string temp = dr[MKMMetaCardAttribute.Signed].ToString();
+                    string temp = dr[MCAttribute.Signed].ToString();
                     if (temp != "")
-                        dr[MKMMetaCardAttribute.Signed] = (temp == "true" ? "Signed" : "");
+                        dr[MCAttribute.Signed] = (temp == "true" ? "Signed" : "");
                 }
-                if (table.Columns.Contains(MKMMetaCardAttribute.Altered))
+                if (table.Columns.Contains(MCAttribute.Altered))
                 {
-                    string temp = dr[MKMMetaCardAttribute.Altered].ToString();
+                    string temp = dr[MCAttribute.Altered].ToString();
                     if (temp != "")
-                        dr[MKMMetaCardAttribute.Altered] = (temp == "true" ? "Altered" : "");
+                        dr[MCAttribute.Altered] = (temp == "true" ? "Altered" : "");
                 }
             }
         }
@@ -714,7 +714,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
             {
                 foreach (var att in data)
                 {
-                    if (att.Key == MKMMetaCardAttribute.MinCondition && att.Value != "")
+                    if (att.Key == MCAttribute.MinCondition && att.Value != "")
                     {
                         // comparing minCondition requires custom handling
                         if (IsOfMinCondition((MKMMetaCard)card2) == Bool3.False)
