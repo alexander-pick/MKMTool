@@ -368,15 +368,15 @@ namespace MKMTool
                 using (StreamWriter exp = new StreamWriter(filePath))
                 {
                     // we know there will be at least one column, otherwise there would be no valid imported items and therefore no export enabled
-                    string row = "\"" + dt.Columns[0].ColumnName + "\"";
+                    string row = "\"" + (dt.Columns[0].ColumnName).Replace("\"", "\"\"") + "\""; // don't forget to escape all " by doubling them
                     for (int i = 1; i < dt.Columns.Count; i++)
-                        row += ",\"" + dt.Columns[i].ColumnName + "\"";
+                        row += ",\"" + (dt.Columns[i].ColumnName).Replace("\"", "\"\"") + "\"";
                     exp.WriteLine(row);
                     foreach (DataRow card in dt.Rows)
                     {
-                        row = "\"" + card[0] + "\"";
+                        row = "\"" + card[0].ToString().Replace("\"", "\"\"") + "\"";
                         for (int i = 1; i < dt.Columns.Count; i++)
-                            row += ",\"" + card[i] + "\"";
+                            row += ",\"" + card[i].ToString().Replace("\"", "\"\"") + "\"";
                         exp.WriteLine(row);
                     }
                 }
