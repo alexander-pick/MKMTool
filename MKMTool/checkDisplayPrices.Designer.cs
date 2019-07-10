@@ -209,6 +209,7 @@
             this.Name = "CheckDisplayPrices";
             this.ShowIcon = false;
             this.Text = "Check Expected Display Value";
+            this.VisibleChanged += new System.EventHandler(this.CheckDisplayPrices_VisibleChanged);
             this.ResumeLayout(false);
             this.PerformLayout();
 

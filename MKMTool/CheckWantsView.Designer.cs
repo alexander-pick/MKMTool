@@ -470,6 +470,8 @@
             this.Name = "CheckWantsView";
             this.ShowIcon = false;
             this.Text = "Check for cheap deals";
+            this.Shown += new System.EventHandler(this.CheckWantsView_Shown);
+            this.VisibleChanged += new System.EventHandler(this.CheckWantsView_VisibleChanged);
             this.groupBoxPriceParam.ResumeLayout(false);
             this.groupBoxPriceParam.PerformLayout();
             this.groupBoxCardParam.ResumeLayout(false);

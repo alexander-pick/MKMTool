@@ -86,6 +86,7 @@
             this.Controls.Add(this.stockGridView);
             this.Name = "StockView";
             this.Text = "StockView";
+            this.VisibleChanged += new System.EventHandler(this.StockView_VisibleChanged);
             ((System.ComponentModel.ISupportInitialize)(this.stockGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -59,13 +59,13 @@
             this.comboBoxExportUploadPrice = new System.Windows.Forms.ComboBox();
             this.labelExportWhichPrice = new System.Windows.Forms.Label();
             this.groupBoxExportFile = new System.Windows.Forms.GroupBox();
+            this.checkBoxExportOnlyAppraised = new System.Windows.Forms.CheckBox();
             this.checkBoxExportAll = new System.Windows.Forms.CheckBox();
             this.buttonExport = new System.Windows.Forms.Button();
             this.checkBoxExportToolPrices = new System.Windows.Forms.CheckBox();
             this.checkBoxExportFormatDeckbox = new System.Windows.Forms.CheckBox();
             this.checkBoxExportPriceGuide = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.checkBoxExportOnlyAppraised = new System.Windows.Forms.CheckBox();
             this.groupBoxImport.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBoxPrice.SuspendLayout();
@@ -426,6 +426,18 @@
             this.groupBoxExportFile.TabStop = false;
             this.groupBoxExportFile.Text = "To file";
             // 
+            // checkBoxExportOnlyAppraised
+            // 
+            this.checkBoxExportOnlyAppraised.AutoSize = true;
+            this.checkBoxExportOnlyAppraised.Location = new System.Drawing.Point(6, 112);
+            this.checkBoxExportOnlyAppraised.Name = "checkBoxExportOnlyAppraised";
+            this.checkBoxExportOnlyAppraised.Size = new System.Drawing.Size(96, 17);
+            this.checkBoxExportOnlyAppraised.TabIndex = 22;
+            this.checkBoxExportOnlyAppraised.Text = "Only appraised";
+            this.toolTip1.SetToolTip(this.checkBoxExportOnlyAppraised, "If checked, only items that had a price generated for them  (at least one of the " +
+        "selected prices) will be exported");
+            this.checkBoxExportOnlyAppraised.UseVisualStyleBackColor = true;
+            // 
             // checkBoxExportAll
             // 
             this.checkBoxExportAll.AutoSize = true;
@@ -480,18 +492,6 @@
             this.checkBoxExportPriceGuide.Text = "MKM price guide prices";
             this.checkBoxExportPriceGuide.UseVisualStyleBackColor = true;
             // 
-            // checkBoxExportOnlyAppraised
-            // 
-            this.checkBoxExportOnlyAppraised.AutoSize = true;
-            this.checkBoxExportOnlyAppraised.Location = new System.Drawing.Point(6, 112);
-            this.checkBoxExportOnlyAppraised.Name = "checkBoxExportOnlyAppraised";
-            this.checkBoxExportOnlyAppraised.Size = new System.Drawing.Size(96, 17);
-            this.checkBoxExportOnlyAppraised.TabIndex = 22;
-            this.checkBoxExportOnlyAppraised.Text = "Only appraised";
-            this.toolTip1.SetToolTip(this.checkBoxExportOnlyAppraised, "If checked, only items that had a price generated for them  (at least one of the " +
-        "selected prices) will be exported");
-            this.checkBoxExportOnlyAppraised.UseVisualStyleBackColor = true;
-            // 
             // PriceExternalList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -502,7 +502,7 @@
             this.Controls.Add(this.groupBoxImport);
             this.Name = "PriceExternalList";
             this.Text = "PriceExternalList";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PriceExternalList_FormClosing);
+            this.Shown += new System.EventHandler(this.PriceExternalList_Shown);
             this.groupBoxImport.ResumeLayout(false);
             this.groupBoxImport.PerformLayout();
             this.groupBox1.ResumeLayout(false);

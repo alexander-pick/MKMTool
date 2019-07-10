@@ -43,77 +43,100 @@ namespace MKMTool
             InitializeComponent();
 
             stockGridView.ReadOnly = true;
-            int start = 1;
-            var articles = new DataTable();
-            Boolean first = true;
-            try
+        }
+
+        // reload data each time the form is made visible in case the user's stock has changed so they can reload the stockview this way
+        private void StockView_VisibleChanged(object sender, EventArgs e)
+        {
+            if (Visible)
             {
-                while (true)
+                int start = 1;
+                var articles = new DataTable();
+                Boolean first = true;
+                try
                 {
-                    var doc = MKMInteract.RequestHelper.readStock(start);
-                    if (doc.HasChildNodes)
+                    while (true)
                     {
-                        var xmlReader = new XmlNodeReader(doc);
-                        var ds = new DataSet();
-                        ds.ReadXml(xmlReader);
-                        var articleTable = ds.Tables[0];
-                        int elementCount = articleTable.Rows.Count;
-                        if (first)
+                        var doc = MKMInteract.RequestHelper.readStock(start);
+                        if (doc.HasChildNodes)
                         {
-                            articles = articleTable;
-                            first = false;
-                        }
-                        else
-                        {
-                            foreach (DataRow dr in articleTable.Rows)
+                            var xmlReader = new XmlNodeReader(doc);
+                            var ds = new DataSet();
+                            ds.ReadXml(xmlReader);
+                            var articleTable = ds.Tables[0];
+                            int elementCount = articleTable.Rows.Count;
+                            if (first)
                             {
-                                dr["article_Id"] = articles.Rows.Count;
-                                articles.ImportRow(dr);
+                                articles = articleTable;
+                                first = false;
                             }
+                            else
+                            {
+                                foreach (DataRow dr in articleTable.Rows)
+                                {
+                                    dr["article_Id"] = articles.Rows.Count;
+                                    articles.ImportRow(dr);
+                                }
+                            }
+                            if (elementCount != 100)
+                            {
+                                break;
+                            }
+                            start += elementCount;
                         }
-                        if (elementCount != 100)
-                        {
-                            break;
-                        }
-                        start += elementCount;
+                        else break; // document is empty -> end
                     }
-                    else break; // document is empty -> end
+
+                    var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Inventory,
+                        (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ProductID) == row2.Field<string>(MKMDbManager.InventoryFields.ProductID));
+
+                    dj = MKMDbManager.JoinDataTables(dj, MKMDbManager.Instance.Expansions,
+                        (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
+
+                    dj.Columns.Remove("article_Id");
+                    dj.Columns.Remove("Date Added");
+                    dj.Columns.Remove("Metacard ID");
+                    dj.Columns.Remove("idArticle");
+                    dj.Columns.Remove("idProduct");
+                    dj.Columns.Remove("Expansion ID");
+                    dj.Columns.Remove("idExpansion");
+
+                    // rename the columns to the names used by MKMMetaCard
+                    dj.Columns[MKMDbManager.ExpansionsFields.Name].ColumnName = MCAttribute.Expansion;
+                    dj.Columns["isFoil"].ColumnName = MCAttribute.Foil;
+                    dj.Columns["isAltered"].ColumnName = MCAttribute.Altered;
+                    dj.Columns["isSigned"].ColumnName = MCAttribute.Signed;
+                    dj.Columns["isPlayset"].ColumnName = MCAttribute.Playset;
+                    dj.Columns["condition"].ColumnName = MCAttribute.Condition;
+                    dj.Columns["comments"].ColumnName = MCAttribute.Comments;
+                    dj.Columns["price"].ColumnName = MCAttribute.MKMPrice;
+                    dj.Columns["count"].ColumnName = MCAttribute.Count;
+
+                    dj.Columns[dj.Columns.IndexOf(MKMDbManager.InventoryFields.Name)].SetOrdinal(0);
+
+                    stockGridView.DataSource = dj;
+
+                    buttonExport.Enabled = true;
                 }
-
-                var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Inventory,
-                    (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ProductID) == row2.Field<string>(MKMDbManager.InventoryFields.ProductID));
-
-                dj = MKMDbManager.JoinDataTables(dj, MKMDbManager.Instance.Expansions,
-                    (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
-
-                dj.Columns.Remove("article_Id");
-                dj.Columns.Remove("Date Added");
-                dj.Columns.Remove("Metacard ID");
-                dj.Columns.Remove("idArticle");
-                dj.Columns.Remove("idProduct");
-                dj.Columns.Remove("Expansion ID");
-                dj.Columns.Remove("idExpansion");
-
-                // rename the columns to the names used by MKMMetaCard
-                dj.Columns[MKMDbManager.ExpansionsFields.Name].ColumnName = MCAttribute.Expansion;
-                dj.Columns["isFoil"].ColumnName = MCAttribute.Foil;
-                dj.Columns["isAltered"].ColumnName = MCAttribute.Altered;
-                dj.Columns["isSigned"].ColumnName = MCAttribute.Signed;
-                dj.Columns["isPlayset"].ColumnName = MCAttribute.Playset;
-                dj.Columns["condition"].ColumnName = MCAttribute.Condition;
-                dj.Columns["comments"].ColumnName = MCAttribute.Comments;
-                dj.Columns["price"].ColumnName = MCAttribute.MKMPrice;
-                dj.Columns["count"].ColumnName = MCAttribute.Count;
-
-                dj.Columns[dj.Columns.IndexOf(MKMDbManager.InventoryFields.Name)].SetOrdinal(0);
-
-                stockGridView.DataSource = dj;
-
-                buttonExport.Enabled = true;
+                catch (Exception eError)
+                {
+                    MKMHelpers.LogError("listing stock in Stock View", eError.Message, true);
+                }
             }
-            catch (Exception eError)
+        }
+
+        /// <summary>
+        /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
+        /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
+        /// </summary>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.CloseReason == CloseReason.UserClosing)
             {
-                MKMHelpers.LogError("listing stock in Stock View", eError.Message, true);
+                e.Cancel = true;
+                Hide();
             }
         }
 

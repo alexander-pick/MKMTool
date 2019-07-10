@@ -19,15 +19,17 @@ namespace MKMTool
         List<MKMMetaCard> importedValidOnly = new List<MKMMetaCard>();
         DataColumnCollection importedColumns;
 
-        bool priceGuidesExported = false; // flags tracking whether the user exported the computed prices, used to give warning that there are unsaved changes
-        bool toolPriceExported = false;
         bool priceGuidesGenerated = false; // turns to true if at least for one article the price guide has been fetched from MKM
         bool toolPriceGenerated = false;// turns to true if at least for one article has the price computed by MKMTool
 
         public PriceExternalList()
         {
             InitializeComponent();
+        }
 
+        // initialization, needs to be done only on the first show
+        private void PriceExternalList_Shown(object sender, EventArgs e)
+        {
             comboBoxFoil.SelectedIndex = 0;
             comboBoxSigned.SelectedIndex = 0;
             comboBoxPlayset.SelectedIndex = 0;
@@ -58,6 +60,21 @@ namespace MKMTool
             checkBoxExportToolPrices.Checked = false;
         }
 
+        /// <summary>
+        /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
+        /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
+        /// </summary>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Hide();
+            }
+        }
+
         private void checkBoxToolPrices_CheckedChanged(object sender, EventArgs e)
         {
             buttonBotSettings.Enabled = checkBoxToolPrices.Enabled;
@@ -84,8 +101,6 @@ namespace MKMTool
 
                 priceGuidesGenerated = false;
                 toolPriceGenerated = false;
-                priceGuidesExported = false;
-                toolPriceExported = false;
 
                 buttonImport.Text = "Importing...";
 
@@ -569,7 +584,6 @@ namespace MKMTool
                     }
                 }
                 priceGuidesGenerated = true;
-                priceGuidesExported = false;
                 MainView.Instance.LogMainWindow("Price guides fetched.");
             }
             if (MKMToolPrice)
@@ -577,7 +591,6 @@ namespace MKMTool
                 MainView.Instance.LogMainWindow("Generating MKMTool prices for the imported list...");
                 bot.generatePrices(importedValidOnly);
                 toolPriceGenerated = true;
-                toolPriceExported = false;
                 MainView.Instance.LogMainWindow("Prices generated.");
             }
         }
@@ -605,13 +618,11 @@ namespace MKMTool
                         export.Columns.Add(MCAttribute.PriceGuideSELL);
                         export.Columns.Add(MCAttribute.PriceGuideTREND);
                         export.Columns.Add(MCAttribute.PriceGuideTRENDFOIL);
-                        priceGuidesExported = true;
                     }
                     if (checkBoxExportToolPrices.Checked)
                     {
                         export.Columns.Add(MCAttribute.MKMToolPrice);
                         export.Columns.Add(MCAttribute.PriceCheapestSimilar);
-                        toolPriceExported = true;
                     }
                 }
                 foreach (MKMMetaCard mc in importedAll)
@@ -632,23 +643,7 @@ namespace MKMTool
 
                 MKMDbManager.WriteTableAsCSV(sf.FileName, export);
 
-                if (toolPriceGenerated && checkBoxExportToolPrices.Checked)
-                    toolPriceExported = true;
-                if (priceGuidesGenerated && checkBoxExportPriceGuide.Checked)
-                    priceGuidesExported = true;
                 MainView.Instance.LogMainWindow("Exporting finished.");
-            }
-        }
-
-        private void PriceExternalList_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if ((priceGuidesGenerated && !priceGuidesExported) || (toolPriceGenerated && !toolPriceExported))
-            {
-                if (MessageBox.Show("There are unsaved changes to the imported list, are you sure you want to close without exporting? All changes will be lost.",
-                    "There are unexported changes", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.No)
-                {
-                    e.Cancel = true;
-                }
             }
         }
 

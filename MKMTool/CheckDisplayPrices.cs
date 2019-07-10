@@ -30,7 +30,6 @@
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 */
 using System;
-using System.Data;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -44,11 +43,34 @@ namespace MKMTool
         public CheckDisplayPrices()
         {
             InitializeComponent();
+        }
 
-            MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
+        /// <summary>
+        /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
+        /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
+        /// </summary>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Hide();
+            }
+        }
 
-            editionBox.Sorted = true;
-            editionBox.SelectedIndex = 135; // currently Gatecrash
+        // reload the expansion each time the form is made visible for the corner case that the expansion database changed in between
+        private void CheckDisplayPrices_VisibleChanged(object sender, EventArgs e)
+        {
+            if (Visible)
+            {
+                editionBox.Items.Clear();
+                MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
+
+                editionBox.Sorted = true;
+                editionBox.SelectedIndex = 135; // currently Gatecrash
+            }
         }
 
         private async void checkDisplayPrice_Click(object sender, EventArgs e)

@@ -48,7 +48,16 @@ namespace MKMTool
 
         private static readonly Timer timer = new Timer();
 
+        // Individual "modules". None of them actually closes when the user closes them, they just hide themselves, clicking
+        // the button on the main window will show them again or hide if they are visible. This allow us to let the
+        // main window be accessible while a module is opened, but at the same time prevents the user from opening two instances of a single module.
+        // Make sure to put all calls that use API to their onVisibleChanged event, not their constructor and to override the onClose.
         private UpdatePriceSettings settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
+        private StockView stockViewWindow = new StockView();
+        private CheckWantsView checkCheapDealsWindow = new CheckWantsView();
+        private CheckDisplayPrices checkDisplayPricesWindow = new CheckDisplayPrices();
+        private WantlistEditorView wantlistEditorViewWindow = new WantlistEditorView();
+        private PriceExternalList priceExternalListWindow = new PriceExternalList();
 
         internal MKMBot bot;
 
@@ -163,12 +172,12 @@ namespace MKMTool
 
         private void readStockButton_Click(object sender, EventArgs e)
         {
-            /*           MKMBot bot = new MKMBot();
-#if !DEBUG
-            bot.getProductList(this);
-#endif*/
-            var sv1 = new StockView();
-            sv1.ShowDialog();
+            if (stockViewWindow.IsDisposed)
+                stockViewWindow = new StockView();
+            if (stockViewWindow.Visible)
+                stockViewWindow.Hide();
+            else
+                stockViewWindow.Show(this);
         }
 
         private void updatePriceRun()
@@ -264,20 +273,32 @@ namespace MKMTool
 
         private void wantlistButton_Click(object sender, EventArgs e)
         {
-            var wl1 = new WantlistEditorView();
-            wl1.ShowDialog();
+            if (wantlistEditorViewWindow.IsDisposed)
+                wantlistEditorViewWindow = new WantlistEditorView();
+            if (wantlistEditorViewWindow.Visible)
+                wantlistEditorViewWindow.Hide();
+            else
+                wantlistEditorViewWindow.Show(this);
         }
 
         private void checkWants_Click(object sender, EventArgs e)
         {
-            var cw = new CheckWantsView();
-            cw.ShowDialog();
+            if (checkCheapDealsWindow.IsDisposed)
+                checkCheapDealsWindow = new CheckWantsView();
+            if (checkCheapDealsWindow.Visible)
+                checkCheapDealsWindow.Hide();
+            else
+                checkCheapDealsWindow.Show(this);
         }
 
         private void checkDisplayPriceButton_Click(object sender, EventArgs e)
         {
-            var cw = new CheckDisplayPrices();
-            cw.ShowDialog();
+            if (checkDisplayPricesWindow.IsDisposed)
+                checkDisplayPricesWindow = new CheckDisplayPrices();
+            if (checkDisplayPricesWindow.Visible)
+                checkDisplayPricesWindow.Hide();
+            else
+                checkDisplayPricesWindow.Show(this);
         }
 
         private void downloadBuysToExcel_Click(object sender, EventArgs e)
@@ -291,6 +312,8 @@ namespace MKMTool
 
         private void buttonSettings_Click(object sender, EventArgs e)
         {
+            if (settingsWindow.IsDisposed)
+                settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
             if (settingsWindow.Visible)
                 settingsWindow.Hide();
             else
@@ -321,8 +344,12 @@ namespace MKMTool
 
         private void buttonPriceExternal_Click(object sender, EventArgs e)
         {
-            PriceExternalList pxl = new PriceExternalList();
-            pxl.ShowDialog();
+            if (priceExternalListWindow.IsDisposed)
+                priceExternalListWindow = new PriceExternalList();
+            if (priceExternalListWindow.Visible)
+                priceExternalListWindow.Hide();
+            else
+                priceExternalListWindow.Show(this);
         }
     }
 }

@@ -247,6 +247,8 @@
             this.ShowIcon = false;
             this.Text = "Wantlist Editor";
             this.Load += new System.EventHandler(this.WantlistEditor_Load);
+            this.Shown += new System.EventHandler(this.WantlistEditorView_Shown);
+            this.VisibleChanged += new System.EventHandler(this.WantlistEditorView_VisibleChanged);
             ((System.ComponentModel.ISupportInitialize)(this.wantsView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -44,7 +44,26 @@ namespace MKMTool
         public CheckWantsView()
         {
             InitializeComponent();
+        }
 
+        /// <summary>
+        /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
+        /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
+        /// </summary>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Hide();
+            }
+        }
+
+        // this is done only once, when it is first shown - populate language combobox, it never changes
+        private void CheckWantsView_Shown(object sender, EventArgs e)
+        {
             foreach (var Lang in MKMHelpers.languagesNames)
             {
                 var item = new MKMHelpers.ComboboxItem();
@@ -56,20 +75,27 @@ namespace MKMTool
             }
 
             langCombo.SelectedIndex = 0;
+        }
 
-            MKMDbManager.Instance.PopulateExpansionsComboBox(ref editionBox);
-            if (editionBox.Items.Count > 0)
+        // this is done whenever it is shown/hidden - in case it is made visible, reload all data in case something has changed in the meantime
+        private void CheckWantsView_VisibleChanged(object sender, EventArgs e)
+        {
+            if (Visible)
             {
-                editionBox.Sorted = true;
-                editionBox.SelectedIndex = 0;
-            }
-            else
-            {
-                MKMHelpers.LogError("loading expansions from local database for Check Cheap Deals", "Database empty.", false);
-            }
+                MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
+                if (editionBox.Items.Count > 0)
+                {
+                    editionBox.Sorted = true;
+                    editionBox.SelectedIndex = 0;
+                }
+                else
+                {
+                    MKMHelpers.LogError("loading expansions from local database for Check Cheap Deals", "Database empty.", false);
+                }
 
-            conditionCombo.SelectedIndex = 4;
-            initWantLists();
+                conditionCombo.SelectedIndex = 4;
+                initWantLists();
+            }
         }
 
         public void initWantLists()

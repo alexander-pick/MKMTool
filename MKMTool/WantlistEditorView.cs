@@ -49,7 +49,26 @@ namespace MKMTool
         public WantlistEditorView()
         {
             InitializeComponent();
+        }
 
+        /// <summary>
+        /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
+        /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
+        /// </summary>
+        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Hide();
+            }
+        }
+
+        // done only once - languages never change
+        private void WantlistEditorView_Shown(object sender, EventArgs e)
+        {
             foreach (var Lang in MKMHelpers.languagesNames)
             {
                 var item = new MKMHelpers.ComboboxItem();
@@ -61,15 +80,23 @@ namespace MKMTool
 
                 langCombo.SelectedIndex = 0;
             }
+        }
 
-            MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
-            editionBox.Sorted = true;
+        // reload the tables based on database each time the form is made visible for the corner case that the database changed in between
+        // reload want lists in case user added a new one through MKM
+        private void WantlistEditorView_VisibleChanged(object sender, EventArgs e)
+        {
+            if (Visible)
+            {
+                editionBox.Items.Clear();
+                MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
+                editionBox.Sorted = true;
 
-            initCardView();
-            initWantLists();
+                initCardView();
+                initWantLists();
 
-
-            conditionCombo.SelectedIndex = 3;
+                conditionCombo.SelectedIndex = 3;
+            }
         }
 
         public void initWantLists()
@@ -92,6 +119,7 @@ namespace MKMTool
 
             if (node.Count > 0)
             {
+                wantListsBox.Items.Clear();
                 foreach (XmlNode nWantlist in node)
                 {
                     var item = new MKMHelpers.ComboboxItem();
@@ -108,6 +136,7 @@ namespace MKMTool
 
         public void initCardView()
         {
+            cardView.Items.Clear();
             cardView.View = View.Details;
             cardView.GridLines = true;
             cardView.FullRowSelect = true;

@@ -4,7 +4,7 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Last changes
 
-**version 0.7.0, x.x.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
+**version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
 Bugfixes:
 + Fixed [Check Display Value](#Check-Display-Value) using locale-dependent number parsing, which caused the decimal delimiter to be ignored if you are using '.' instead of ',', leading to 100x higher prices.
 + Fixed numerous issues in [Check for Cheap Deals](#Check-for-Cheap-Deals), now it works as intended for all three modes (expansion check, user check, want list check)
@@ -17,6 +17,7 @@ Bugfixes:
 New/improved features:
 + Added a new module "Price External List" - allows to generate new prices to a list of card loaded from a CSV file and then export it or directly put on sale to MKM. See [documentation](#Price-External-List) below.
 + The main window can now be enlarged
++ All "module" windows (Check Cheap Deals, Check Display Value etc.) now no longer block the main window, so you can scroll through the log while the module is opened. Clicking the module window while its window is open will close the window. Data that rely on your MKM profile are reloaded every time you re-open the window, but "local" settings (i.e. checkboxes you checked etc.) now persist when you close and re-open the window.
 + The number of API calls you sent to MKM is now displayed on the bottom of the window along the maximum number of calls you are allowed. When the limit is reached, MKMTool will no longer send any requests to MKM until you restart MKMTool or new day has passed (MKM resets the counter on 0:00 CET). The number of calls comes directly from MKM (they send it with each call), so it is 100% reliable. When you have only 50 calls remaining, the text will turn red to warn you.
 + Reworked GUI for [Check for Cheap Deals](#Check-for-Cheap-Deals). Also, for user check you can now filter only cards from the specified expansion rather than checking all cards of the user
 + Added the option to use different price factor for the average price when worldwide search is used for price update (there is a separate slider for it now)
@@ -99,10 +100,10 @@ The first startup takes a bit since 1 mb of data is downloaded and unzipped, but
 
 ![screenshot](http://www.alexander-pick.com/github/tool1.PNG)
 
-MKMTool has 4 Main Features:
+MKMTool has several features/modules:
 
 ### Price Update
-The most interesting function (for me at least) is the automatic price update. This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accesible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.updatePrices() method).
+The most interesting function (for me at least) is the automatic price update. This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accessible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.updatePrices() method).
 
 The base part of the algorithm is finding "similar items". This is a sequence of cards sold by **other** MKM users in **the same country as you** that are the same as the one you are trying to sell. "The same" means they have the same name, expansion, foil/nonfoil, signed/altered and playset/single statuses. Condition is always either the same or better and will be discussed later. Once the sequence is determined, the price is computed based either on the average or on the lowest or highest prices from the sequence. The sequence is always ordered from the cheapest items up. If the algorithm at some points finds out that it does not need another similar item, it stops reading them and just the ones found so far are used to compute the price. Hence the prices will always be a bit skewed towards the cheaper offers.
 
@@ -265,6 +266,8 @@ The first line of the file must be a header naming all the columns - the *attrib
 
 The following is the list of all recognized attributes. **Note that all of the attribute names are case sensitive and many of the values are as well**:
 
+
++ **idProduct**: MKM's identification number of the product. If it is assigned, MKMTool will also internally fill the Name, Expansion and Expansion ID fields. You can still have them in the list, but MKMTool will use the ones found based on this ID. 
 + **Name**: the name of the card, in English. Case sensitive, use the name exactly as you can find it on MKM's product page, i.e. first letters capitalized except for prepositions. Synonyms: enName.
 + **LocName**: the name of the card in the language in which it is printed. Note that different languages have different rules about the capitalization - some are like English, but some have only first letter of the first word capitalized.
 + **Language**: English name of the language, first letters capital, i.e. one of the following: English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese
@@ -277,7 +280,6 @@ The following is the list of all recognized attributes. **Note that all of the a
 + **Signed**: whether it is signed or not. Valid values are (all case insensitive): "true" or "signed" for signed cards, "false" for non-signed cards, "null" or empty for when you do not care.
 + **Altered**: whether it is altered or not. Valid values are (all case insensitive): "true" or "altered" for altered cards, "false" for non-altered cards, "null" or empty for when you do not care. Synonyms: Altered Art.
 + **Playset**: whether it is a playset or not. Valid values are (all case insensitive): "true" for playsets, "false" for non-playsets cards, "null" or empty for when you do not care. Note that for playsets, the MinPrice is the price for the entire playset, not a single unit, regardless of whether you are using the "treat playsets as single cards" option or not.
-+ **idProduct**: MKM's identification number of the product. If it is assigned, MKMTool will also internally fill the Name, Expansion and Expansion ID fields. You can still have them in the list, but MKMTool will use the ones found based on this ID. 
 + **idMetaproduct**: MKM's identification number of the metaproduct this product belongs to. Metaproducts gather all cards with the same name, but from different expansions.
 + **Count**: the number of the items. It is recommended *not* to use this in you myStock.csv file. If you do, the match will be required. So if you for example have 5x some card, you write the count down in the list, then you sell one later, you will no longer get a match next time you do price update unless you manually update the Count in the myStock.csv.
 + **Rarity**: rarity of the card, full word, case sensitive. Valid values are: Masterpiece, Mythic, Rare, Special, Time Shifted, Uncommon, Common, Land, Token, Arena Code Card, Tip Card.
@@ -322,7 +324,3 @@ https://www.amazon.de/registry/wishlist/PY25W6O71YIV/ref=cm_sw_em_r_mt_ws__ugkRy
 *Sorry I don’t have paypal.*
 
 **If you are producing a commercial product and need some help with the MKM API or you want to integrate some of my code in your application, feel free to contact me.**
-
-
-
- 
