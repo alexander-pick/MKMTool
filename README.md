@@ -4,11 +4,12 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Last changes
 
-**version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
+**Version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
+
 Bugfixes:
 + Fixed [Check Display Value](#Check-Display-Value) using locale-dependent number parsing, which caused the decimal delimiter to be ignored if you are using '.' instead of ',', leading to 100x higher prices.
 + Fixed numerous issues in [Check for Cheap Deals](#Check-for-Cheap-Deals), now it works as intended for all three modes (expansion check, user check, want list check)
-+ Error logging is now more systematic, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
++ Error logging is now more consistent, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
 + Local database is updated after pressing the update button even when the files already exist on hard drive
 + Want list editor now also displays "metaproducts", that is cards for which you have set the expansion to "any" (it will show "\<any\>" in the expansion name column). In line with that, it will no longer crash if you open a want list that has only metaproducts.
 + Fixed behaviour of the delete function in Want List editor: when no line is selected, message is displayed; when multiple lines are selected, all of the selected items are deleted.
