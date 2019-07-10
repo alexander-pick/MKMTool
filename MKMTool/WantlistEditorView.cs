@@ -62,7 +62,7 @@ namespace MKMTool
                 langCombo.SelectedIndex = 0;
             }
 
-            MKMDbManager.Instance.PopulateExpansionsComboBox(ref editionBox);
+            MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
             editionBox.Sorted = true;
 
             initCardView();

@@ -474,14 +474,14 @@ namespace MKMTool
         /// </summary>
         /// <param name="exp">Initialized combobox ready to have it's Item property filled. This does not empty the Item list
         /// and also does not modify anything else - only does exp.Items.Add(ComboboxItem).</param>
-        public void PopulateExpansionsComboBox(ref ComboBox exp)
+        public void PopulateExpansionsComboBox(ComboBox exp)
         {
             foreach (DataRow nExpansion in expansions.Rows)
             {
                 ComboboxItem item = new ComboboxItem();
 
-                item.Text = nExpansion["enName"].ToString();
-                item.Value = nExpansion["idExpansion"].ToString();
+                item.Text = nExpansion[ExpansionsFields.Name].ToString();
+                item.Value = nExpansion[ExpansionsFields.ExpansionID].ToString();
 
                 exp.Items.Add(item);
             }

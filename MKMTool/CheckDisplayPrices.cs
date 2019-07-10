@@ -39,46 +39,16 @@ using System.Xml;
 namespace MKMTool
 {
     public partial class CheckDisplayPrices : Form
-    {
-        private readonly DataTable eS = new DataTable();
+    { 
 
         public CheckDisplayPrices()
         {
             InitializeComponent();
 
-            try
-            {
-                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
+            MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
 
-                var node = doc.GetElementsByTagName("expansion");
-
-                eS.Columns.Add("idExpansion", typeof (string));
-                eS.Columns.Add("abbreviation", typeof (string));
-                eS.Columns.Add("enName", typeof (string));
-
-                foreach (XmlNode nExpansion in node)
-                {
-                    eS.Rows.Add(nExpansion["idExpansion"].InnerText, nExpansion["abbreviation"].InnerText,
-                        nExpansion["enName"].InnerText);
-                }
-
-                foreach (XmlNode nExpansion in node)
-                {
-                    var item = new MKMHelpers.ComboboxItem();
-
-                    item.Text = nExpansion["enName"].InnerText;
-                    item.Value = nExpansion["idExpansion"].InnerText;
-
-                    editionBox.Items.Add(item);
-                }
-
-                editionBox.Sorted = true;
-                editionBox.SelectedIndex = 135; // currently Kaladesh
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("initializing expansions for display price check", eError.Message, true);
-            }
+            editionBox.Sorted = true;
+            editionBox.SelectedIndex = 135; // currently Gatecrash
         }
 
         private async void checkDisplayPrice_Click(object sender, EventArgs e)
@@ -95,11 +65,11 @@ namespace MKMTool
             var fUncommonCardsNotinPacks = (float)Convert.ToDouble(uncommonNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
 
             var fBoxContent = (float)Convert.ToDouble(boosterPerBoxText.Text, CultureInfo.InvariantCulture); //36 Packs
-            string edition = (editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+            string editionID = (editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
             
             // run the check in a separate thread so that the main GUI is correctly updated
             await Task.Run(() => checkDisplayPrice_run(fMythicFactor, fPackUncommon, fPackRareMythic, fRareCardsNotinPacks, fMythicCardsNotinPacks,
-                fUncommonCardsNotinPacks, fBoxContent, edition));
+                fUncommonCardsNotinPacks, fBoxContent, editionID));
             checkDisplayPrice.Enabled = true;
         }
 
@@ -107,15 +77,14 @@ namespace MKMTool
         /// Checks the expected ROI of a given display. Expected to be run in a separate thread
         /// </summary>
         private void checkDisplayPrice_run(float fMythicFactor, float fPackUncommon, float fPackRareMythic, float fRareCardsNotinPacks,
-            float fMythicCardsNotinPacks, float fUncommonCardsNotinPacks, float fBoxContent, string edition)
+            float fMythicCardsNotinPacks, float fUncommonCardsNotinPacks, float fBoxContent, string editionID)
         {
             try
             {
                 //used to determine index of best start edition
                 //MessageBox.Show((editionBox.SelectedIndex.ToString()));
 
-                var doc =
-                    MKMInteract.RequestHelper.getExpansionsSingles(edition);
+                var doc = MKMInteract.RequestHelper.getExpansionsSingles(editionID);
                 //would be easier if mkm would deliver detailed info with this call but ...
 
                 MainView.Instance.LogMainWindow("====== Expansion Stats ======");
