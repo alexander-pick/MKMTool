@@ -631,11 +631,12 @@ namespace MKMTool
                     {
                         if (toolPriceGenerated)
                         {
-                            bool priceNotSet = mc.GetAttribute(MCAttribute.MKMToolPrice) != "" || mc.GetAttribute(MCAttribute.PriceCheapestSimilar) != "";
-                            if (priceNotSet && (!priceGuidesGenerated || !mc.HasPriceGuides))
+                            bool priceNotSet = !checkBoxExportPriceGuide.Checked || 
+                                (mc.GetAttribute(MCAttribute.MKMToolPrice) == "" && mc.GetAttribute(MCAttribute.PriceCheapestSimilar) != "");
+                            if (priceNotSet && (!checkBoxExportToolPrices.Checked || !priceGuidesGenerated || !mc.HasPriceGuides))
                                 continue;
                         }
-                        else if (priceGuidesGenerated && !mc.HasPriceGuides)
+                        else if (!checkBoxExportToolPrices.Checked || !priceGuidesGenerated || !mc.HasPriceGuides)
                             continue;
                     }
                     mc.WriteItselfIntoTable(export, checkBoxExportAll.Checked, checkBoxExportFormatDeckbox.Checked ? MCFormat.Deckbox : MCFormat.MKM);
