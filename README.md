@@ -99,7 +99,7 @@ The first startup takes a bit since 1 MB of data is downloaded and unzipped, but
 
 ## Ok - ok, but what can MKMTool do?
 
-![screenshot](http://www.alexander-pick.com/github/tool1.PNG)
+![Main Window](MKMTool/doc/mainWindow.png)
 
 MKMTool has several features/modules, click the links to bring you to documentation for the particular feature below:
 + [Price Update](#Price-Update): Automatically updates prices of your stock on MKM based on current prices similar cards are being sold for by other sellers. The algorithm used for computing the prices is highly customizable.
@@ -117,7 +117,7 @@ The base part of the algorithm is finding "similar items". This is a sequence of
 
 The following figure shows the settings window. Each of the parameters will now be described in details, going from top to bottom, left to right:
 
-![Update Price Settings](MKMTool/updatePriceSettings.png)
+![Update Price Settings](MKMTool/doc/updatePriceSettings.png)
 
 + **Minimum price of rares:** This is the minimum price that will ever be assigned to your rares (and mythics) no matter what price is computed.
 + **Minimum # of similar items:** if by the end the sequence of similar items is smaller than this number, no price update will be performed.
@@ -184,7 +184,7 @@ Next article we have is a Lightly Played Lightning Bolt from Beta. MKMTool compu
 
 ### Check for Cheap Deals
 
-![Check Cheap Deals](MKMTool/checkCheapDeals.png)
+![Check Cheap Deals](MKMTool/doc/checkCheapDeals.png)
 
 For the fun of it – with this feature you can find cheap deals with X percent cheaper (the first parameter, see figure above) than other vendors and cheaper than the Trend if selected. You can specify a shipping addition to be added to the lowest found price to ensure a good deal. If cards are found they are directly added to your cart on MKM, just log in and check your cart. Use the parameters on the right side of the window to specify what kind of cards you are looking for and how it should be priced. There are three ways to check cheap deals:
 + Whole expansion check: all cards from a given expansion will be checked for cheap deals.
@@ -200,7 +200,7 @@ This is more of an experimental feature, I written it to roughly calculate the e
 
 ### Price External List
 
-![Price External List](MKMTool/priceExternalList.png)
+![Price External List](MKMTool/doc/priceExternalList.png)
 
 This module allows you to set a price not for cards you already have on sale on MKM, but rather any list of cards you have. The aim is to provide as robust interface as possible: the format of the input file must follow the CSV rules described in [CSV card lists in MKMTool](#CSV-Card-Lists-in-MKMTool), but what attributes you have set for your cards in that list is up to you. The module can work with as little as only the name and still give you a reasonable price estimate. Of course, the more details you include (expansions, languages, conditions etc.), the more realistic prices you will get. Once the list is appraised, you can either save it as a CSV file again, or directly put it up for sale on MKM.
 
@@ -250,15 +250,15 @@ In order to be able to upload a given card to MKM, it has to have a Language - w
 
 Easy Editor for MKM want list, I written this since the MKM features to build a list were too unhandy for me. This works well with the check for cheap deals feature. However, the functionality is (in the current version) limited: for language, you have to choose either all, or one specific language, not a combination of several languages; you have to choose one precise condition; for boolean flag as foil, signed etc., you can choose only yes or no, not "any"; for expansions, you have to choose a specific one, you can't choose "any"; similarly, if you have chosen "any" expansion in the MKM's want list editor, MKMTool will display it only as "<any>", it won't list all the possible expansions.
 
+### View Inventory
+
+Pretty much just shows you a list of your currently listed item – nothing special here. But there is a button to export your inventory to a CSV file using the formatting MKMTool uses for other modules - see [CSV Card Lists in MKMTool](#CSV-Card-Lists-in-MKMTool).
+
 ## Other Features / Options
 
 ### Account Info
 
 Does what it says, shows you the info stack of your account in raw data.
-
-### View Inventory
-
-Pretty much just shows you a list of your currently listed item – nothing special here. But there is a button to export your inventory to a CSV file using the formatting MKMTool uses for other modules - see [CSV Card Lists in MKMTool](#CSV-Card-Lists-in-MKMTool).
 
 ### Update Local MKM Product List
 Updates the local offline database provided from MKM. This CSV is usually maintained by the program, it automatically updates itself if it is older than 100 days or when some module fails to find the data it is asking for (and the database is more than 1 day old). So most of the time, you should not need to click this button, except in cases when for example new expansion just comes out and you want to use the [Check for Cheap Deals](#Check-for-Cheap-Deals) option, updating the database will make the new expansion appear in the list of expansions.
