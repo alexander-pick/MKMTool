@@ -82,7 +82,7 @@ You can simply open the project in Microsoft Visual Studio Community 2015 (free 
 
 If you are too lazy to compile, here is a build:
 
-http://www.alexander-pick.com/github/MKMTool-05b-Release_11072017.rar 
+https://tomasjanak.github.io/MKMTool0.7.0.zip (version 0.7.0, compiled by [Tomas Janak](https://github.com/tomasjanak))
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
@@ -95,16 +95,23 @@ Before you can use the tool please rename config_template.xml to config.xml and 
 + open config.xml with an editor and put the token details in the file - field names should be self explaining and this is simple xml
 + run the tool - should work!
 
-The first startup takes a bit since 1 mb of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.
+The first startup takes a bit since 1 MB of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.
 
 ## Ok - ok, but what can MKMTool do?
 
 ![screenshot](http://www.alexander-pick.com/github/tool1.PNG)
 
-MKMTool has several features/modules:
+MKMTool has several features/modules, click the links to bring you to documentation for the particular feature below:
++ [Price Update](#Price-Update): Automatically updates prices of your stock on MKM based on current prices similar cards are being sold for by other sellers. The algorithm used for computing the prices is highly customizable.
++ [Check for Cheap Deals](#Check-for-Cheap-Deals): Finds cards currently on sale on MKM that are significantly under-priced relative to the prices other copies of the same cards are on sale. There are three modes you can use: check cards from a specific expansion, from specific seller, or from your wantlist.
++ [Check Display Value](#Check-Display-Value): Evaluates the expected value you get from singles in a booster box of a specified set based on the current prices of singles on MKM.
++ [Price External List](#Price-External-List): Loads a list of cards from a CSV file and allows you to use the Price Update algorithm to set price to those cards and then export them back to CSV or put them directly on sale on MKM.
++ [Want List Editor](#Want-List-Editor): Adds or removes cards from any of your want lists.
++ [View Inventory](#View-Inventory): Downloads your entire stock from MKM and visualizes it in a table with a search function. Also allows you to export the inventory to a CSV file.
+
 
 ### Price Update
-The most interesting function (for me at least) is the automatic price update. This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accessible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.updatePrices() method).
+This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accessible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.updatePrices() method).
 
 The base part of the algorithm is finding "similar items". This is a sequence of cards sold by **other** MKM users in **the same country as you** that are the same as the one you are trying to sell. "The same" means they have the same name, expansion, foil/nonfoil, signed/altered and playset/single statuses. Condition is always either the same or better and will be discussed later. Once the sequence is determined, the price is computed based either on the average or on the lowest or highest prices from the sequence. The sequence is always ordered from the cheapest items up. If the algorithm at some points finds out that it does not need another similar item, it stops reading them and just the ones found so far are used to compute the price. Hence the prices will always be a bit skewed towards the cheaper offers.
 
