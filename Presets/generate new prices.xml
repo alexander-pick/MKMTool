@@ -1,0 +1,5 @@
+<MKMBotSettings priceMinRarePrice="0.10" priceMinSimilarItems="2" priceMaxSimilarItems="15" priceSetPriceBy="ByAverage" priceFactor="0.40" priceFactorWorldwide="0.50" priceMarkup2="0.06" priceMarkup3="0.09" priceMarkup4="0.14" priceMarkupCap="3.5" priceIgnorePlaysets="True" condAcceptance="SomeMatchesAbove" logUpdated="True" logLessThanMinimum="True" logSmallPriceChange="False" logLargePriceChangeTooLow="False" logLargePriceChangeTooHigh="False" logHighPriceVariance="True" testMode="False" searchWorldwide="True" description="Intended for use with the Price External List module. Allows relatively large variance and small amount of minimal similar items so that &quot;some&quot; price is almost always set.">
+  <priceMaxChangeLimits>
+  </priceMaxChangeLimits>
+  <priceMaxDifferenceLimits>3;3.00;10;2.00;50;1.00;999999;0.10;</priceMaxDifferenceLimits>
+</MKMBotSettings>

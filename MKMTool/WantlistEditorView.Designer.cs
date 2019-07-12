@@ -57,6 +57,7 @@
             // 
             // wantListsBox
             // 
+            this.wantListsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.wantListsBox.FormattingEnabled = true;
             this.wantListsBox.Location = new System.Drawing.Point(460, 9);
             this.wantListsBox.Margin = new System.Windows.Forms.Padding(2);
@@ -113,6 +114,7 @@
             // conditionCombo
             // 
             this.conditionCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.conditionCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.conditionCombo.FormattingEnabled = true;
             this.conditionCombo.Items.AddRange(new object[] {
             "MT",
@@ -142,6 +144,7 @@
             // langCombo
             // 
             this.langCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.langCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.langCombo.FormattingEnabled = true;
             this.langCombo.Location = new System.Drawing.Point(2, 570);
             this.langCombo.Margin = new System.Windows.Forms.Padding(2);
@@ -210,6 +213,7 @@
             // 
             // editionBox
             // 
+            this.editionBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.editionBox.FormattingEnabled = true;
             this.editionBox.Location = new System.Drawing.Point(286, 9);
             this.editionBox.Name = "editionBox";
@@ -217,7 +221,7 @@
             this.editionBox.TabIndex = 26;
             this.editionBox.SelectedIndexChanged += new System.EventHandler(this.editionBox_SelectedIndexChanged);
             // 
-            // WantlistEditor
+            // WantlistEditorView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -239,10 +243,12 @@
             this.Controls.Add(this.cardView);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(2);
-            this.Name = "WantlistEditor";
+            this.Name = "WantlistEditorView";
             this.ShowIcon = false;
             this.Text = "Wantlist Editor";
             this.Load += new System.EventHandler(this.WantlistEditor_Load);
+            this.Shown += new System.EventHandler(this.WantlistEditorView_Shown);
+            this.VisibleChanged += new System.EventHandler(this.WantlistEditorView_VisibleChanged);
             ((System.ComponentModel.ISupportInitialize)(this.wantsView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

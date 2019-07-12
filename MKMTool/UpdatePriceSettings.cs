@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with MKMTool.  If not, see <http://www.gnu.org/licenses/>.
 
     Diese Datei ist Teil von MKMTool.
 
@@ -21,7 +21,7 @@
     Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren
     veröffentlichten Version, weiterverbreiten und/oder modifizieren.
 
-    Fubar wird in der Hoffnung, dass es nützlich sein wird, aber
+    MKMTool wird in der Hoffnung, dass es nützlich sein wird, aber
     OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
     Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
     Siehe die GNU General Public License für weitere Details.
@@ -46,13 +46,20 @@ namespace MKMTool
         // min price and average (0-0.5) or average and highest price (0.5-1)
         private double priceByAvg = 0.5;
         private Dictionary<string, MKMBotSettings> presets;
-        
-        public UpdatePriceSettings()
+        private string lastPresetName; // name of the last preset under which it is stored in Properties.Settings.Default
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdatePriceSettings"/> class.
+        /// </summary>
+        /// <param name="lastPresetName">The last preset used by this settings windows under which it is stored in Properties.Settings.Default</param>
+        /// <param name="title">Title of the window</param>
+        public UpdatePriceSettings(string lastPresetName, string title)
         {
             InitializeComponent();
             loadPresets();
-            // load the last previously used preset
-            string lastPreset = Properties.Settings.Default.LastSettingsPreset;
+            this.Text = title;
+            this.lastPresetName = lastPresetName;
+            string lastPreset = Properties.Settings.Default[lastPresetName].ToString();
             if (comboBoxPresets.Items.Contains(lastPreset))
             {
                 comboBoxPresets.SelectedIndex = comboBoxPresets.Items.IndexOf(lastPreset);
@@ -79,7 +86,7 @@ namespace MKMTool
         /// <summary>
         /// Gathers data from the gui and creates their appropriate representation as the MKMBotSettings object.
         /// </summary>
-        /// <param name="s">The settings object after the method succesfully executes.</param>
+        /// <param name="s">The settings object after the method successfully executes.</param>
         /// <returns>True if all settings were read, false in case of parsing error.</returns>
         public bool GenerateBotSettings(out MKMBotSettings s)
         {
@@ -121,18 +128,25 @@ namespace MKMTool
             {
                 s.priceSetPriceBy = PriceSetMethod.ByAverage;
                 s.priceFactor = (double)trackBarPriceEstAvg.Value / (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum);
+                s.priceFactorWorldwide = (double)trackBarPriceEstAvgWorld.Value / (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum);
             }
             else if (radioButtonPriceEstByLowestPrice.Checked)
             {
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfLowestPrice;
-                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value) / 100;
+                s.priceFactor = s.priceFactorWorldwide = Decimal.ToDouble(numericUpDownPriceEstLowestPrice.Value) / 100;
             }
             else
             {
                 s.priceSetPriceBy = PriceSetMethod.ByPercentageOfHighestPrice;
-                s.priceFactor = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value) / 100;
+                s.priceFactor = s.priceFactorWorldwide = Decimal.ToDouble(numericUpDownPriceEstHighestPrice.Value) / 100;
             }
-            
+
+            s.priceMarkup2 = Decimal.ToDouble(numericUpDownPriceMultCopies2.Value) / 100;
+            s.priceMarkup3 = Decimal.ToDouble(numericUpDownPriceMultCopies3.Value) / 100;
+            s.priceMarkup4 = Decimal.ToDouble(numericUpDownPriceMultCopies4.Value) / 100;
+            s.priceMarkupCap = Decimal.ToDouble(numericUpDownPriceMultCopiesCap.Value);
+            s.priceIgnorePlaysets = checkBoxPricePlaysetIgnore.Checked;
+
             if (radioButtonCondMatchOnly.Checked)
                 s.condAcceptance = AcceptedCondition.OnlyMatching;
             else if (radioButtonCondAcceptBetterAlways.Checked)
@@ -143,7 +157,8 @@ namespace MKMTool
             s.logUpdated = checkBoxLogUpdated.Checked;
             s.logLessThanMinimum = checkBoxLogMinItems.Checked;
             s.logSmallPriceChange = checkBoxLogSmallChange.Checked;
-            s.logHighPriceChange = checkBoxLogLargeChange.Checked;
+            s.logLargePriceChangeTooLow = checkBoxLogLargeChangeLow.Checked;
+            s.logLargePriceChangeTooHigh = checkBoxLogLargeChangeHigh.Checked;
             s.logHighPriceVariance = checkBoxLogHighVariance.Checked;
             
             s.testMode = checkBoxTestMode.Checked;
@@ -183,6 +198,8 @@ namespace MKMTool
                 radioButtonPriceEstByLowestPrice.Checked = false;
                 radioButtonPriceEstHighestPrice.Checked = false;
                 trackBarPriceEstAvg.Value = (int)(settings.priceFactor * (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum) + trackBarPriceEstAvg.Minimum);
+                trackBarPriceEstAvgWorld.Value = (int)(settings.priceFactorWorldwide * 
+                    (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum) + trackBarPriceEstAvgWorld.Minimum);
             }
             else if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
             {
@@ -198,6 +215,12 @@ namespace MKMTool
                 radioButtonPriceEstHighestPrice.Checked = true;
                 numericUpDownPriceEstHighestPrice.Value = new decimal(settings.priceFactor * 100);
             }
+
+            numericUpDownPriceMultCopies2.Value = new decimal(settings.priceMarkup2 * 100);
+            numericUpDownPriceMultCopies3.Value = new decimal(settings.priceMarkup3 * 100);
+            numericUpDownPriceMultCopies4.Value = new decimal(settings.priceMarkup4 * 100);
+            numericUpDownPriceMultCopiesCap.Value = new decimal(settings.priceMarkupCap);
+            checkBoxPricePlaysetIgnore.Checked = settings.priceIgnorePlaysets;
 
             if (settings.condAcceptance == AcceptedCondition.OnlyMatching)
             {
@@ -221,11 +244,13 @@ namespace MKMTool
             checkBoxLogUpdated.Checked = settings.logUpdated;
             checkBoxLogMinItems.Checked = settings.logLessThanMinimum;
             checkBoxLogSmallChange.Checked = settings.logSmallPriceChange;
-            checkBoxLogLargeChange.Checked = settings.logHighPriceChange;
+            checkBoxLogLargeChangeLow.Checked = settings.logLargePriceChangeTooLow;
+            checkBoxLogLargeChangeHigh.Checked = settings.logLargePriceChangeTooHigh;
             checkBoxLogHighVariance.Checked = settings.logHighPriceVariance;
 
             checkBoxTestMode.Checked = settings.testMode;
             checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
+            trackBarPriceEstAvgWorld.Enabled = settings.searchWorldwide;
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
@@ -261,17 +286,34 @@ namespace MKMTool
                 labelPriceEstSliderValue.Text = "AVG";
         }
 
+        private void trackBarPriceEstAvgWorld_ValueChanged(object sender, EventArgs e)
+        {
+            priceByAvg = (double)trackBarPriceEstAvgWorld.Value / (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum);
+            if (priceByAvg == 1)
+                labelPriceEstSliderValueWorld.Text = "Max Price";
+            else if (priceByAvg > 0.5)
+                labelPriceEstSliderValueWorld.Text = "AVG + " + ((priceByAvg - 0.5) * 2).ToString("f2") + " * (Max Price - AVG)";
+            else if (priceByAvg == 0)
+                labelPriceEstSliderValueWorld.Text = "Min Price";
+            else if (priceByAvg < 0.5)
+                labelPriceEstSliderValueWorld.Text = "Min Price + " + ((priceByAvg) * 2).ToString("f2") + " * (AVG - Min Price)";
+            else
+                labelPriceEstSliderValueWorld.Text = "AVG";
+        }
+
         private void radioButtonPriceEstPriceByAvg_CheckedChanged(object sender, EventArgs e)
         {
             if (radioButtonPriceEstPriceByAvg.Checked)
             {
                 trackBarPriceEstAvg.Enabled = true;
+                trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked;
                 radioButtonPriceEstHighestPrice.Checked = false;
                 radioButtonPriceEstByLowestPrice.Checked = false;
             }
             else
             {
                 trackBarPriceEstAvg.Enabled = false;
+                trackBarPriceEstAvgWorld.Enabled = false;
             }
         }
 
@@ -338,16 +380,14 @@ namespace MKMTool
                 {
                     XmlDocument doc = new XmlDocument();
                     doc.Load(file.FullName);
-                    if (s.Parse(doc))
-                    {
-                        string name = file.Name.Substring(0, file.Name.Length - 4); // cut off the ".xml"
-                        presets[name] = s;
-                        comboBoxPresets.Items.Add(name);
-                    }
+                    s.Parse(doc);
+                    string name = file.Name.Substring(0, file.Name.Length - 4); // cut off the ".xml"
+                    presets[name] = s;
+                    comboBoxPresets.Items.Add(name);
                 }
-                catch (Exception)
+                catch (Exception eError)
                 {
-                    continue;
+                    MKMHelpers.LogError("reading preset " + file.Name, eError.Message, false);
                 }
             }
             comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add("Choose Preset...");
@@ -384,7 +424,7 @@ namespace MKMTool
         {
             string name = comboBoxPresets.SelectedItem.ToString();
             UpdateSettingsGUI(presets[name]);
-            Properties.Settings.Default.LastSettingsPreset = name;
+            Properties.Settings.Default[lastPresetName] = name;
             Properties.Settings.Default.Save();
         }
 
@@ -402,7 +442,7 @@ namespace MKMTool
                         labelPresetsDescr.Text = settings.description; // so just rewrite the description
                     else
                         comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add(name);
-                    Properties.Settings.Default.LastSettingsPreset = name;
+                    Properties.Settings.Default[lastPresetName] = name;
                     Properties.Settings.Default.Save();
                 }
             }
@@ -426,10 +466,14 @@ namespace MKMTool
                 }
                 catch (Exception exc)
                 {
-                    MessageBox.Show("Deleting preset faile: " + Environment.NewLine + Environment.NewLine + exc.Message,
-                        "Deleting preset failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MKMHelpers.LogError("deleting preset", exc.Message, true);
                 }
             }
+        }
+
+        private void checkBoxPriceEstWorldwide_CheckedChanged(object sender, EventArgs e)
+        {
+            trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked && radioButtonPriceEstPriceByAvg.Checked;
         }
     }
 }

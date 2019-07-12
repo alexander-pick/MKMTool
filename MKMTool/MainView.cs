@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with MKMTool.  If not, see <http://www.gnu.org/licenses/>.
 
     Diese Datei ist Teil von MKMTool.
 
@@ -21,7 +21,7 @@
     Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren
     veröffentlichten Version, weiterverbreiten und/oder modifizieren.
 
-    Fubar wird in der Hoffnung, dass es nützlich sein wird, aber
+    MKMTool wird in der Hoffnung, dass es nützlich sein wird, aber
     OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
     Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
     Siehe die GNU General Public License für weitere Details.
@@ -32,61 +32,136 @@
 #undef DEBUG
 
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
-using System.Xml;
-using System.Xml.Serialization;
 using Timer = System.Timers.Timer;
 
 namespace MKMTool
 {
     public partial class MainView : Form
     {
-        public delegate void logboxAppendCallback(string text);
+        private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
+        public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
 
         private static readonly Timer timer = new Timer();
 
-        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings();
+        // Individual "modules". None of them actually closes when the user closes them, they just hide themselves, clicking
+        // the button on the main window will show them again or hide if they are visible. This allow us to let the
+        // main window be accessible while a module is opened, but at the same time prevents the user from opening two instances of a single module.
+        // Make sure to put all calls that use API to their onVisibleChanged event, not their constructor and to override the onClose.
+        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
+        private StockView stockViewWindow = new StockView();
+        private CheckWantsView checkCheapDealsWindow = new CheckWantsView();
+        private CheckDisplayPrices checkDisplayPricesWindow = new CheckDisplayPrices();
+        private WantlistEditorView wantlistEditorViewWindow = new WantlistEditorView();
+        private PriceExternalList priceExternalListWindow = new PriceExternalList();
 
-        private MKMBot bot;
+        internal MKMBot bot;
 
-        public MainView()
+        /// <summary>
+        /// The price updating bot of the application's main window. Initialized at the start of the application.
+        /// </summary>
+        /// <value>
+        /// The bot.
+        /// </value>
+        internal MKMBot Bot
+        {
+            get
+            {
+                return bot;
+            }
+        }
+
+        private static MainView instance = null; // singleton instance of the main app window
+
+        /// <summary>
+        /// The main application window as a singleton so that it can be easily accessed from anywhere without having to pass it around as method's argument.
+        /// Not thread-safe, but we don't care because the first instance is created right at the begging by the main thread.
+        /// </summary>
+        /// <returns>The main application window</returns>
+        public static MainView Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new MainView();
+                    instance.Load += new EventHandler(instance.initialize);
+                }
+                return instance;
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainView"/> class.
+        /// Keep the constructor simple - put any initializations that might call MainView.Instance (which is anything really) in the Initialize() method.
+        /// </summary>
+        private MainView()
         {
             InitializeComponent();
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+            this.Text = "MKMTool " + fileVersionInfo.ProductVersion + " - Alexander Pick 2017 - Licensed under GPL v3";
 
 #if DEBUG
             logBox.AppendText("DEBUG MODE ON!\n");
 #endif
+
+            if (!File.Exists(@".\\config.xml"))
+            {
+                MessageBox.Show("No config file found! Create a config.xml first.");
+
+                Application.Exit();
+            }
+        }
+
+        /// <summary>
+        /// Initializes the instance of this MainView.
+        /// Because error logging mechanism uses the MainView's console, it needs to be called only after the handle for the window
+        /// has been created --> during the "Load" event or later (after the form has been created and shown).
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void initialize(object sender, EventArgs e)
+        {
+            timer.Interval = 1440 * 1000 * 60; // set the interval to one day (1440 minutes in ms)
             try
             {
-
-
-                if (!File.Exists(@".\\config.xml"))
-                {
-                    MessageBox.Show("No config file found! Create a config.xml first.");
-
-                    Application.Exit();
-                }
-
-                MKMHelpers.GetProductList();
-                                
                 var doc2 = MKMInteract.RequestHelper.getAccount();
 
                 MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
                 MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
-
-                bot = new MKMBot();
             }
             catch (Exception eError)
             {
-                MessageBox.Show(eError.Message);
+                MKMHelpers.LogError("initializing product list and account info", eError.Message, true);
             }
+            bot = new MKMBot();
+        }
+
+        /// <summary>
+        /// Logs a messages in the application's main window within the main thread by using Delegate.Invoke
+        /// so that it can be safely called from other threads.
+        /// This is just a convenience method to shorten the syntax of something as simple as writing a message in a window.
+        /// Thread safe (the whole point of it...).
+        /// </summary>
+        /// <param name="message">The message to log. An new line will be appended at the end of it.</param>
+        public void LogMainWindow(string message)
+        {
+            logBox.Invoke(new logboxAppendCallback(logBoxAppend), message + Environment.NewLine);
+        }
+
+        /// <summary>
+        /// Appends a given string to the main window's log. 
+        /// Not thread safe -> only for internal use, use the public method LogMainWindow from the outside classes.
+        /// </summary>
+        /// <param name="text">The text.</param>
+        private void logBoxAppend(string text)
+        {
+            logBox.AppendText(text);
         }
 
         private void loginButton_Click(object sender, EventArgs e)
@@ -97,17 +172,17 @@ namespace MKMTool
 
         private void readStockButton_Click(object sender, EventArgs e)
         {
-            /*           MKMBot bot = new MKMBot();
-#if !DEBUG
-            bot.getProductList(this);
-#endif*/
-            var sv1 = new StockView();
-            sv1.ShowDialog();
+            if (stockViewWindow.IsDisposed)
+                stockViewWindow = new StockView();
+            if (stockViewWindow.Visible)
+                stockViewWindow.Hide();
+            else
+                stockViewWindow.Show(this);
         }
 
         private void updatePriceRun()
         {
-            bot.updatePrices(this);
+            bot.updatePrices();
         }
 
         private async void updatePriceButton_Click(object sender, EventArgs e)
@@ -128,7 +203,13 @@ namespace MKMTool
 
         private void getProductListButton_Click(object sender, EventArgs e)
         {
-            MKMHelpers.GetProductList();
+            logBoxAppend("Updating local database files..." + Environment.NewLine);
+            getProductListButton.Text = "Updating...";
+            getProductListButton.Enabled = false;
+            if (MKMDbManager.Instance.UpdateDatabaseFiles())
+                logBoxAppend("Database created." + Environment.NewLine);
+            getProductListButton.Enabled = true;
+            getProductListButton.Text = "Update local MKM Product List";
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)
@@ -149,9 +230,7 @@ namespace MKMTool
 
                 logBox.AppendText("Timing MKM Update job every " + Convert.ToInt32(runtimeIntervall.Text) +
                                   " minutes." + Environment.NewLine);
-
-                timer.Interval = Convert.ToInt32(runtimeIntervall.Text) * 1000 * 60;
-
+                
                 timer.Elapsed += updatePriceEvent;
 
                 timer.Start();
@@ -178,74 +257,99 @@ namespace MKMTool
 
         private void updatePriceEvent(object sender, ElapsedEventArgs e)
         {
-            //var mainForm = Application.OpenForms["Form1"] != null ? (MainView) Application.OpenForms["Form1"] : null;
-
-            try
-            {
-                logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Starting scheduled MKM Update Job..." + Environment.NewLine);
-            }
-            catch (Exception eError)
-            {
-                MessageBox.Show(eError.ToString());
-            }
+            LogMainWindow("Starting scheduled MKM Update Job...");
 
             MKMBotSettings s;
             if (settingsWindow.GenerateBotSettings(out s))
             {
                 bot.setSettings(s);
                 updatePriceButton.Text = "Updating...";
-                bot.updatePrices(this); //mainForm
+                bot.updatePrices(); //mainForm
                 updatePriceButton.Text = "Update Prices";
             }
             else
-                logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
-        }
-
-        public void logBoxAppend(string text)
-        {
-            logBox.AppendText(text);
+                LogMainWindow("Update abandoned, incorrect setting parameters.");
         }
 
         private void wantlistButton_Click(object sender, EventArgs e)
         {
-            var wl1 = new WantlistEditorView();
-            wl1.ShowDialog();
+            if (wantlistEditorViewWindow.IsDisposed)
+                wantlistEditorViewWindow = new WantlistEditorView();
+            if (wantlistEditorViewWindow.Visible)
+                wantlistEditorViewWindow.Hide();
+            else
+                wantlistEditorViewWindow.Show(this);
         }
 
         private void checkWants_Click(object sender, EventArgs e)
         {
-            var cw = new CheckWantsView(this);
-            cw.ShowDialog();
+            if (checkCheapDealsWindow.IsDisposed)
+                checkCheapDealsWindow = new CheckWantsView();
+            if (checkCheapDealsWindow.Visible)
+                checkCheapDealsWindow.Hide();
+            else
+                checkCheapDealsWindow.Show(this);
         }
 
         private void checkDisplayPriceButton_Click(object sender, EventArgs e)
         {
-            var cw = new CheckDisplayPrices(this);
-            cw.ShowDialog();
+            if (checkDisplayPricesWindow.IsDisposed)
+                checkDisplayPricesWindow = new CheckDisplayPrices();
+            if (checkDisplayPricesWindow.Visible)
+                checkDisplayPricesWindow.Hide();
+            else
+                checkDisplayPricesWindow.Show(this);
         }
 
         private void downloadBuysToExcel_Click(object sender, EventArgs e)
         {
-            MKMBotSettings s;
-            if (settingsWindow.GenerateBotSettings(out s))
-            {
-                logBox.AppendText("Downloading Buys data." + Environment.NewLine);
-                bot.setSettings(s);
+            logBox.AppendText("Downloading Buys data." + Environment.NewLine);
 
-                string sFilename = bot.getBuys(this, "8"); //mainForm
-
+            string sFilename = MKMBot.getBuys(this, "8"); //mainForm
+            if (sFilename != "")
                 Process.Start(sFilename);
-            }
-            else
-                logBox.AppendText("Bud data download abandoned, incorrect setting parameters." + Environment.NewLine);
         }
 
         private void buttonSettings_Click(object sender, EventArgs e)
         {
+            if (settingsWindow.IsDisposed)
+                settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
             if (settingsWindow.Visible)
                 settingsWindow.Hide();
             else
                 settingsWindow.Show(this);
+        }
+
+        // validate that it is numerical
+        private void runtimeIntervall_TextChanged(object sender, EventArgs e)
+        {
+            int res;
+            if (Int32.TryParse(runtimeIntervall.Text, out res))
+                timer.Interval = res * 1000 * 60;
+            else
+                runtimeIntervall.Text = "" + (int)(timer.Interval / 60000);
+        }
+
+        /// <summary>
+        /// Updates the label on the bottom of the main window that shows the user how many requests they did / how many they are allowed to do.
+        /// </summary>
+        /// <param name="requestsPerformed">The requests performed since last reset (0:00 CET).</param>
+        /// <param name="requestsLimit">The requests limit (based on the account type).</param>
+        public void updateRequestCount(int requestsPerformed, int requestsLimit)
+        {
+            labelRequestCounter.Text = "API Requests made/allowed: " + requestsPerformed + "/" + requestsLimit;
+            if (requestsLimit - requestsPerformed < 50)
+                labelRequestCounter.ForeColor = System.Drawing.Color.Red;
+        }
+
+        private void buttonPriceExternal_Click(object sender, EventArgs e)
+        {
+            if (priceExternalListWindow.IsDisposed)
+                priceExternalListWindow = new PriceExternalList();
+            if (priceExternalListWindow.Visible)
+                priceExternalListWindow.Hide();
+            else
+                priceExternalListWindow.Show(this);
         }
     }
 }

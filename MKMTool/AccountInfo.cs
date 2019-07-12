@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with MKMTool.  If not, see <http://www.gnu.org/licenses/>.
 
     Diese Datei ist Teil von MKMTool.
 
@@ -21,7 +21,7 @@
     Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren
     veröffentlichten Version, weiterverbreiten und/oder modifizieren.
 
-    Fubar wird in der Hoffnung, dass es nützlich sein wird, aber
+    MKMTool wird in der Hoffnung, dass es nützlich sein wird, aber
     OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
     Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
     Siehe die GNU General Public License für weitere Details.
@@ -39,21 +39,26 @@ namespace MKMTool
         public AccountInfo()
         {
             InitializeComponent();
-                        
-            var doc = MKMInteract.RequestHelper.getAccount();
-
             treeView1.Nodes.Clear();
             treeView1.Nodes.Add(new TreeNode("Account Details"));
             var tNode = new TreeNode();
             tNode = treeView1.Nodes[0];
 
-            AddNode(doc["response"]["account"], tNode);
+            try
+            {
+                var doc = MKMInteract.RequestHelper.getAccount();
+
+                AddNode(doc["response"]["account"], tNode);
+            }
+            catch (System.Exception eError)
+            {
+                MKMHelpers.LogError("fetching account info", eError.Message, true);
+            }
             //treeView1.ExpandAll();
         }
 
         // SRC:
         // https://support.microsoft.com/de-de/help/317597/how-to-populate-a-treeview-control-with-xml-data-in-visual-c-2005-or-in-visual-c-.net
-
         private void AddNode(XmlNode inXmlNode, TreeNode inTreeNode)
         {
             XmlNode xNode;

@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with MKMTool.  If not, see <http://www.gnu.org/licenses/>.
 
     Diese Datei ist Teil von MKMTool.
 
@@ -21,7 +21,7 @@
     Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren
     veröffentlichten Version, weiterverbreiten und/oder modifizieren.
 
-    Fubar wird in der Hoffnung, dass es nützlich sein wird, aber
+    MKMTool wird in der Hoffnung, dass es nützlich sein wird, aber
     OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
     Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
     Siehe die GNU General Public License für weitere Details.
@@ -35,7 +35,6 @@ using System;
 using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Windows.Forms;
 using System.Xml;
 using System.Collections.Generic;
 
@@ -48,7 +47,7 @@ namespace MKMTool
     };
 
     // result of traversing the similar items listed on MKM
-    public enum TraverseResult { SequenceFound, // succesfully found long enough sequence of similar items
+    public enum TraverseResult { SequenceFound, // successfully found long enough sequence of similar items
         Culled, // not enough items were found and some  outliers were culled
         HighVariance, // not enough items were found because of high difference between few cheap items and many expensive ones
         NotEnoughSimilars // not enough items were found - even without any culling
@@ -57,7 +56,7 @@ namespace MKMTool
     /// <summary>
     /// Contains all customizable settings that are used by MKMBot.
     /// All numbers expressed as percentage must be saved as a double with 0 = 0%, 1 = 100%.
-    /// Can be serialized into a xml, otherwise it is basically a struct -> all members are public
+    /// Can be serialized into a XML, otherwise it is basically a struct -> all members are public
     /// </summary>
     public class MKMBotSettings
     {
@@ -73,9 +72,13 @@ namespace MKMTool
         // if price computed based on average, priceFactor = 0.5 will set price as average of similar items, at 0
         //      it will be equal to the lowest price, at 1 to the highest price. Remaining values are linear interpolation between either 
         //      min price and average (0-0.5) or average and highest price (0.5-1)
-        // if price computed as percentage of lowest or higest price, priceFactor is that percentage
+        // if price computed as percentage of lowest or highest price, priceFactor is that percentage
         public double priceFactor;
+        public double priceFactorWorldwide; // the same, but for worldwide search
 
+        public double priceMarkup2, priceMarkup3, priceMarkup4; // in percent, markup to use when we have 2, 3 or more copies of the given card
+        public double priceMarkupCap; // in euro, max amount of money allowed to be added on top of the estimated price by the markup
+        public bool priceIgnorePlaysets; // if set to true, articles with isPlayset=true will be treated as four single cards - both for our stock and other sellers
 
         /// Card Condition Settings
         
@@ -84,13 +87,13 @@ namespace MKMTool
 
         /// Log Settings
 
-        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logHighPriceChange, logHighPriceVariance;
+        public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logLargePriceChangeTooLow, logLargePriceChangeTooHigh, logHighPriceVariance;
 
         /// Other Settings
 
         public bool testMode; // if set to true, price updates will be computed and logged, but not sent to MKM
         public bool searchWorldwide; // if the minimum of items is not found in the sellers country, do a search ignoring country - used only when nothing is culled!
-        public string description; // overal description of what is this setting expected to do, written in the GUI
+        public string description; // overall description of what is this setting expected to do, written in the GUI
 
         public MKMBotSettings()
         {
@@ -117,11 +120,19 @@ namespace MKMTool
             priceMaxSimilarItems = refSettings.priceMaxSimilarItems;
             priceSetPriceBy = refSettings.priceSetPriceBy;
             priceFactor = refSettings.priceFactor;
+            priceFactorWorldwide = refSettings.priceFactorWorldwide;
+            priceMarkup2 = refSettings.priceMarkup2;
+            priceMarkup3 = refSettings.priceMarkup3;
+            priceMarkup4 = refSettings.priceMarkup4;
+            priceMarkupCap = refSettings.priceMarkupCap;
+            priceIgnorePlaysets = refSettings.priceIgnorePlaysets;
+
             condAcceptance = refSettings.condAcceptance;
             logUpdated = refSettings.logUpdated;
             logLessThanMinimum = refSettings.logLessThanMinimum;
             logSmallPriceChange = refSettings.logSmallPriceChange;
-            logHighPriceChange = refSettings.logHighPriceChange;
+            logLargePriceChangeTooLow = refSettings.logLargePriceChangeTooLow;
+            logLargePriceChangeTooHigh = refSettings.logLargePriceChangeTooHigh;
             logHighPriceVariance = refSettings.logHighPriceVariance;
             testMode = refSettings.testMode;
             description = refSettings.description;
@@ -130,107 +141,122 @@ namespace MKMTool
 
         /// <summary>
         /// Fills this instance from data stored in XML.
+        /// In case there is a failure, exception is thrown and the data previously contained in this instance will not be changed at all.
         /// </summary>
         /// <param name="s">XML document representing an instance of MKMBotSettings. <seealso cref="Serialize()" /></param>
-        /// <returns>True if parsing was succesful, false if it was not (in that case, the structure will remain unchanged).</returns>
-        public bool Parse(XmlDocument s)
+        /// <exception cref="FormatException">When parsing numbers.</exception>
+        /// <exception cref="ArgumentException">When parsing numbers.</exception>
+        /// <exception cref="OverflowException">When parsing numbers.</exception>
+        public void Parse(XmlDocument s)
         {
             MKMBotSettings temp = new MKMBotSettings();
-            try
-            {
-                XmlNode root = s.GetElementsByTagName("MKMBotSettings").Item(0);
+            XmlNode root = s.GetElementsByTagName("MKMBotSettings").Item(0);
 
-                double threshold, allowedChange;
-                string[] limits;
-                foreach (XmlNode child in root.ChildNodes)
-                {
-                    switch (child.Name)
-                    {
-                        case "priceMaxChangeLimits":
-                            limits = child.InnerText.Split(';');
-                            for (int i = 1; i < limits.Length; i += 2)
-                            {
-                                if (double.TryParse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture, out threshold)
-                                    && double.TryParse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture, out allowedChange))
-                                    temp.priceMaxChangeLimits.Add(threshold, allowedChange);
-                                else
-                                    return false;
-                            }
-                            break;
-                        case "priceMaxDifferenceLimits":
-                            limits = child.InnerText.Split(';');
-                            for (int i = 1; i < limits.Length; i += 2)
-                            {
-                                if (double.TryParse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture, out threshold)
-                                    && double.TryParse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture, out allowedChange))
-                                    temp.priceMaxDifferenceLimits.Add(threshold, allowedChange);
-                                else
-                                    return false;
-                            }
-                            break;
-                    }
-                }
-                foreach (XmlNode att in root.Attributes)
-                {
-                    switch (att.Name)
-                    {
-                        case "priceMinRarePrice":
-                            temp.priceMinRarePrice = double.Parse(att.Value, CultureInfo.InvariantCulture);
-                            break;
-                        case "priceMinSimilarItems":
-                            temp.priceMinSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
-                            break;
-                        case "priceMaxSimilarItems":
-                            temp.priceMaxSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
-                            break;
-                        case "priceSetPriceBy":
-                            temp.priceSetPriceBy = (PriceSetMethod)Enum.Parse(typeof(PriceSetMethod), att.Value);
-                            break;
-                        case "priceFactor":
-                            temp.priceFactor = double.Parse(att.Value, CultureInfo.InvariantCulture);
-                            break;
-                        case "condAcceptance":
-                            temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
-                            break;
-                        case "logUpdated":
-                            temp.logUpdated = bool.Parse(att.Value);
-                            break;
-                        case "logLessThanMinimum":
-                            temp.logLessThanMinimum = bool.Parse(att.Value);
-                            break;
-                        case "logSmallPriceChange":
-                            temp.logSmallPriceChange = bool.Parse(att.Value);
-                            break;
-                        case "logHighPriceChange":
-                            temp.logHighPriceChange = bool.Parse(att.Value);
-                            break;
-                        case "logHighPriceVariance":
-                            temp.logHighPriceVariance = bool.Parse(att.Value);
-                            break;
-                        case "testMode":
-                            temp.testMode = bool.Parse(att.Value);
-                            break;
-                        case "searchWorldwide":
-                            temp.searchWorldwide = bool.Parse(att.Value);
-                            break;
-                        case "description":
-                            temp.description = att.Value;
-                            break;
-                    }
-                }
-            }
-            catch (Exception)
+            double threshold, allowedChange;
+            string[] limits;
+            foreach (XmlNode child in root.ChildNodes)
             {
-                return false;
+                switch (child.Name)
+                {
+                    case "priceMaxChangeLimits":
+                        limits = child.InnerText.Split(';');
+                        for (int i = 1; i < limits.Length; i += 2)
+                        {
+                            threshold = double.Parse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            allowedChange = double.Parse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            temp.priceMaxChangeLimits.Add(threshold, allowedChange);
+                        }
+                        break;
+                    case "priceMaxDifferenceLimits":
+                        limits = child.InnerText.Split(';');
+                        for (int i = 1; i < limits.Length; i += 2)
+                        {
+                            threshold = double.Parse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            allowedChange = double.Parse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            temp.priceMaxDifferenceLimits.Add(threshold, allowedChange);
+                        }
+                        break;
+                }
             }
+            temp.priceFactorWorldwide = -1;
+            foreach (XmlNode att in root.Attributes)
+            {
+                switch (att.Name)
+                {
+                    case "priceMinRarePrice":
+                        temp.priceMinRarePrice = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMinSimilarItems":
+                        temp.priceMinSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMaxSimilarItems":
+                        temp.priceMaxSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceSetPriceBy":
+                        temp.priceSetPriceBy = (PriceSetMethod)Enum.Parse(typeof(PriceSetMethod), att.Value);
+                        break;
+                    case "priceFactor":
+                        temp.priceFactor = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceFactorWorldwide":
+                        temp.priceFactorWorldwide = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMarkup2":
+                        temp.priceMarkup2 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMarkup3":
+                        temp.priceMarkup3 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMarkup4":
+                        temp.priceMarkup4 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMarkupCap":
+                        temp.priceMarkupCap = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceIgnorePlaysets":
+                        temp.priceIgnorePlaysets = bool.Parse(att.Value);
+                        break;
+                    case "condAcceptance":
+                        temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
+                        break;
+                    case "logUpdated":
+                        temp.logUpdated = bool.Parse(att.Value);
+                        break;
+                    case "logLessThanMinimum":
+                        temp.logLessThanMinimum = bool.Parse(att.Value);
+                        break;
+                    case "logSmallPriceChange":
+                        temp.logSmallPriceChange = bool.Parse(att.Value);
+                        break;
+                    case "logLargePriceChangeTooLow":
+                        temp.logLargePriceChangeTooLow = bool.Parse(att.Value);
+                        break;
+                    case "logLargePriceChangeTooHigh":
+                        temp.logLargePriceChangeTooHigh = bool.Parse(att.Value);
+                        break;
+                    case "logHighPriceVariance":
+                        temp.logHighPriceVariance = bool.Parse(att.Value);
+                        break;
+                    case "testMode":
+                        temp.testMode = bool.Parse(att.Value);
+                        break;
+                    case "searchWorldwide":
+                        temp.searchWorldwide = bool.Parse(att.Value);
+                        break;
+                    case "description":
+                        temp.description = att.Value;
+                        break;
+                }
+            }
+            if (temp.priceFactorWorldwide == -1)
+                temp.priceFactorWorldwide = temp.priceFactor; // for backwards compatibility - in 0.6.1 and older version, priceFactorWorldwide was always the same as priceFactor
             this.Copy(temp); // nothing failed, let's keep the settings
-            return true;
         }
 
         /// <summary>
         /// Serializes this instance.
         /// </summary>
-        /// <returns>A xml representation of this object.</returns>
+        /// <returns>A XML representation of this object.</returns>
         public XmlDocument Serialize()
         {
             XmlDocument s = new XmlDocument();
@@ -254,13 +280,20 @@ namespace MKMTool
             root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceSetPriceBy", priceSetPriceBy.ToString());
             root.SetAttribute("priceFactor", priceFactor.ToString("f2", CultureInfo.InvariantCulture));
+            root.SetAttribute("priceFactorWorldwide", priceFactorWorldwide.ToString("f2", CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMarkup2", priceMarkup2.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMarkup3", priceMarkup3.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMarkup4", priceMarkup4.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMarkupCap", priceMarkupCap.ToString(CultureInfo.InvariantCulture));
+            root.SetAttribute("priceIgnorePlaysets", priceIgnorePlaysets.ToString());
 
             root.SetAttribute("condAcceptance", condAcceptance.ToString());
 
             root.SetAttribute("logUpdated", logUpdated.ToString());
             root.SetAttribute("logLessThanMinimum", logLessThanMinimum.ToString());
             root.SetAttribute("logSmallPriceChange", logSmallPriceChange.ToString());
-            root.SetAttribute("logHighPriceChange", logHighPriceChange.ToString());
+            root.SetAttribute("logLargePriceChangeTooLow", logLargePriceChangeTooLow.ToString());
+            root.SetAttribute("logLargePriceChangeTooHigh", logLargePriceChangeTooHigh.ToString());
             root.SetAttribute("logHighPriceVariance", logHighPriceVariance.ToString());
 
             root.SetAttribute("testMode", testMode.ToString());
@@ -274,10 +307,6 @@ namespace MKMTool
 
     internal class MKMBot
     {
-        public delegate void logboxAppendCallback(string text, MainView frm1);
-
-        private readonly DataTable dt = MKMHelpers.ReadSQLiteToDt("inventory");
-
         private MKMBotSettings settings;
         
         public MKMBot()
@@ -308,17 +337,23 @@ namespace MKMTool
             s.priceMaxSimilarItems = 4;
             s.priceSetPriceBy = PriceSetMethod.ByAverage;
             s.priceFactor = 0.5;
+            s.priceFactorWorldwide = 0.5;
+            s.priceMarkup2 = s.priceMarkup3 = s.priceMarkup4 = 0;
+            s.priceMarkupCap = 0;
+            s.priceIgnorePlaysets = false;
 
             s.condAcceptance = AcceptedCondition.OnlyMatching;
 
             s.logUpdated = true;
             s.logLessThanMinimum = true;
             s.logSmallPriceChange = true;
-            s.logHighPriceChange = true;
+            s.logLargePriceChangeTooLow = true;
+            s.logLargePriceChangeTooHigh = true;
             s.logHighPriceVariance = true;
 
             s.testMode = false;
             s.searchWorldwide = false;
+
 
             return s;
         }
@@ -326,11 +361,6 @@ namespace MKMTool
         public void setSettings(MKMBotSettings s)
         {
             this.settings = s;
-        }
-
-        private void logBoxAppend(string text, MainView frm1)
-        {
-            frm1.logBox.AppendText(text);
         }
 
 
@@ -350,86 +380,115 @@ namespace MKMTool
             return double.MaxValue;
         }
 
-        public DataTable buildProperWantsList(string sListId)
+        /// <summary>
+        /// Generates new prices for a provided list of cards using the current settings, except it ignores the
+        /// max change price limits as the assumption is that there is not yet any user-set price.
+        /// </summary>
+        /// <param name="cardList">List of all the cards to appraise. Upon exiting, each card will gain two new attributes:
+        /// KMTool Price and Price - Cheapest Similar. The first has the price computed, the second has the price of the item that
+        /// is currently on sale and has the lowest price and is the same condition, language etc. 
+        /// and also from domestic seller if worldwide search is not enabled in the settings.</param>
+        public void generatePrices(List<MKMMetaCard> cardList)
         {
-            try
+            settings.priceMaxChangeLimits.Clear();
+            settings.logLargePriceChangeTooHigh = false;
+            settings.logLargePriceChangeTooLow = false;
+
+            MainView.Instance.LogMainWindow("Appraising card list...");
+            Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>(); // just an empty dummy myStock lists
+            foreach (MKMMetaCard mc in cardList)
             {
-
-                var doc = MKMInteract.RequestHelper.getWantsListByID(sListId);
-
-                var xmlReader = new XmlNodeReader(doc);
-
-                var ds = new DataSet();
-
-                ds.ReadXml(xmlReader);
-
-                if (!ds.Tables.Contains("item"))
+                XmlNodeList similarItems = getSimilarItems(mc);
+                if (similarItems != null)
                 {
-                    return new DataTable();
+                    string backupMKMPrice = mc.GetAttribute(MCAttribute.MKMPrice);
+                    mc.SetAttribute(MCAttribute.MKMPrice, "-9999");
+                    appraiseArticle(mc, similarItems, myStock);
+                    if (backupMKMPrice != "")
+                        mc.SetAttribute(MCAttribute.MKMPrice, backupMKMPrice);
+                    else
+                        mc.RemoveAttribute(MCAttribute.MKMPrice);
                 }
-
-                DataTable eS = MKMHelpers.ReadSQLiteToDt("expansions");
-                
-                var dv = MKMHelpers.JoinDataTables(dt, eS,
-                    (row1, row2) => row1.Field<string>("Expansion ID") == row2.Field<string>("idExpansion"));
-
-                dv = MKMHelpers.JoinDataTables(dv, ds.Tables["item"],
-                    (row1, row2) => row1.Field<string>("idProduct") == row2.Field<string>("idProduct"));
-
-                return dv;
             }
-            catch (Exception eError)
-            {
-                MessageBox.Show(eError.ToString());
-                return new DataTable();
-            }
+
+            MainView.Instance.LogMainWindow("List appraised.");
         }
 
-        public void updatePrices(MainView frm1)
+
+        public void updatePrices()
         {
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
             {
-                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                    "Setting price according to lowest price is very risky - specify limits for maximal price change first!" + Environment.NewLine, frm1);
+                MainView.Instance.LogMainWindow("Setting price according to lowest price is very risky - specify limits for maximal price change first!");
                 return;
             }
-            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                "Updating Prices..." + Environment.NewLine, frm1);
 
-            // should fix weird float errors on foregin systems.
-
-            // TJ - this does not look like a good idea to me. MKM is sending data formated in a locale where '.' is used as decimal separator
-            // it makes no sense to force switch to german locale here and then later start replacing all '.' by ','
-            //System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
-
-            //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), Application.CurrentCulture.EnglishName + "\n", frm1);
-
+#if (DEBUG)
             var debugCounter = 0;
+#endif
             List<XmlNode> articles = new List<XmlNode>();
             string sRequestXML = "";
             XmlNodeList result;
             var start = 1;
-            do
+            // load file with lowest prices
+            Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>();
+            if (File.Exists(@".//myStock.csv"))
             {
-                var doc = MKMInteract.RequestHelper.readStock(start);
-
-                //logBox.AppendText(OutputFormat.PrettyXml(doc.OuterXml));
-                result = doc.GetElementsByTagName("article");
-                foreach (XmlNode article in result)
+                MainView.Instance.LogMainWindow("Found myStock.csv, parsing minimal prices...");
+                try
                 {
-                    articles.Add(article);
+                    DataTable stock = MKMDbManager.ConvertCSVtoDataTable(@".//myStock.csv");
+                    if (stock.Columns.Contains(MCAttribute.MinPrice))
+                    {
+                        foreach (DataRow dr in stock.Rows)
+                        {
+                            MKMMetaCard card = new MKMMetaCard(dr);
+                            if (card.GetAttribute(MCAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
+                            {
+                                string name = card.GetAttribute(MCAttribute.Name);
+                                if (!myStock.ContainsKey(name))
+                                    myStock.Add(name, new List<MKMMetaCard>());
+                                myStock[name].Add(card);
+                            }
+                        }
+                    }
+                    else
+                        MainView.Instance.LogMainWindow("myStock.csv does not contain MinPrice column, will be ignored.");
                 }
-                start += result.Count;
-            } while (result.Count == 100);
+                catch (Exception eError)
+                {
+                    MKMHelpers.LogError("reading list of minimal prices, continuing price update without it", eError.Message, false);
+                }
+            }
+            try
+            {
+                do
+                {
+                    var doc = MKMInteract.RequestHelper.readStock(start);
 
-            int putCounter = 0; 
+                    result = doc.GetElementsByTagName("article");
+                    foreach (XmlNode article in result)
+                    {
+                        articles.Add(article);
+                    }
+                    start += result.Count;
+                } while (result.Count == 100);
+            }
+            catch (Exception error)
+            {
+                MKMHelpers.LogError("reading own stock, cannot continue price update", error.Message, true);
+                return;
+            }
+
+            MainView.Instance.LogMainWindow("Updating Prices...");
+            int putCounter = 0;
             foreach (XmlNode article in articles)
             {
 #if (DEBUG)
                 debugCounter++;
                 if (debugCounter > 3)
                 {
-                    frm1.logBox.AppendText("DEBUG MODE - EXITING AFTER 3\n");
+                    MainView.Instance.logMainWindow("DEBUG MODE - EXITING AFTER 3\n");
                     break;
                 }
 #endif
@@ -437,300 +496,316 @@ namespace MKMTool
                 // -> check if condition exists to see if this is a single card or something else
                 if (article["condition"] != null && article["idArticle"].InnerText != null && article["price"].InnerText != null)
                 {
-                    string update = checkArticle(article, frm1);
-                    if (update != null)
+                    MKMMetaCard MKMCard = new MKMMetaCard(article);
+                    XmlNodeList similarItems = getSimilarItems(MKMCard);
+                    if (similarItems != null)
                     {
-                        sRequestXML += update;
-                        // max 100 articles is allowed to be part of a PUT call - if we are there, call it
-                        if (putCounter > 98 && !settings.testMode)
+                        appraiseArticle(MKMCard, similarItems, myStock);
+                        string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
+                        if (newPrice != "")
                         {
-                            sendPriceUpdate(sRequestXML, frm1);
-                            putCounter = 0;
-                            sRequestXML = "";
+                            sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
+                            // max 100 articles is allowed to be part of a PUT call - if we are there, call it
+                            if (putCounter > 98 && !settings.testMode)
+                            {
+                                MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
+                                putCounter = 0;
+                                sRequestXML = "";
+                            }
+                            else
+                                putCounter++;
                         }
-                        else
-                            putCounter++;
                     }
                 }
             }
-
             if (settings.testMode)
             {
-                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                    "Done. Prices NOT SENT to MKM - running in test mode finished." + Environment.NewLine,
-                    frm1);
+                MainView.Instance.LogMainWindow("Done. Prices NOT SENT to MKM - running in test mode finished.");
             }
             else if (sRequestXML.Length > 0)
             {
-                sendPriceUpdate(sRequestXML, frm1);
+                MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
             }
             else
             {
-                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                    "Done. No valid/meaningful price updates created." + Environment.NewLine, frm1);
+                MainView.Instance.LogMainWindow("Done. No valid/meaningful price updates created.");
             }
 
             String timeStamp = GetTimestamp(DateTime.Now);
 
-            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                "Last Run finished: " + timeStamp + Environment.NewLine, frm1);
+            MainView.Instance.LogMainWindow("Last Run finished: " + timeStamp);
         }
 
         /// <summary>
-        /// Sends the price update to MKM.
+        /// For a specified card, makes an API request and gets articles on sale with the same product ID
+        /// and if specified also the same: languageID, condition (same or better as the card), foil, signed and altered flags.
         /// </summary>
-        /// <param name="sRequestXML">The raw (= not as a api request yet) xml with all article updates. Check that it is not empty before calling this.</param>
-        /// <param name="frm1">The main window - log messages will be written there.</param>
-        private void sendPriceUpdate(string sRequestXML, MainView frm1)
+        /// <param name="card">The card template for which to get similar articles on sale on MKM.</param>
+        /// <param name="maxNbItems">Maximum amount of items fetched from MKM. The larger the longer it usually takes MKM to process the request.</param>
+        /// <returns>List with MKM "article" nodes, one for each similar items.</returns>
+        private XmlNodeList getSimilarItems(MKMMetaCard card, int maxNbItems = 150)
         {
-            sRequestXML = MKMInteract.RequestHelper.getRequestBody(sRequestXML);
-
-            //logBox.AppendText("final Request:\n");
-            //logBox.AppendText(OutputFormat.PrettyXml(sRequestXML));
-
-            XmlDocument rdoc = null;
-
+            string sUrl = "http://not.initilaized";
+            string condition = card.GetAttribute(MCAttribute.Condition);
+            if (condition == "MT") // treat mint cards as near mint for pricing purposes, but do not actually change the value in article
+                condition = "NM";
+            string productID = card.GetAttribute(MCAttribute.ProductID);
+            string languageID = card.GetAttribute(MCAttribute.LanguageID);
+            string isFoil = card.GetAttribute(MCAttribute.Foil);
+            string isSigned = card.GetAttribute(MCAttribute.Signed);
+            string isAltered = card.GetAttribute(MCAttribute.Altered);
+            string articleName = card.GetAttribute(MCAttribute.Name);
             try
             {
-                rdoc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/stock", "PUT",
-                    sRequestXML);
+                sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
+                            (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
+                            (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
+                            (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
+                            "&start=0&maxResults=" + maxNbItems;
+
+                return MKMInteract.RequestHelper.makeRequest(sUrl, "GET").GetElementsByTagName("article");
             }
             catch (Exception eError)
             {
-                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR Msg: " + eError.Message + "\n",
-                    frm1);
-            }
-
-            var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
-            var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
-
-            var iUpdated = xUpdatedArticles.Count;
-            var iFailed = xNotUpdatedArticles.Count;
-
-            if (iFailed == 1)
-            {
-                iFailed = 0;
-            }
-
-            frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                iUpdated + " articles updated successfully, " + iFailed + " failed" + Environment.NewLine, frm1);
-
-            if (iFailed > 1)
-            {
-                try
-                {
-                    File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
-                }
-                catch (Exception eError)
-                {
-                    frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR Msg : " + eError.Message + Environment.NewLine,
-                        frm1);
-                }
+                MKMHelpers.LogError("updating price of " + articleName, eError.Message, false, sUrl);
+                return null;
             }
         }
 
-        private string checkArticle(XmlNode article, MainView frm1)
+
+        /// <summary>
+        /// Sets a price to the specified article based on the current bot settings.
+        /// </summary>
+        /// <param name="article">An initialized MKMMetaCard describing the articles. Must have productID set - ideally initialize
+        /// using the constructor from XMLNode. Upon exiting this method, the attributes MKMTool Price and Price - Cheapest Similar will be set
+        /// for it: the first has the price computed, the second has the price of the item that
+        /// is currently on sale and has the lowest price and is the same condition, language etc. 
+        /// and also from domestic seller if worldwide search is not enabled in the settings. If price cannot be computed, the attribute will be empty.</param>
+        /// <param name="myStock">A list of cards with minPrice set to compare with the computed price - MKMToolPrice will never be lower 
+        /// then the highest minPrice among all matching cards in this list. Hashed by the card name.</param>
+        private void appraiseArticle(MKMMetaCard article, XmlNodeList similarItems, Dictionary<string, List<MKMMetaCard>> myStock)
         {
-            var sUrl = "http://not.initilaized";
-            bool changeMT = false;
-            if (article["condition"].InnerText == "MT") // treat mint cards as near mint for pricing purposes
-            {
-                article["condition"].InnerText = "NM";
-                changeMT = true;
-            }
-            try
-            {
-                var sArticleID = article["idProduct"].InnerText;
+            string productID = article.GetAttribute(MCAttribute.ProductID);
+            string articleName = article.GetAttribute(MCAttribute.Name);
+            article.SetAttribute(MCAttribute.MKMToolPrice, "");
+            article.SetAttribute(MCAttribute.PriceCheapestSimilar, "");
 
-                /*XmlDocument doc2 = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/products/" + sArticleID, "GET");
-
-                logBox.AppendText(OutputFormat.PrettyXml(doc2.OuterXml));*/
-
-                sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + sArticleID +
-                            "?idLanguage=" + article["language"]["idLanguage"].InnerText +
-                            "&minCondition=" + article["condition"].InnerText + "&start=0&maxResults=150&isFoil="
-                            + article["isFoil"].InnerText +
-                            "&isSigned=" + article["isSigned"].InnerText +
-                            "&isAltered=" + article["isAltered"].InnerText;
-                
-                var doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
-
-                XmlNodeList similarItems = doc2.GetElementsByTagName("article");
-
-                List<double> prices = new List<double>();
-                string sOldPrice = article["price"].InnerText;
-                double dOldPrice = Convert.ToDouble(sOldPrice, CultureInfo.InvariantCulture);
-                int lastMatch = -1;
-                bool ignoreSellersCountry = false;
-                TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
-                if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars) // if there isn't enough similar items being sold in seller's country, check other countries as well
-                {
-                    ignoreSellersCountry = true;
-                    prices.Clear();
-                    lastMatch = -1;
-                    res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, ref prices);
-                }
-                double priceEstimation = 0;
-                if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
-                {
-                    priceEstimation = prices[0] * settings.priceFactor;
-                }
-                else if (res == TraverseResult.Culled)
-                {
-                    if (settings.logLessThanMinimum)
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                                " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                                "Current Price: " + article["price"].InnerText + ", unchanged, only " +
-                                (lastMatch + 1) + " similar items found (but some outliers were culled)" +
-                                (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
-                    return null;
-                }
-                else if (res == TraverseResult.HighVariance)
-                {
-                    if (settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                            sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                            " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                            "NOT UPDATED - variance of prices among cheapest similar items is too high" +
-                            (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
-                    return null;
-                }
-                else if (res == TraverseResult.NotEnoughSimilars)
-                {
-                    if (settings.logLessThanMinimum)
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                            sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                            " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                            "Current Price: " + article["price"].InnerText + ", unchanged, only " +
-                            (lastMatch + 1) + " similar items found" +
-                            (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
-                    return null;
-                }
-                else if (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
+            List<double> prices = new List<double>();
+            int lastMatch = -1;
+            bool ignoreSellersCountry = false;
+            TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
+            if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
+                || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
                 // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
-
-                {
-                    if (settings.logLessThanMinimum)
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                            sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                            " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                            "Current Price: " + article["price"].InnerText + ", unchanged, only " +
-                            (lastMatch + 1) + " similar items with an item with matching condition above them were found" +
-                            (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
-                    return null;
-                }
-                else
-                {
-                    // if any condition is allowed, use the whole sequence
-                    // if only matching is allowed, use whole sequence as well because it is only matching items
-                    if (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove)
-                        lastMatch = prices.Count - 1;
-                    if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
-                        priceEstimation = prices[lastMatch] * settings.priceFactor;
-                    else // estimation by average
-                    {
-                        for (int i = 0; i <= lastMatch; i++)
-                            priceEstimation += prices[i]; // priceEstimation is initialized to 0 above
-                        priceEstimation /= (lastMatch + 1);
-                        // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
-                        if (settings.priceFactor > 0.5)
-                            priceEstimation += (prices[lastMatch] - priceEstimation) * (settings.priceFactor - 0.5) * 2;
-                        else if (settings.priceFactor < 0.5) // linear interpolation between lowest price and average
-                            priceEstimation = prices[0] + (priceEstimation - prices[0]) * (settings.priceFactor) * 2;
-                    }
-                }
-                if (priceEstimation < settings.priceMinRarePrice &&
-                    (article["product"]["rarity"].InnerText == "Rare" || article["product"]["rarity"].InnerText == "Mythic"))
-                    priceEstimation = settings.priceMinRarePrice;
-
-                // check the estimation is OK
-                string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
-
-                // check it is not above the max price change limits
-                foreach (var limits in settings.priceMaxChangeLimits)
-                {
-                    if (dOldPrice < limits.Key)
-                    {
-                        if (Math.Abs(dOldPrice - priceEstimation) > dOldPrice * limits.Value)
-                        {
-                            priceEstimation = -1;
-                            if (settings.logHighPriceVariance)
-                                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                                    sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                                    " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                                    "NOT UPDATED - change too large: Current Price: "
-                                    + sOldPrice + ", Calcualted Price:" + sNewPrice +
-                                    (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
-
-                        }
-                        break;
-                    }
-                }
-                if (priceEstimation > 0 // is < 0 if change was too large
-                    && Math.Abs(priceEstimation - dOldPrice) != Double.Epsilon // don't update if it did not change - clearer log
-                    )
-                {
-                    if (settings.logUpdated && (settings.logSmallPriceChange ||
-                        (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                            sArticleID + ">>> " + article["product"]["enName"].InnerText +
-                            " (" + article["product"]["expansion"].InnerText + ", " + article["language"]["languageName"].InnerText + ")" + Environment.NewLine +
-                            "Current Price: " + sOldPrice + ", Calcualted Price:" + sNewPrice +
-                            ", based on " + (lastMatch + 1) + " items" +
-                            (ignoreSellersCountry ? " - worldwide search!" : "") + Environment.NewLine, frm1);
-
-                    if (changeMT)
-                        article["condition"].InnerText = "MT";
-
-                    return MKMInteract.RequestHelper.changeStockArticleBody(article, sNewPrice);
-                }
-            }
-            catch (Exception eError)
+                )
             {
-
-#if (DEBUG)
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                            "ERR at  : " + article["product"]["enName"].InnerText + "\n", frm1);
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),
-                            "ERR Msg : " + eError.Message + "\n", frm1);
-                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "ERR URL : " + sUrl + "\n", frm1);
-#endif
-                using (var sw = File.AppendText(@".\\error_log.txt"))
-                {
-                    sw.WriteLine("ERR at  : " + article["product"]["enName"].InnerText);
-                    sw.WriteLine("ERR Msg : " + eError.Message);
-                    sw.WriteLine("ERR URL : " + sUrl);
-                }
-
+                ignoreSellersCountry = true;
+                prices.Clear();
+                lastMatch = -1;
+                res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
             }
-            return null;
+            double priceEstimation = 0;
+            double priceFactor = ignoreSellersCountry ? settings.priceFactorWorldwide : settings.priceFactor;
+            string articleExpansion = article.GetAttribute(MCAttribute.Expansion);
+            string articleLanguage = article.GetAttribute(MCAttribute.Language);
+            string articlePrice = article.GetAttribute(MCAttribute.MKMPrice);
+            if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
+            {
+                priceEstimation = prices[0] * priceFactor;
+            }
+            else if (res == TraverseResult.Culled)
+            {
+                if (settings.logLessThanMinimum)
+                    MainView.Instance.LogMainWindow(
+                            productID + ">>> " + articleName +
+                            " (" + articleExpansion + ", " +
+                            (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                            "Current Price: " + articlePrice + ", unchanged, only " +
+                            (lastMatch + 1) + " similar items found (but some outliers were culled)" +
+                            (ignoreSellersCountry ? " - worldwide search!" : ""));
+                return;
+            }
+            else if (res == TraverseResult.HighVariance)
+            {
+                if (settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
+                    MainView.Instance.LogMainWindow(
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "NOT UPDATED - variance of prices among cheapest similar items is too high" +
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
+                return;
+            }
+            else if (res == TraverseResult.NotEnoughSimilars)
+            {
+                if (settings.logLessThanMinimum)
+                    MainView.Instance.LogMainWindow(
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "Current Price: " + articlePrice + ", unchanged, only " +
+                        (lastMatch + 1) + " similar items found" +
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
+                return;
+            }
+            else if (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
+            // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
+
+            {
+                if (settings.logLessThanMinimum)
+                    MainView.Instance.LogMainWindow(
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "Current Price: " + articlePrice + ", unchanged, only " +
+                        (lastMatch + 1) + " similar items with an item with matching condition above them were found" +
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
+                return;
+            }
+            else
+            {
+                // if any condition is allowed, use the whole sequence
+                // if only matching is allowed, use whole sequence as well because it is only matching items
+                if (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove)
+                    lastMatch = prices.Count - 1;
+                if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
+                    priceEstimation = prices[lastMatch] * priceFactor;
+                else // estimation by average
+                {
+                    for (int i = 0; i <= lastMatch; i++)
+                        priceEstimation += prices[i]; // priceEstimation is initialized to 0 above
+                    priceEstimation /= (lastMatch + 1);
+                    // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
+                    if (priceFactor > 0.5)
+                        priceEstimation += (prices[lastMatch] - priceEstimation) * (priceFactor - 0.5) * 2;
+                    else if (priceFactor < 0.5) // linear interpolation between lowest price and average
+                        priceEstimation = prices[0] + (priceEstimation - prices[0]) * (priceFactor) * 2;
+                }
+            }
+
+            // increase the estimate based on how many of those articles do we have in stock
+            double markupValue = 0;
+            string isPlayset = article.GetAttribute(MCAttribute.Playset);
+            string count = article.GetAttribute(MCAttribute.Count);
+            int iCount;
+            if (settings.priceIgnorePlaysets && isPlayset == "true")
+                markupValue = priceEstimation * settings.priceMarkup4;
+            else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
+            {
+                if (iCount == 2)
+                    markupValue = priceEstimation * settings.priceMarkup2;
+                else if (iCount == 3)
+                    markupValue = priceEstimation * settings.priceMarkup3;
+                else if (iCount > 3)
+                    markupValue = priceEstimation * settings.priceMarkup4;
+            }
+            if (markupValue > settings.priceMarkupCap)
+                markupValue = settings.priceMarkupCap;
+            priceEstimation += markupValue;
+
+            string articleRarity = article.GetAttribute(MCAttribute.Rarity);
+            if (priceEstimation < settings.priceMinRarePrice
+                && (articleRarity == "Rare" || articleRarity == "Mythic"))
+                priceEstimation = settings.priceMinRarePrice;
+
+            // check the estimation is OK
+            double dOldPrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
+            string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
+            // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
+            if (settings.priceIgnorePlaysets && isPlayset == "true")
+            {
+                dOldPrice /= 4;
+                sNewPrice = (priceEstimation * 4).ToString("f2", CultureInfo.InvariantCulture);
+            }
+            // check it is not above the max price change limits
+            foreach (var limits in settings.priceMaxChangeLimits)
+            {
+                if (dOldPrice < limits.Key)
+                {
+                    double priceDif = dOldPrice - priceEstimation; // positive when our price is too high, negative when our price is too low
+                    if (Math.Abs(priceDif) > dOldPrice * limits.Value)
+                    {
+                        priceEstimation = -1;
+                        if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
+                            settings.logLargePriceChangeTooLow && priceDif < 0)
+                            MainView.Instance.LogMainWindow(
+                                productID + ">>> " + articleName +
+                                " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                                "NOT UPDATED - change too large: Current Price: "
+                                + articlePrice + ", Calculated Price:" + sNewPrice +
+                                (ignoreSellersCountry ? " - worldwide search!" : ""));
+
+                    }
+                    break;
+                }
+            }
+            if (priceEstimation > 0 // is < 0 if change was too large
+                && Math.Abs(priceEstimation - dOldPrice) != Double.Epsilon // don't update if it did not change - clearer log
+                )
+            {
+                // check against minimum price from local stock database
+                List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
+                if (myStock.ContainsKey(""))
+                    listArticles.AddRange(myStock[""]); // special treatment for entries that are not for a specific card name
+                if (myStock.ContainsKey(articleName))
+                    listArticles.AddRange(myStock[articleName]);
+                if (listArticles.Count > 0)
+                {
+                    foreach (MKMMetaCard card in listArticles)
+                    {
+                        if (card.Equals(article))
+                        {
+                            string minPrice = card.GetAttribute(MCAttribute.MinPrice);
+                            double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
+                            if (isPlayset == "true")
+                                dminPrice /= 4;
+                            if (priceEstimation < dminPrice)
+                            {
+                                priceEstimation = dminPrice;
+                                sNewPrice = minPrice;
+                            }
+                        }
+                    }
+                }
+                // log large change or small change when enabled
+                if (settings.logUpdated && (settings.logSmallPriceChange ||
+                    (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
+                    MainView.Instance.LogMainWindow(
+                        productID + ">>> " + articleName +
+                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
+                        "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
+                        ", based on " + (lastMatch + 1) + " items" +
+                        (ignoreSellersCountry ? " - worldwide search!" : ""));
+
+                article.SetAttribute(MCAttribute.MKMToolPrice, sNewPrice);
+            }
         }
 
-        private TraverseResult traverseSimilarItems(XmlNodeList similarItems, XmlNode article, bool ignoreSellersCountry,
-            ref int lastMatch, ref List<double> prices)
+        private TraverseResult traverseSimilarItems(XmlNodeList similarItems, MKMMetaCard article, bool ignoreSellersCountry,
+            ref int lastMatch, List<double> prices)
         {
             bool minNumberNotYetFound = true;
+            string articleCondition = article.GetAttribute(MCAttribute.Condition);
+            string isPlayset = article.GetAttribute(MCAttribute.Playset);
+            bool ignorePlaysets = settings.priceIgnorePlaysets || (isPlayset == "");
             foreach (XmlNode offer in similarItems)
             {
                 if ((ignoreSellersCountry || offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry)
-                    && offer["isPlayset"].InnerText == article["isPlayset"].InnerText
+                    && (ignorePlaysets || (offer["isPlayset"].InnerText == isPlayset))
                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                     )
                 {
-                    //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["product"]["enName"].InnerText + "\n", frm1);
-                    //frm1.logBox.Invoke(new logboxAppendCallback(this.logBoxAppend), article["price"].InnerText + " " + offer["price"].InnerText + "\n", frm1);
-
-                    if (offer["condition"].InnerText != article["condition"].InnerText && settings.condAcceptance == AcceptedCondition.OnlyMatching)
+                    if (offer["condition"].InnerText != articleCondition && settings.condAcceptance == AcceptedCondition.OnlyMatching)
                         continue;
 
                     float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
+                    if (ignorePlaysets && offer["isPlayset"].InnerText == "true") // if we are ignoring playsets, work with the price of a single
+                        price /= 4;
 
                     if (minNumberNotYetFound)
                     {
-                        if (offer["condition"].InnerText == article["condition"].InnerText)
+                        if (offer["condition"].InnerText == articleCondition)
                             lastMatch = prices.Count;
                         prices.Add(price);
+                        if (article.GetAttribute(MCAttribute.PriceCheapestSimilar) == "")
+                            article.SetAttribute(MCAttribute.PriceCheapestSimilar, "" + price);
                         if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice)
                         {
                             lastMatch = 0; // so that it is correctly counted that 1 item was used to estimate the price
@@ -773,7 +848,7 @@ namespace MKMTool
                                 else return TraverseResult.SequenceFound;
                             }
                         }
-                        if (offer["condition"].InnerText == article["condition"].InnerText)
+                        if (offer["condition"].InnerText == articleCondition)
                             lastMatch = prices.Count;
                         prices.Add(price);
                     }
@@ -794,7 +869,7 @@ namespace MKMTool
             return now.ToString("dd.MM.yyyy HH:mm:ss");
         }
 
-        public string getBuys(MainView mainView, string iType)
+        public static string getBuys(MainView mainView, string iType)
         {
             /*
                 bought or 1
@@ -815,7 +890,17 @@ namespace MKMTool
             {
                 do
                 {
-                    var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v1.1/output.xml/orders/2/" + iType + "/" + iPage, "GET");
+                    string sUrl = "https://api.cardmarket.com/ws/v1.1/output.xml/orders/2/" + iType + "/" + iPage;
+                    XmlDocument doc = null;
+                    try
+                    {
+                        doc = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
+                    }
+                    catch (Exception eError)
+                    {
+                        MKMHelpers.LogError("getting buys, no data downloaded", eError.Message, true, sUrl);
+                        return "";
+                    }
 
                     count = doc.SelectNodes("response/order").Count;
 
@@ -836,11 +921,15 @@ namespace MKMTool
                         {
                             try
                             {
-                                file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + article["product"]["name"].InnerText + "\";\"" + article["product"]["expansion"].InnerText + "\";\"" + article["language"]["languageName"].InnerText + "\";\"" + article["price"].InnerText + "\"");
+                                file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + article["product"]["name"].InnerText
+                                    // only single cards have expansion -> leave it empty for displays etc.
+                                    + "\";\"" + (article["product"]["expansion"] == null ? "" : article["product"]["expansion"].InnerText)
+                                    + "\";\"" + article["language"]["languageName"].InnerText
+                                    + "\";\"" + article["price"].InnerText + "\"");
                             }
                             catch (Exception eError)
                             {
-
+                                MKMHelpers.LogError("writing buy entry of " + article["product"]["name"].InnerText + ", product skipped", eError.Message, false);
                             }
 
                         }
@@ -848,8 +937,6 @@ namespace MKMTool
                 }
                 while (count == 100);
             }
-            
-
 
             return sFilename;
         }
