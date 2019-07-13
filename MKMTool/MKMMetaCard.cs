@@ -319,14 +319,36 @@ namespace MKMTool
                     data[MCAttribute.Name] = row[MKMDbManager.InventoryFields.Name].ToString();
                     data[MCAttribute.MetaproductID] = row[MKMDbManager.InventoryFields.MetaproductID].ToString();
                 }
+                else
+                {
+                    data[MCAttribute.ProductID] = "";
+                    LogError("creating metacard", "Unrecognized product ID " + productId + ", will be ignored", false);
+                }
             }
+            // make sure the chosen expansion is valid 
             string expID = GetAttribute(MCAttribute.ExpansionID);
             string expansion = GetAttribute(MCAttribute.Expansion);
             if (expID != "")
-                data[MCAttribute.Expansion] = expansion = MKMDbManager.Instance.GetExpansionName(expID);
-            else if (expansion != "")
             {
-                data[MCAttribute.ExpansionID] = expID = MKMDbManager.Instance.GetExpansionID(expansion);
+                string temp = MKMDbManager.Instance.GetExpansionName(expID);
+                if (temp == "")
+                {
+                    LogError("creating metacard", "Unrecognized expansion ID " + expID + ", will be ignored", false);
+                    data[MCAttribute.ExpansionID] = expID = "";                    
+                }
+                else
+                    data[MCAttribute.Expansion] = expansion = temp;
+            }
+            if (expansion != "" && expID == "") // if expID is set, expansion has already been set too
+            {
+                string temp = MKMDbManager.Instance.GetExpansionID(expansion);
+                if (temp == "")
+                {
+                    LogError("creating metacard", "Unrecognized expansion " + expansion + ", will be ignored", false);
+                    data[MCAttribute.Expansion] = expID = "";
+                }
+                else
+                    data[MCAttribute.ExpansionID] = expID = temp;
             }
             // if we don't know product ID, but we know expansion and name, we can get it
             if (productId == "" && expID != "")

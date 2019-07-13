@@ -4,6 +4,9 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Last changes
 
+**Version 0.7.0.1, work in progress**
++ When reading a card from CSV and product ID, expansion ID or expansion name is not recognized, a warning will be displayed.
+
 **Version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
 
 Bugfixes:
