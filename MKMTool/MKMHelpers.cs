@@ -49,6 +49,8 @@ namespace MKMTool
         // My userId (to disregard items listed by myself when setting a new price)
         public static string sMyId = "0";
 
+        private static object errorLogLock = new object();
+
         // key = language ID, value = language name
         public static Dictionary<string, string> languagesNames = new Dictionary<string, string>
         {
@@ -201,31 +203,34 @@ namespace MKMTool
         /// Since the URL can be very long, it is never outputted in the console window, only in the file.</param>
         public static void LogError(string subject, string errorMessage, bool popup, string sURL = "")
         {
-            // if this the first error of this run, write a header with current date and time in the error log file to know which errors are old and which new
-            // monitoring when (if) first error happens helps limit the size of the log in runs when no error happens
-            // TODO - maybe clean the log once in a while?
-            if (firstError) 
+            lock (errorLogLock)
             {
-                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                // if this the first error of this run, write a header with current date and time in the error log file to know which errors are old and which new
+                // monitoring when (if) first error happens helps limit the size of the log in runs when no error happens
+                // TODO - maybe clean the log once in a while?
+                if (firstError)
+                {
+                    System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                    using (var sw = File.AppendText(@".\\error_log.txt"))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString() + ", version: " + fileVersionInfo.ProductVersion);
+                        firstError = false;
+                    }
+                }
+                string msg = "Error with " + subject + ": " + errorMessage;
                 using (var sw = File.AppendText(@".\\error_log.txt"))
                 {
-                    sw.WriteLine(DateTime.Now.ToString() + ", version: " + fileVersionInfo.ProductVersion);
-                    firstError = false;
+                    if (sURL.Length > 0)
+                        sw.WriteLine(msg + " @ " + sURL);
+                    else
+                        sw.WriteLine(msg);
                 }
-            }
-            string msg = "Error with " + subject + ": " + errorMessage;
-            using (var sw = File.AppendText(@".\\error_log.txt"))
-            {
-                if (sURL.Length > 0)
-                    sw.WriteLine(msg + " @ " + sURL);
-                else
-                    sw.WriteLine(msg);
-            }
-            MainView.Instance.LogMainWindow(msg);
+                MainView.Instance.LogMainWindow(msg);
 
-            if (popup)
-                MessageBox.Show(msg, "MKMTool encountered error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (popup)
+                    MessageBox.Show(msg, "MKMTool encountered error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         public class ComboboxItem
