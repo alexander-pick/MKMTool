@@ -2,13 +2,18 @@
 
 If you have just updated to 0.7.0 from older version, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
 
-## Last changes
+## Latest changes
+
 **Version 0.7.0.2, 20.8.2019**
 + Fixed update price crashing when it encounters single cards from non-MTG games. Now they will be processed as well - but not all features are guaranteed to work for non-MTG.
 
 **Version 0.7.0.1, 13.7.2019**
 + When reading a card from CSV and product ID, expansion ID or expansion name is not recognized, a warning will be displayed.
 + Some more clarifications on limitations of Price External List
+
+
+<details><summary><i>Show older changelogs</i></summary>
+<p>
 
 **Version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
 
@@ -65,6 +70,9 @@ New/improved features:
 **22.02.2017**
 + bug preventing the startup was fixed
 
+</p>
+</details>
+
 ## What is this?
 
 MKMTool is a helper application I wrote for tinkering around with optimization of sale processes on magiccardmarket.eu and the idea of automation of some tasks most people wouldn’t be able to get done by pure manpower. 
@@ -88,7 +96,7 @@ You can simply open the project in Microsoft Visual Studio Community 2015 (free 
 
 If you are too lazy to compile, here is a build:
 
-https://tomasjanak.github.io/MKMTool0.7.0.zip (version 0.7.0, compiled by [Tomas Janak](https://github.com/tomasjanak))
+https://tomasjanak.github.io/MKMTool0.7.0.2.zip (version 0.7.0.2, compiled by [Tomas Janak](https://github.com/tomasjanak))
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
