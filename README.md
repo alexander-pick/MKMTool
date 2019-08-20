@@ -3,6 +3,8 @@
 If you have just updated to 0.7.0 from older version, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
 
 ## Last changes
+**Version 0.7.0.2, 20.8.2019**
++ Fixed update price crashing when it encounters single cards from non-MTG games. Now they will be processed as well - but not all features are guaranteed to work for non-MTG.
 
 **Version 0.7.0.1, 13.7.2019**
 + When reading a card from CSV and product ID, expansion ID or expansion name is not recognized, a warning will be displayed.

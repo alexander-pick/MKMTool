@@ -788,7 +788,7 @@ namespace MKMTool
             foreach (XmlNode offer in similarItems)
             {
                 if ((ignoreSellersCountry || offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry)
-                    && (ignorePlaysets || (offer["isPlayset"].InnerText == isPlayset))
+                    && (ignorePlaysets || ((offer["isPlayset"] != null) && (offer["isPlayset"].InnerText == isPlayset))) // isPlayset can be null for some games (not MTG)
                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                     )
                 {
@@ -796,7 +796,7 @@ namespace MKMTool
                         continue;
 
                     float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
-                    if (ignorePlaysets && offer["isPlayset"].InnerText == "true") // if we are ignoring playsets, work with the price of a single
+                    if (ignorePlaysets && (offer["isPlayset"] != null)  && (offer["isPlayset"].InnerText == "true")) // if we are ignoring playsets, work with the price of a single
                         price /= 4;
 
                     if (minNumberNotYetFound)

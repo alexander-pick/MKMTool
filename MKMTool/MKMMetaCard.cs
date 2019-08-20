@@ -411,6 +411,16 @@ NOT STORED      links: { }                           // HATEOAS links
             data[MCAttribute.Comments] = MKMArticle["comments"].InnerText;
             data[MCAttribute.MKMPrice] = MKMArticle["price"].InnerText;
             data[MCAttribute.Count] = MKMArticle["count"].InnerText;
+            data[MCAttribute.Condition] = MKMArticle["condition"].InnerText;
+            // the flags can be null based on what game this is
+            if (MKMArticle["isFoil"] != null)
+                data[MCAttribute.Foil] = MKMArticle["isFoil"].InnerText;
+            if (MKMArticle["isSigned"] != null)
+                data[MCAttribute.Signed] = MKMArticle["isSigned"].InnerText;
+            if (MKMArticle["isAltered"] != null)
+                data[MCAttribute.Altered] = MKMArticle["isAltered"].InnerText;
+            if (MKMArticle["isPlayset"] != null)
+                data[MCAttribute.Playset] = MKMArticle["isPlayset"].InnerText;
             if (MKMArticle["product"] != null) // based on which API call was used, this can be null
             {
                 data[MCAttribute.Name] = MKMArticle["product"]["enName"].InnerText;
@@ -419,11 +429,6 @@ NOT STORED      links: { }                           // HATEOAS links
                 data[MCAttribute.CardNumber] = MKMArticle["product"]["nr"].InnerText;
                 data[MCAttribute.Rarity] = MKMArticle["product"]["rarity"].InnerText;
             }
-            data[MCAttribute.Condition] = MKMArticle["condition"].InnerText;
-            data[MCAttribute.Foil] = MKMArticle["isFoil"].InnerText;
-            data[MCAttribute.Signed] = MKMArticle["isSigned"].InnerText;
-            data[MCAttribute.Altered] = MKMArticle["isAltered"].InnerText;
-            data[MCAttribute.Playset] = MKMArticle["isPlayset"].InnerText;
         }
 
         /// <summary>
