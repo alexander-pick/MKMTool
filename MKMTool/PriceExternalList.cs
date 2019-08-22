@@ -656,14 +656,15 @@ namespace MKMTool
                 {
                     if (checkBoxExportOnlyAppraised.Checked)
                     {
+                        // price guides are not generated or the card does not have them or the user does not want them
+                        bool priceGuidesSkip = (!checkBoxExportPriceGuide.Checked || !priceGuidesGenerated || !mc.HasPriceGuides);
                         if (toolPriceGenerated)
                         {
-                            bool priceNotSet = !checkBoxExportPriceGuide.Checked || 
-                                (mc.GetAttribute(MCAttribute.MKMToolPrice) == "" && mc.GetAttribute(MCAttribute.PriceCheapestSimilar) != "");
-                            if (priceNotSet && (!checkBoxExportToolPrices.Checked || !priceGuidesGenerated || !mc.HasPriceGuides))
+                            if ((mc.GetAttribute(MCAttribute.MKMToolPrice) == "" && mc.GetAttribute(MCAttribute.PriceCheapestSimilar) == "") // toolPrices not present for this card
+                                && priceGuidesSkip)
                                 continue;
                         }
-                        else if (!checkBoxExportToolPrices.Checked || !priceGuidesGenerated || !mc.HasPriceGuides)
+                        else if (priceGuidesSkip)
                             continue;
                     }
                     mc.WriteItselfIntoTable(export, checkBoxExportAll.Checked, checkBoxExportFormatDeckbox.Checked ? MCFormat.Deckbox : MCFormat.MKM);

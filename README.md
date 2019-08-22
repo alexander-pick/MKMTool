@@ -4,6 +4,10 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Latest changes
 
+**Version 0.7.0.3, 22.8.2019**
++ Fixed the "export only appraised" in Price External List to (hopefully) work correctly
++ In Price External List, when identifying cards based on their locName, full match is required now. Only products whose foreign name match exactly what is in the list will be considered as those cards. Before, many cards would falsely flagged as "multiple results for this card name", because of misc products like sleeves etc. with the same name as the card.
+
 **Version 0.7.0.2, 20.8.2019**
 + Fixed update price crashing when it encounters single cards from non-MTG games. Now they will be processed as well - but not all features are guaranteed to work for non-MTG.
 
