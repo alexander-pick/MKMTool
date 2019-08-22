@@ -198,7 +198,7 @@ namespace MKMTool
                 }
                 if (name == "" && productID == "") // we have neither name or productID - we have to hope we have locName and language
                 {
-                    string locName = mc.GetAttribute(MCAttribute.LocName);
+                    string locName = mc.GetAttribute(MCAttribute.LocName).ToLower();
                     if (locName == "" || languageID == "")
                     {
                         LogError("importing line #" + (counter + 1) + ", article will be ignored",
@@ -224,7 +224,7 @@ namespace MKMTool
                                 foreach (XmlNode product in products)
                                 {
                                     // only take exact matches, otherwise we get all kinds of garbage like sleeves etc. that use the name of the card
-                                    if (product["locName"].InnerText == locName)
+                                    if (product["locName"].InnerText.ToLower() == locName)
                                         found.Add(product);
                                 }
                                 start += products.Count;

@@ -6,7 +6,8 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 **Version 0.7.0.3, 22.8.2019**
 + Fixed the "export only appraised" in Price External List to (hopefully) work correctly
-+ In Price External List, when identifying cards based on their locName, full match is required now. Only products whose foreign name match exactly what is in the list will be considered as those cards. Before, many cards would falsely flagged as "multiple results for this card name", because of misc products like sleeves etc. with the same name as the card.
++ In Price External List, when identifying cards based on their locName, full match is required now. Only products whose foreign name match exactly what is in the list will be considered as those cards. Before, many cards were falsely flagged as "multiple results for this card name", because of misc products like sleeves etc. with the same name as the card.
++ In Price External List, foreign name can now be any case (just as the English names)
 
 **Version 0.7.0.2, 20.8.2019**
 + Fixed update price crashing when it encounters single cards from non-MTG games. Now they will be processed as well - but not all features are guaranteed to work for non-MTG.
@@ -295,8 +296,8 @@ The following is the list of all recognized attributes. **Note that all of the a
 
 
 + **idProduct**: MKM's identification number of the product. If it is assigned, MKMTool will also internally fill the Name, Expansion and Expansion ID fields. You can still have them in the list, but MKMTool will use the ones found based on this ID. 
-+ **Name**: the name of the card, in English. Case sensitive, use the name exactly as you can find it on MKM's product page, i.e. first letters capitalized except for prepositions. Synonyms: enName.
-+ **LocName**: the name of the card in the language in which it is printed. Note that different languages have different rules about the capitalization - some are like English, but some have only first letter of the first word capitalized.
++ **Name**: the name of the card, in English. In some cases can be case sensitive, preferably use the name exactly as you can find it on MKM's product page, i.e. first letters capitalized except for prepositions. Synonyms: enName.
++ **LocName**: the name of the card in the language in which it is printed. In some cases can be case sensitive. Note that different languages have different rules about the capitalization - some are like English, but some have only first letter of the first word capitalized.
 + **Language**: English name of the language, first letters capital, i.e. one of the following: English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese
 + **LanguageID**: MKM's language ID, an integer with values 1-11: 1 for English, 2 for French, 3 for German, 4 for Spanish, 5 for Italian, 6 for Simplified Chinese, 7 for Japanese, 8 for Portuguese, 9 for Russian, 10 for Korean, 11 for Traditional Chinese.
 + **Expansion**: the expansion of the card. Case sensitive. Use the name in exactly the form you can find on MKM product pages, i.e. first letters capitalized except for prepositions. If it is assigned, MKMTool will also internally fill in the **Expansion ID** field. Synonyms: Edition.
