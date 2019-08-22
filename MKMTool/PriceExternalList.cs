@@ -219,17 +219,13 @@ namespace MKMTool
                             {
                                 XmlDocument doc = MKMInteract.RequestHelper.findProducts(locName, languageID, start);
                                 products = doc.GetElementsByTagName("product");
+                                // we still want to insert empty string in the hash table - this way we know in the future that this name is invalid
+                                locNameProducts[hash] = "";
                                 foreach (XmlNode product in products)
                                 {
-                                    if (found.Count > 0 && product["enName"].InnerText != found[found.Count - 1]["enName"].InnerText)
-                                    {
-                                        // we still want to insert empty string in the hash table - this way we know in the future that this name is invalid
-                                        locNameProducts[hash] = "";
-                                        // there are different cards as a result of the search -> we cannot identify the card, do not process it
-                                        throw new Exception("Multiple different products match this localized name: " +
-                                            product["enName"] + " and " + found[found.Count - 1]["enName"]);
-                                    }
-                                    found.Add(product);
+                                    // only take exact matches, otherwise we get all kinds of garbage like sleeves etc. that use the name of the card
+                                    if (product["locName"].InnerText == locName)
+                                        found.Add(product);
                                 }
                                 start += products.Count;
                             } while (products.Count == 100);
