@@ -708,7 +708,7 @@ namespace MKMTool
             buttonAppraise.Enabled = true;
             buttonExport.Enabled = true;
             buttonExportToMKM.Enabled = true;
-            buttonAppraise.Text = "Upload to MKM";
+            buttonExportToMKM.Text = "Upload to MKM";
         }
 
         private void uploadListToMKM(string chosenPrice, bool logAll)

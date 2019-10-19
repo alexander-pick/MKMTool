@@ -257,7 +257,6 @@ namespace MKMTool
                     }
                     else if (method == "POST")
                     {
-                        // this is mostly guessing, I've seen how the response object looks when it is successful, bot when it is not
                         XmlNodeList inserted = rdoc.GetElementsByTagName("inserted");
                         foreach (XmlNode x in inserted)
                         {
@@ -268,19 +267,14 @@ namespace MKMTool
                         }
                     }
 
-                    if (iFailed == 1)
-                    {
-                        iFailed = 0;
-                    }
-
                     MainView.Instance.LogMainWindow(
                         iUpdated + " articles updated successfully, " + iFailed + " failed");
 
-                    if (iFailed > 1)
+                    if (iFailed > 0)
                     {
                         try
                         {
-                            File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.ToString());
+                            File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.InnerText.ToString());
                         }
                         catch (Exception eError)
                         {
