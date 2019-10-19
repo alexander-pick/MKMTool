@@ -248,11 +248,13 @@ namespace MKMTool
                     XmlDocument rdoc = makeRequest("https://api.cardmarket.com/ws/v2.0/stock", method,
                         sRequestXML);
                     int iUpdated = 0, iFailed = 0;
+                    string failed = "";
                     if (method == "PUT")
                     {
                         var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
                         var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
-
+                        foreach (XmlNode node in xNotUpdatedArticles)
+                            failed += node.InnerText;
                         iUpdated = xUpdatedArticles.Count;
                         iFailed = xNotUpdatedArticles.Count;
                     }
@@ -264,7 +266,10 @@ namespace MKMTool
                             if (x["success"].InnerText == "true")
                                 iUpdated++;
                             else
+                            {
                                 iFailed++;
+                                failed += x.InnerText;
+                            }
                         }
                     }
 
@@ -275,7 +280,7 @@ namespace MKMTool
                     {
                         try
                         {
-                            File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", rdoc.InnerText.ToString());
+                            File.WriteAllText(@".\\log" + DateTime.Now.ToString("ddMMyyyy-HHmm") + ".log", failed);
                         }
                         catch (Exception eError)
                         {
