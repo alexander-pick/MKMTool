@@ -94,8 +94,8 @@ First a small disclaimer and things to remember:
 
 + The entire tool uses the mkmapi 2.0 and is purely designed as proof of concept. If you use this application, always remember that this is coded for fun and not 100% perfectly tested. I am not responsible for any damage or anything it might cause. You are using it in a real environment where real loss of money is possible. Don’t blame me if you sell your lotus for pennies.
 + This is not an official MKM software product, it’s a private venture for the fun of it.
-+ Non commercial users have 5000 API calls by day, depending on the function these can be exhausted very quickly (check for cheap deals, get box value i.e.).
-+ I am German, the code was written to sell Magic Cards. Everything else will need some adjustments. If you want to sell other things than MTG Singles you need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love).
++ Non commercial users have 5000 API calls by day, depending on the function these can be exhausted very quickly (i.e. check for cheap deals, get box value). **BEWARE: MKM can block you from accessing the API if you repeatedly use large amount of requests that are not "stock management", even if you do not exhaust your request limit. Specifically, do not use [Check for Cheap Deals](#Check-for-Cheap-Deals), [Price External List](#Price-External-List) or [Check Display Value](#Check-Display-Value) too often / on large quantities of cards.** If that happens, you will still be able to use MKM, just not the API and therefore MKMTool. If it is your first offense, MKM will usually give you another chance after you talked it out with the support.
++ I am German, the code was written to sell Magic Cards. If you want to sell other things than MTG Singles you might need to adjust the code to your needs (Yugi, Pokemon or whatever games I don’t play should be easy, metaproducts might need more love). Note that the Update Price function will update prices of your cards from all games you have on Cardmarket, not just Magic - however, MKMTool was tested only on Magic cards, so some unexpected behaviour might occur.
 + Beware the program might be slow or if it is calculating it might be not responding a while. This is OK, I didn’t multithread it so this is no problem. Keep an eye on the main log window.
 + In the evening hours if magiccardmarket is crowded, the API seems to be slower, please take this into account if you use the tool.
 + If you find bugs, feel free to report them on github. 
@@ -105,9 +105,9 @@ First a small disclaimer and things to remember:
 
 You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
 
-If you are too lazy to compile, here is a build:
+If you are too lazy to compile, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.7.0.2.zip (version 0.7.0.2, compiled by [Tomas Janak](https://github.com/tomasjanak))
+https://tomasjanak.github.io/MKMTool0.7.0.4.zip (version 0.7.0.4, compiled by [Tomas Janak](https://github.com/tomasjanak))
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
@@ -120,7 +120,7 @@ Before you can use the tool please rename config_template.xml to config.xml and 
 + open config.xml with an editor and put the token details in the file - field names should be self explaining and this is simple xml
 + run the tool - should work!
 
-The first startup takes a bit since 1 MB of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.
+The first startup takes a bit since 3 MB of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.
 
 ## Ok - ok, but what can MKMTool do?
 
