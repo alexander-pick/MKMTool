@@ -6,6 +6,7 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 **Version 0.7.0.4, 19.10.2019**
 + Fixed failed price updates when the price was computed to less than 0.02€ - MKM requires 2 cents as minimum -> if a lower price is computed, it is set to 0.02€
++ Fixed failed article updates when comments included characters that are special in XML (&, <, > etc.) -> the special characters can now be used
 
 **Version 0.7.0.3, 22.8.2019**
 + Fixed the "export only appraised" in Price External List to (hopefully) work correctly

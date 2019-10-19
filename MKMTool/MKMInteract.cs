@@ -34,6 +34,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace MKMTool
 {
@@ -165,7 +166,7 @@ namespace MKMTool
                                  "<idArticle>" + card.GetAttribute(MCAttribute.ArticleID) + "</idArticle>" +
                                  "<price>" + sNewPrice + "</price>" +
                                  "<idLanguage>" + card.GetAttribute(MCAttribute.LanguageID) + "</idLanguage>" +
-                                 "<comments>" + card.GetAttribute(MCAttribute.Comments) + " </comments>" +
+                                 new XElement("comments", card.GetAttribute(MCAttribute.Comments)) + // to escape special characters (&, <, > etc.)
                                  "<count>" + card.GetAttribute(MCAttribute.Count) + "</count>" +
                                  "<condition>" + card.GetAttribute(MCAttribute.Condition) + "</condition>" +
                                  "</article>";
@@ -188,7 +189,7 @@ namespace MKMTool
                 var XMLContent = "<article>" +
                                 "<idProduct>" + card.GetAttribute(MCAttribute.ProductID) + "</idProduct>" +
                                 "<idLanguage>" + card.GetAttribute(MCAttribute.LanguageID) + "</idLanguage>" +
-                                "<comments>" + card.GetAttribute(MCAttribute.Comments) + " </comments>" +
+                                 new XElement("comments", card.GetAttribute(MCAttribute.Comments)) + // to escape special characters (&, <, > etc.)
                                 "<count>" + card.GetAttribute(MCAttribute.Count) + "</count>" +
                                 "<price>" + card.GetAttribute(MCAttribute.MKMPrice) + "</price>" +
                                 "<condition>" + card.GetAttribute(MCAttribute.Condition) + "</condition>" +
