@@ -4,6 +4,9 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Latest changes
 
+**Version 0.7.0.4, 19.10.2019**
++ Fixed failed price updates when the price was computed to less than 0.02€ - MKM requires 2 cents as minimum -> if a lower price is computed, it is set to 0.02€
+
 **Version 0.7.0.3, 22.8.2019**
 + Fixed the "export only appraised" in Price External List to (hopefully) work correctly
 + In Price External List, when identifying cards based on their locName, full match is required now. Only products whose foreign name match exactly what is in the list will be considered as those cards. Before, many cards were falsely flagged as "multiple results for this card name", because of misc products like sleeves etc. with the same name as the card.

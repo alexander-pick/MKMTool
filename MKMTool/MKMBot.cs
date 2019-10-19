@@ -707,13 +707,23 @@ namespace MKMTool
 
             // check the estimation is OK
             double dOldPrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
-            string sNewPrice = priceEstimation.ToString("f2", CultureInfo.InvariantCulture);
+            string sNewPrice;
+            // just a temporary to correctly convert priceEstimation to string based on is/isn't playset; is/isn't less than minimum allowed price (0.02€)
+            double priceToSet = priceEstimation; 
             // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
             if (settings.priceIgnorePlaysets && isPlayset == "true")
             {
                 dOldPrice /= 4;
-                sNewPrice = (priceEstimation * 4).ToString("f2", CultureInfo.InvariantCulture);
+                priceToSet *= 4;
+                if (priceToSet < 0.02) // minimum price MKM accepts for a single article is 0.02€
+                {
+                    priceToSet = 0.02;
+                    priceEstimation = 0.005; // 0.02/4
+                }
             }
+            else if (priceToSet < 0.02)
+                priceToSet = priceEstimation = 0.02;
+            sNewPrice = priceToSet.ToString("f2", CultureInfo.InvariantCulture);
             // check it is not above the max price change limits
             foreach (var limits in settings.priceMaxChangeLimits)
             {
@@ -737,7 +747,7 @@ namespace MKMTool
                 }
             }
             if (priceEstimation > 0 // is < 0 if change was too large
-                && Math.Abs(priceEstimation - dOldPrice) != Double.Epsilon // don't update if it did not change - clearer log
+                && Math.Abs(priceEstimation - dOldPrice) > 0.005 // don't update if it did not change - clearer log
                 )
             {
                 // check against minimum price from local stock database
@@ -797,7 +807,7 @@ namespace MKMTool
 
                     float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
                     if (ignorePlaysets && (offer["isPlayset"] != null)  && (offer["isPlayset"].InnerText == "true")) // if we are ignoring playsets, work with the price of a single
-                        price /= 4;
+                        price /= 4.0f;
 
                     if (minNumberNotYetFound)
                     {
