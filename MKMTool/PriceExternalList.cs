@@ -108,9 +108,10 @@ namespace MKMTool
 
         private void checkBoxToolPrices_CheckedChanged(object sender, EventArgs e)
         {
-            buttonBotSettings.Enabled = checkBoxToolPrices.Enabled;
+            buttonBotSettings.Enabled = checkBoxToolPrices.Checked;
             if (!buttonBotSettings.Enabled && !botSettings.IsDisposed)
-                botSettings.Close();
+                botSettings.Hide();
+            checkBoxMyStock.Enabled = checkBoxToolPrices.Checked;
         }
 
         private async void buttonImport_Click(object sender, EventArgs e)
@@ -616,7 +617,7 @@ namespace MKMTool
             if (MKMToolPrice)
             {
                 MainView.Instance.LogMainWindow("Generating MKMTool prices for the imported list...");
-                bot.generatePrices(importedValidOnly);
+                bot.generatePrices(importedValidOnly, checkBoxMyStock.Enabled && checkBoxMyStock.Checked); // the checkbox can be checked, but not enabled if user does not want MKMTool prices
                 toolPriceGenerated = true;
                 MainView.Instance.LogMainWindow("Prices generated.");
             }

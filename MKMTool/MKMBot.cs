@@ -388,14 +388,16 @@ namespace MKMTool
         /// KMTool Price and Price - Cheapest Similar. The first has the price computed, the second has the price of the item that
         /// is currently on sale and has the lowest price and is the same condition, language etc. 
         /// and also from domestic seller if worldwide search is not enabled in the settings.</param>
-        public void generatePrices(List<MKMMetaCard> cardList)
+        /// <param name="useMyStock">If set to true, the MyStock.csv file will be used during the appraisal to 
+        /// limit minimum prices of appraised cards.</param>
+        public void generatePrices(List<MKMMetaCard> cardList, bool useMyStock)
         {
             settings.priceMaxChangeLimits.Clear();
             settings.logLargePriceChangeTooHigh = false;
             settings.logLargePriceChangeTooLow = false;
 
             MainView.Instance.LogMainWindow("Appraising card list...");
-            Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>(); // just an empty dummy myStock lists
+            Dictionary<string, List<MKMMetaCard>> myStock = useMyStock ? LoadMyStock() : new Dictionary<string, List<MKMMetaCard>>();
             foreach (MKMMetaCard mc in cardList)
             {
                 XmlNodeList similarItems = getSimilarItems(mc);
@@ -414,23 +416,12 @@ namespace MKMTool
             MainView.Instance.LogMainWindow("List appraised.");
         }
 
-
-        public void updatePrices()
+        /// <summary>
+        /// Reads the myStock.csv file used for setting minimal prices during appraisal.
+        /// </summary>
+        /// <returns>Dictionary of cards, key == card name or empty string for MetaCards that should ignore names.</returns>
+        private Dictionary<string, List<MKMMetaCard>> LoadMyStock()
         {
-            if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
-            {
-                MainView.Instance.LogMainWindow("Setting price according to lowest price is very risky - specify limits for maximal price change first!");
-                return;
-            }
-
-#if (DEBUG)
-            var debugCounter = 0;
-#endif
-            List<XmlNode> articles = new List<XmlNode>();
-            string sRequestXML = "";
-            XmlNodeList result;
-            var start = 1;
-            // load file with lowest prices
             Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>();
             if (File.Exists(@".//myStock.csv"))
             {
@@ -460,6 +451,26 @@ namespace MKMTool
                     MKMHelpers.LogError("reading list of minimal prices, continuing price update without it", eError.Message, false);
                 }
             }
+            return myStock;
+        }
+
+        public void updatePrices()
+        {
+            if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
+            {
+                MainView.Instance.LogMainWindow("Setting price according to lowest price is very risky - specify limits for maximal price change first!");
+                return;
+            }
+
+#if (DEBUG)
+            var debugCounter = 0;
+#endif
+            List<XmlNode> articles = new List<XmlNode>();
+            string sRequestXML = "";
+            XmlNodeList result;
+            var start = 1;
+            // load file with lowest prices
+            Dictionary<string, List<MKMMetaCard>> myStock = LoadMyStock();
             try
             {
                 do
@@ -750,6 +761,19 @@ namespace MKMTool
                 && Math.Abs(priceEstimation - dOldPrice) > 0.005 // don't update if it did not change - clearer log
                 )
             {
+                // Check if the card itself has MinPrice defined - won't happen for traditional update, but can for External List Appraisal
+                double dOwnMinPrice;
+                string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
+                if (double.TryParse(sOwnMinPrice, out dOwnMinPrice))
+                {
+                    if (isPlayset == "true")
+                        dOwnMinPrice /= 4;
+                    if (priceEstimation < dOwnMinPrice)
+                    {
+                        priceEstimation = dOwnMinPrice;
+                        sNewPrice = sOwnMinPrice;
+                    }
+                }
                 // check against minimum price from local stock database
                 List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
                 if (myStock.ContainsKey(""))
@@ -758,6 +782,8 @@ namespace MKMTool
                     listArticles.AddRange(myStock[articleName]);
                 if (listArticles.Count > 0)
                 {
+                    //reset the min price - card.Equals would otherwise resolve an equal card as not equal because the cards coming from MKM do not have the Min Price
+                    article.SetAttribute(MCAttribute.MinPrice, "");
                     foreach (MKMMetaCard card in listArticles)
                     {
                         if (card.Equals(article))
@@ -773,7 +799,9 @@ namespace MKMTool
                             }
                         }
                     }
+                    article.SetAttribute(MCAttribute.MinPrice, sOwnMinPrice); // restore the Min Price
                 }
+
                 // log large change or small change when enabled
                 if (settings.logUpdated && (settings.logSmallPriceChange ||
                     (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))

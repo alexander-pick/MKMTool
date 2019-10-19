@@ -66,6 +66,7 @@
             this.checkBoxExportFormatDeckbox = new System.Windows.Forms.CheckBox();
             this.checkBoxExportPriceGuide = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.checkBoxMyStock = new System.Windows.Forms.CheckBox();
             this.groupBoxImport.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBoxPrice.SuspendLayout();
@@ -288,6 +289,7 @@
             // 
             // groupBoxPrice
             // 
+            this.groupBoxPrice.Controls.Add(this.checkBoxMyStock);
             this.groupBoxPrice.Controls.Add(this.buttonBotSettings);
             this.groupBoxPrice.Controls.Add(this.buttonAppraise);
             this.groupBoxPrice.Controls.Add(this.checkBoxToolPrices);
@@ -311,7 +313,7 @@
             // 
             // buttonAppraise
             // 
-            this.buttonAppraise.Location = new System.Drawing.Point(170, 56);
+            this.buttonAppraise.Location = new System.Drawing.Point(170, 65);
             this.buttonAppraise.Name = "buttonAppraise";
             this.buttonAppraise.Size = new System.Drawing.Size(142, 54);
             this.buttonAppraise.TabIndex = 13;
@@ -492,6 +494,18 @@
             this.checkBoxExportPriceGuide.Text = "MKM price guide prices";
             this.checkBoxExportPriceGuide.UseVisualStyleBackColor = true;
             // 
+            // checkBoxMyStock
+            // 
+            this.checkBoxMyStock.AutoSize = true;
+            this.checkBoxMyStock.Location = new System.Drawing.Point(239, 42);
+            this.checkBoxMyStock.Name = "checkBoxMyStock";
+            this.checkBoxMyStock.Size = new System.Drawing.Size(109, 17);
+            this.checkBoxMyStock.TabIndex = 15;
+            this.checkBoxMyStock.Text = "Use myStock.csv";
+            this.toolTip1.SetToolTip(this.checkBoxMyStock, "If checked, your myStock.csv will be used to limit minimal prices for the assigne" +
+        "d MKMTool Price");
+            this.checkBoxMyStock.UseVisualStyleBackColor = true;
+            // 
             // PriceExternalList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -557,5 +571,6 @@
         private System.Windows.Forms.GroupBox groupBoxExportFile;
         private System.Windows.Forms.CheckBox checkBoxExportLogAll;
         private System.Windows.Forms.CheckBox checkBoxExportOnlyAppraised;
+        private System.Windows.Forms.CheckBox checkBoxMyStock;
     }
 }
