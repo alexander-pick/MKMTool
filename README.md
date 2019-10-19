@@ -321,6 +321,8 @@ The following is the list of all recognized attributes. **Note that all of the a
 + **Price**: the price of the article on MKM. Note that technically this is pointless for the Price Update module and you should not include it in your myStock.csv as it will cause you to get a match on the metacard only if your current price is exactly equal to this number.
 + **Comments**: the message stored as an MKM comment for the article.
 + **Card Number**: Number of the card within the expansion.
++ **inShoppingCart**: True or false value telling if the card is currently in someone's shopping cart on MKM.
++ **lastEdited**: Date when was the card last edited on MKM.
 + **XXX - MKM Price Guide**: Not recommended to use for myStock.csv. This is several fields that include the price guides MKM includes with their "product" entries from the API. Note that when MKMTool sets the price guide based on a product entry obtained from MKM API, it stores the entire guide - non-foil cards will include the guide for foil cards and vice versa, cards worse than EX will have LOWEX+ price guide etc. XXX can be one of the following:
    - SELL                   // Average price of articles ever sold of this product
    - LOW                    // Current lowest non-foil price (all conditions)

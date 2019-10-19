@@ -168,6 +168,16 @@ namespace MKMTool
         public static string CardNumber { get { return "Card Number"; } }
 
         /// <summary>
+        /// True or false whether the card is currently in some shopping cart on MKM.
+        /// </summary>
+        public static string IsInCart { get { return "inShoppingCart"; } }
+
+        /// <summary>
+        /// When was the card last edited on MKM.
+        /// </summary>
+        public static string LastEdited { get { return "lastEdited"; } }
+
+        /// <summary>
         /// The MKM's price guide. Average price of articles ever sold of this product.
         /// </summary>
         public static string PriceGuideSELL { get { return "SELL - MKM Price Guide"; } }
@@ -412,6 +422,9 @@ NOT STORED      links: { }                           // HATEOAS links
             data[MCAttribute.MKMPrice] = MKMArticle["price"].InnerText;
             data[MCAttribute.Count] = MKMArticle["count"].InnerText;
             data[MCAttribute.Condition] = MKMArticle["condition"].InnerText;
+            data[MCAttribute.IsInCart] = MKMArticle["inShoppingCart"].InnerText;
+            data[MCAttribute.LastEdited] = MKMArticle["lastEdited"].InnerText;
+
             // the flags can be null based on what game this is
             if (MKMArticle["isFoil"] != null)
                 data[MCAttribute.Foil] = MKMArticle["isFoil"].InnerText;
@@ -426,6 +439,7 @@ NOT STORED      links: { }                           // HATEOAS links
                 data[MCAttribute.Name] = MKMArticle["product"]["enName"].InnerText;
                 data[MCAttribute.LocName] = MKMArticle["product"]["locName"].InnerText;
                 data[MCAttribute.Expansion] = MKMArticle["product"]["expansion"].InnerText;
+                data[MCAttribute.ExpansionID] = MKMDbManager.Instance.GetExpansionID(MKMArticle["product"]["expansion"].InnerText);
                 data[MCAttribute.CardNumber] = MKMArticle["product"]["nr"].InnerText;
                 data[MCAttribute.Rarity] = MKMArticle["product"]["rarity"].InnerText;
             }
