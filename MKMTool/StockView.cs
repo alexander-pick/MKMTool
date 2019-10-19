@@ -52,7 +52,6 @@ namespace MKMTool
             {
                 int start = 1;
                 var articles = new DataTable();
-                Boolean first = true;
                 try
                 {
                     while (true)
@@ -60,22 +59,15 @@ namespace MKMTool
                         var doc = MKMInteract.RequestHelper.readStock(start);
                         if (doc.HasChildNodes)
                         {
-                            var xmlReader = new XmlNodeReader(doc);
-                            var ds = new DataSet();
-                            ds.ReadXml(xmlReader);
-                            var articleTable = ds.Tables[0];
-                            int elementCount = articleTable.Rows.Count;
-                            if (first)
+                            var result = doc.GetElementsByTagName("article");
+                            int elementCount = 0;
+                            foreach (XmlNode article in result)
                             {
-                                articles = articleTable;
-                                first = false;
-                            }
-                            else
-                            {
-                                foreach (DataRow dr in articleTable.Rows)
+                                if (article["condition"] != null) // is null for articles that are not cards (boosters etc.) - don't process those
                                 {
-                                    dr["article_Id"] = articles.Rows.Count;
-                                    articles.ImportRow(dr);
+                                    MKMMetaCard m = new MKMMetaCard(article);
+                                    m.WriteItselfIntoTable(articles, true, MCFormat.MKM);
+                                    elementCount++;
                                 }
                             }
                             if (elementCount != 100)
@@ -84,35 +76,26 @@ namespace MKMTool
                             }
                             start += elementCount;
                         }
-                        else break; // document is empty -> end
+                        else break; // document is empty -> end*/
                     }
 
-                    var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Inventory,
-                        (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ProductID) == row2.Field<string>(MKMDbManager.InventoryFields.ProductID));
+                    // Remove columns we don't want showing
+                    // TODO - what is and isn't shown should probably be customizable and left to the user to choose in some way
+                    articles.Columns.Remove(MCAttribute.ArticleID);
+                    articles.Columns.Remove(MCAttribute.ProductID);
+                    articles.Columns.Remove(MCAttribute.LanguageID);
+                    articles.Columns.Remove(MCAttribute.CardNumber);
 
-                    dj = MKMDbManager.JoinDataTables(dj, MKMDbManager.Instance.Expansions,
+                    var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Expansions,
                         (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
 
-                    dj.Columns.Remove("article_Id");
-                    dj.Columns.Remove("Date Added");
-                    dj.Columns.Remove("Metacard ID");
-                    dj.Columns.Remove("idArticle");
-                    dj.Columns.Remove("idProduct");
-                    dj.Columns.Remove("Expansion ID");
-                    dj.Columns.Remove("idExpansion");
-
-                    // rename the columns to the names used by MKMMetaCard
-                    dj.Columns[MKMDbManager.ExpansionsFields.Name].ColumnName = MCAttribute.Expansion;
-                    dj.Columns["isFoil"].ColumnName = MCAttribute.Foil;
-                    dj.Columns["isAltered"].ColumnName = MCAttribute.Altered;
-                    dj.Columns["isSigned"].ColumnName = MCAttribute.Signed;
-                    dj.Columns["isPlayset"].ColumnName = MCAttribute.Playset;
-                    dj.Columns["condition"].ColumnName = MCAttribute.Condition;
-                    dj.Columns["comments"].ColumnName = MCAttribute.Comments;
-                    dj.Columns["price"].ColumnName = MCAttribute.MKMPrice;
-                    dj.Columns["count"].ColumnName = MCAttribute.Count;
-
-                    dj.Columns[dj.Columns.IndexOf(MKMDbManager.InventoryFields.Name)].SetOrdinal(0);
+                    dj.Columns.Remove(MCAttribute.ExpansionID); // duplicated
+                    dj.Columns.Remove(MKMDbManager.ExpansionsFields.ExpansionID); // ...and we don't want it anyway
+                    dj.Columns.Remove(MKMDbManager.ExpansionsFields.Name); // duplicated
+                    
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Name)].SetOrdinal(0);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Expansion)].SetOrdinal(1);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Language)].SetOrdinal(2);
 
                     stockGridView.DataSource = dj;
 
