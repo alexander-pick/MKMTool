@@ -255,8 +255,12 @@ namespace MKMTool
                         var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
                         foreach (XmlNode node in xNotUpdatedArticles)
                             failed += node.InnerText;
+                        // there is always at least one element of each updated and notUpdated articles, but it can be empty if nothing succeeded/failed
+                        // problem is, if exactly one failed, there will still be one element, so we need to disambiguate it
                         iUpdated = xUpdatedArticles.Count;
-                        iFailed = xNotUpdatedArticles.Count;
+                        if (iUpdated == 1 && xUpdatedArticles[0].InnerText == "")
+                            iUpdated = 0;
+                        iFailed = failed == "" ? 0 : xNotUpdatedArticles.Count;
                     }
                     else if (method == "POST")
                     {
