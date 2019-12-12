@@ -6,6 +6,7 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 **Version 0.7.0.5, 12.12.2019**
 + Fix Download buys outputting all the orders N times, where N was number of orders
++ Card and expansion name for singles in Download buys is now exported in English 
 
 **Version 0.7.0.4, 19.10.2019**
 + Using the myStock.csv when pricing external list is now possible (there is a checkbox, default off). Also, if list contains the Min Price column, that price will also be used as minimal price (same rules apply as when using myStock.csv).
@@ -110,7 +111,7 @@ You can simply open the project in Microsoft Visual Studio Community 2015 (free 
 
 If you are too lazy to compile, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.7.0.4.zip (version 0.7.0.4, compiled by [Tomas Janak](https://github.com/tomasjanak))
+https://tomasjanak.github.io/MKMTool0.7.0.5.zip (version 0.7.0.5, compiled by [Tomas Janak](https://github.com/tomasjanak))
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 

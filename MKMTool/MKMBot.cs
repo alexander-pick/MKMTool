@@ -959,9 +959,24 @@ namespace MKMTool
                         {
                             try
                             {
-                                file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + article["product"]["name"].InnerText
-                                    // only single cards have expansion -> leave it empty for displays etc.
-                                    + "\";\"" + (article["product"]["expansion"] == null ? "" : article["product"]["expansion"].InnerText)
+                                // MKM returns the card and expansion name in the language of the article
+                                // -> for now let's output all in English with the help of our database
+                                string name = article["product"]["name"].InnerText;
+                                string expansion = "";
+                                if (article["product"]["expansion"] != null) // ... but our database works only for singles -> so do it only for that (only singles have expansion)
+                                {
+                                    if (article["language"]["idLanguage"].InnerText != "1") // "1" == English
+                                    {
+                                        var card = MKMDbManager.Instance.GetSingleCard(article["idProduct"].InnerText);
+                                        expansion = MKMDbManager.Instance.GetExpansionName(card.Field<string>(MKMDbManager.InventoryFields.ExpansionID));
+                                        name = card.Field<string>(MKMDbManager.InventoryFields.Name);
+                                    }
+                                    else
+                                        expansion = article["product"]["expansion"].InnerText;
+                                }
+                                // else only single cards have expansion -> leave it empty for displays etc.
+                                file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + name
+                                    + "\";\"" + expansion
                                     + "\";\"" + article["language"]["languageName"].InnerText
                                     + "\";\"" + article["price"].InnerText + "\"");
                             }
