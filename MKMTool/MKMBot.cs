@@ -950,7 +950,7 @@ namespace MKMTool
 
                     foreach (XmlNode order in oNodes)
                     {
-                        var aNodes = doc.GetElementsByTagName("article");
+                        var aNodes = order.SelectNodes("article");
 
                         string oID = order["idOrder"].InnerText;
                         string sOdate = order["state"]["dateReceived"].InnerText;

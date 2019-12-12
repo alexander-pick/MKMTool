@@ -4,6 +4,9 @@ If you have just updated to 0.7.0 from older version, please delete the "mkmtool
 
 ## Latest changes
 
+**Version 0.7.0.5, 12.12.2019**
++ Fix Download buys outputting all the orders N times, where N was number of orders
+
 **Version 0.7.0.4, 19.10.2019**
 + Using the myStock.csv when pricing external list is now possible (there is a checkbox, default off). Also, if list contains the Min Price column, that price will also be used as minimal price (same rules apply as when using myStock.csv).
 + Fixed failed price updates when the price was computed to less than 0.02€ - MKM requires 2 cents as minimum -> if a lower price is computed, it is set to 0.02€
