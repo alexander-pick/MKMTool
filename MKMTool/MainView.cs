@@ -351,5 +351,15 @@ namespace MKMTool
             else
                 priceExternalListWindow.Show(this);
         }
+        //rocky
+        private void buyListButton_Click(object sender, EventArgs e)
+        {
+            bot.getActualOrderList(this);
+        }
+
+        private void labelRequestCounter_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

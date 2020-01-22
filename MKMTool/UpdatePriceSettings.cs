@@ -122,6 +122,8 @@ namespace MKMTool
             }
 
             s.priceMinRarePrice = Decimal.ToDouble(numericUpDownPriceEstMinPrice.Value);
+            s.priceMinPriceRest = Decimal.ToDouble(numericUpDownPriceEstMinPriceRest.Value);
+            s.priceMinPriceFoils = Decimal.ToDouble(numericUpDownPriceEstMinPriceFoils.Value);
             s.priceMinSimilarItems = Decimal.ToInt32(numericUpDownPriceEstMinN.Value);
             s.priceMaxSimilarItems = Decimal.ToInt32(numericUpDownPriceEstMaxN.Value);
             if (radioButtonPriceEstPriceByAvg.Checked)
@@ -190,6 +192,8 @@ namespace MKMTool
                 textBoxPriceEstMaxDiff.Text += "" + limitPair.Key + ";" + (limitPair.Value * 100).ToString("f2") + ";";
 
             numericUpDownPriceEstMinPrice.Value = new decimal(settings.priceMinRarePrice);
+            numericUpDownPriceEstMinPriceRest.Value = new decimal(settings.priceMinPriceRest);
+            numericUpDownPriceEstMinPriceFoils.Value = new decimal(settings.priceMinPriceFoils);
             numericUpDownPriceEstMinN.Value = new decimal(settings.priceMinSimilarItems);
             numericUpDownPriceEstMaxN.Value = new decimal(settings.priceMaxSimilarItems);
             if (settings.priceSetPriceBy == PriceSetMethod.ByAverage)

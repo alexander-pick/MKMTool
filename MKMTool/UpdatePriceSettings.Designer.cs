@@ -63,6 +63,7 @@ namespace MKMTool
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdatePriceSettings));
             this.groupBoxLogSettings = new System.Windows.Forms.GroupBox();
+            this.checkBoxLogLargeChangeHigh = new System.Windows.Forms.CheckBox();
             this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
             this.checkBoxLogLargeChangeLow = new System.Windows.Forms.CheckBox();
             this.checkBoxLogSmallChange = new System.Windows.Forms.CheckBox();
@@ -119,7 +120,8 @@ namespace MKMTool
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.checkBoxLogLargeChangeHigh = new System.Windows.Forms.CheckBox();
+            this.numericUpDownPriceEstMinPriceRest = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDownPriceEstMinPriceFoils = new System.Windows.Forms.NumericUpDown();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -138,6 +140,8 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).BeginInit();
             this.groupBoxPresets.SuspendLayout();
             this.panelPresetsDescr.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPriceRest)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPriceFoils)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBoxLogSettings
@@ -154,6 +158,18 @@ namespace MKMTool
             this.groupBoxLogSettings.TabIndex = 14;
             this.groupBoxLogSettings.TabStop = false;
             this.groupBoxLogSettings.Text = "Log settings";
+            // 
+            // checkBoxLogLargeChangeHigh
+            // 
+            this.checkBoxLogLargeChangeHigh.AutoSize = true;
+            this.checkBoxLogLargeChangeHigh.Checked = true;
+            this.checkBoxLogLargeChangeHigh.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLogLargeChangeHigh.Location = new System.Drawing.Point(11, 66);
+            this.checkBoxLogLargeChangeHigh.Name = "checkBoxLogLargeChangeHigh";
+            this.checkBoxLogLargeChangeHigh.Size = new System.Drawing.Size(315, 17);
+            this.checkBoxLogLargeChangeHigh.TabIndex = 5;
+            this.checkBoxLogLargeChangeHigh.Text = "Log non-updates due to large price change (yours is too high)";
+            this.checkBoxLogLargeChangeHigh.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogHighVariance
             // 
@@ -273,6 +289,8 @@ namespace MKMTool
             // 
             // groupBoxPriceEstim
             // 
+            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstMinPriceFoils);
+            this.groupBoxPriceEstim.Controls.Add(this.numericUpDownPriceEstMinPriceRest);
             this.groupBoxPriceEstim.Controls.Add(this.labelWorlwideAvg);
             this.groupBoxPriceEstim.Controls.Add(this.checkBoxPricePlaysetIgnore);
             this.groupBoxPriceEstim.Controls.Add(this.labelMultCopiesCap);
@@ -636,7 +654,7 @@ namespace MKMTool
             // 
             // numericUpDownPriceEstMaxN
             // 
-            this.numericUpDownPriceEstMaxN.Location = new System.Drawing.Point(710, 19);
+            this.numericUpDownPriceEstMaxN.Location = new System.Drawing.Point(728, 19);
             this.numericUpDownPriceEstMaxN.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -648,7 +666,7 @@ namespace MKMTool
             0,
             0});
             this.numericUpDownPriceEstMaxN.Name = "numericUpDownPriceEstMaxN";
-            this.numericUpDownPriceEstMaxN.Size = new System.Drawing.Size(70, 20);
+            this.numericUpDownPriceEstMaxN.Size = new System.Drawing.Size(52, 20);
             this.numericUpDownPriceEstMaxN.TabIndex = 35;
             this.numericUpDownPriceEstMaxN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numericUpDownPriceEstMaxN.Value = new decimal(new int[] {
@@ -660,7 +678,7 @@ namespace MKMTool
             // 
             // numericUpDownPriceEstMinN
             // 
-            this.numericUpDownPriceEstMinN.Location = new System.Drawing.Point(476, 19);
+            this.numericUpDownPriceEstMinN.Location = new System.Drawing.Point(532, 19);
             this.numericUpDownPriceEstMinN.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -672,7 +690,7 @@ namespace MKMTool
             0,
             0});
             this.numericUpDownPriceEstMinN.Name = "numericUpDownPriceEstMinN";
-            this.numericUpDownPriceEstMinN.Size = new System.Drawing.Size(70, 20);
+            this.numericUpDownPriceEstMinN.Size = new System.Drawing.Size(49, 20);
             this.numericUpDownPriceEstMinN.TabIndex = 33;
             this.numericUpDownPriceEstMinN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numericUpDownPriceEstMinN.Value = new decimal(new int[] {
@@ -690,7 +708,7 @@ namespace MKMTool
             0,
             0,
             131072});
-            this.numericUpDownPriceEstMinPrice.Location = new System.Drawing.Point(255, 19);
+            this.numericUpDownPriceEstMinPrice.Location = new System.Drawing.Point(210, 19);
             this.numericUpDownPriceEstMinPrice.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -702,7 +720,7 @@ namespace MKMTool
             0,
             131072});
             this.numericUpDownPriceEstMinPrice.Name = "numericUpDownPriceEstMinPrice";
-            this.numericUpDownPriceEstMinPrice.Size = new System.Drawing.Size(70, 20);
+            this.numericUpDownPriceEstMinPrice.Size = new System.Drawing.Size(61, 20);
             this.numericUpDownPriceEstMinPrice.TabIndex = 16;
             this.numericUpDownPriceEstMinPrice.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numericUpDownPriceEstMinPrice.Value = new decimal(new int[] {
@@ -714,7 +732,7 @@ namespace MKMTool
             // labelPriceEstMaxN
             // 
             this.labelPriceEstMaxN.AutoSize = true;
-            this.labelPriceEstMaxN.Location = new System.Drawing.Point(570, 21);
+            this.labelPriceEstMaxN.Location = new System.Drawing.Point(587, 21);
             this.labelPriceEstMaxN.Name = "labelPriceEstMaxN";
             this.labelPriceEstMaxN.Size = new System.Drawing.Size(134, 13);
             this.labelPriceEstMaxN.TabIndex = 32;
@@ -725,14 +743,14 @@ namespace MKMTool
             this.labelPriceEstMinPrice.AutoSize = true;
             this.labelPriceEstMinPrice.Location = new System.Drawing.Point(8, 21);
             this.labelPriceEstMinPrice.Name = "labelPriceEstMinPrice";
-            this.labelPriceEstMinPrice.Size = new System.Drawing.Size(147, 13);
+            this.labelPriceEstMinPrice.Size = new System.Drawing.Size(204, 13);
             this.labelPriceEstMinPrice.TabIndex = 15;
-            this.labelPriceEstMinPrice.Text = "Minimum price of rares [EUR]:";
+            this.labelPriceEstMinPrice.Text = "Minimum price of rares / rest / foils [EUR]:";
             // 
             // labelPriceEstMinN
             // 
             this.labelPriceEstMinN.AutoSize = true;
-            this.labelPriceEstMinN.Location = new System.Drawing.Point(339, 21);
+            this.labelPriceEstMinN.Location = new System.Drawing.Point(395, 21);
             this.labelPriceEstMinN.Name = "labelPriceEstMinN";
             this.labelPriceEstMinN.Size = new System.Drawing.Size(131, 13);
             this.labelPriceEstMinN.TabIndex = 31;
@@ -834,17 +852,63 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
-            // checkBoxLogLargeChangeHigh
+            // numericUpDownPriceEstMinPriceRest
             // 
-            this.checkBoxLogLargeChangeHigh.AutoSize = true;
-            this.checkBoxLogLargeChangeHigh.Checked = true;
-            this.checkBoxLogLargeChangeHigh.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogLargeChangeHigh.Location = new System.Drawing.Point(11, 66);
-            this.checkBoxLogLargeChangeHigh.Name = "checkBoxLogLargeChangeHigh";
-            this.checkBoxLogLargeChangeHigh.Size = new System.Drawing.Size(315, 17);
-            this.checkBoxLogLargeChangeHigh.TabIndex = 5;
-            this.checkBoxLogLargeChangeHigh.Text = "Log non-updates due to large price change (yours is too high)";
-            this.checkBoxLogLargeChangeHigh.UseVisualStyleBackColor = true;
+            this.numericUpDownPriceEstMinPriceRest.DecimalPlaces = 2;
+            this.numericUpDownPriceEstMinPriceRest.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            this.numericUpDownPriceEstMinPriceRest.Location = new System.Drawing.Point(272, 19);
+            this.numericUpDownPriceEstMinPriceRest.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMinPriceRest.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numericUpDownPriceEstMinPriceRest.Name = "numericUpDownPriceEstMinPriceRest";
+            this.numericUpDownPriceEstMinPriceRest.Size = new System.Drawing.Size(61, 20);
+            this.numericUpDownPriceEstMinPriceRest.TabIndex = 65;
+            this.numericUpDownPriceEstMinPriceRest.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownPriceEstMinPriceRest.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            // 
+            // numericUpDownPriceEstMinPriceFoils
+            // 
+            this.numericUpDownPriceEstMinPriceFoils.DecimalPlaces = 2;
+            this.numericUpDownPriceEstMinPriceFoils.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
+            this.numericUpDownPriceEstMinPriceFoils.Location = new System.Drawing.Point(335, 19);
+            this.numericUpDownPriceEstMinPriceFoils.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericUpDownPriceEstMinPriceFoils.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numericUpDownPriceEstMinPriceFoils.Name = "numericUpDownPriceEstMinPriceFoils";
+            this.numericUpDownPriceEstMinPriceFoils.Size = new System.Drawing.Size(61, 20);
+            this.numericUpDownPriceEstMinPriceFoils.TabIndex = 66;
+            this.numericUpDownPriceEstMinPriceFoils.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.numericUpDownPriceEstMinPriceFoils.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
             // 
             // UpdatePriceSettings
             // 
@@ -880,6 +944,8 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).EndInit();
             this.groupBoxPresets.ResumeLayout(false);
             this.panelPresetsDescr.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPriceRest)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPriceFoils)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -945,5 +1011,7 @@ namespace MKMTool
         private System.Windows.Forms.Label labelWorlwideAvg;
         private System.Windows.Forms.CheckBox checkBoxPricePlaysetIgnore;
         private System.Windows.Forms.CheckBox checkBoxLogLargeChangeHigh;
+        private System.Windows.Forms.NumericUpDown numericUpDownPriceEstMinPriceRest;
+        private System.Windows.Forms.NumericUpDown numericUpDownPriceEstMinPriceFoils;
     }
 }

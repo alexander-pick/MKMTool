@@ -67,6 +67,8 @@ namespace MKMTool
         // each pair is a <max price of item; max difference in % allowed for such the next item> to be considered as similar - used to cull outliers
         public SortedList<double, double> priceMaxDifferenceLimits;
         public double priceMinRarePrice;
+        public double priceMinPriceRest;
+        public double priceMinPriceFoils;
         public int priceMinSimilarItems, priceMaxSimilarItems;
         public PriceSetMethod priceSetPriceBy;
         // if price computed based on average, priceFactor = 0.5 will set price as average of similar items, at 0
@@ -116,6 +118,8 @@ namespace MKMTool
                 priceMaxDifferenceLimits.Add(limit.Key, limit.Value);
 
             priceMinRarePrice = refSettings.priceMinRarePrice;
+            priceMinPriceRest = refSettings.priceMinPriceRest;
+            priceMinPriceFoils = refSettings.priceMinPriceFoils;
             priceMinSimilarItems = refSettings.priceMinSimilarItems;
             priceMaxSimilarItems = refSettings.priceMaxSimilarItems;
             priceSetPriceBy = refSettings.priceSetPriceBy;
@@ -185,6 +189,12 @@ namespace MKMTool
                 {
                     case "priceMinRarePrice":
                         temp.priceMinRarePrice = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMinPriceRest":
+                        temp.priceMinPriceRest = double.Parse(att.Value, CultureInfo.InvariantCulture);
+                        break;
+                    case "priceMinPriceFoils":
+                        temp.priceMinPriceFoils = double.Parse(att.Value, CultureInfo.InvariantCulture);
                         break;
                     case "priceMinSimilarItems":
                         temp.priceMinSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
@@ -276,6 +286,8 @@ namespace MKMTool
             root.AppendChild(child);
 
             root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2", CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMinPriceRest", priceMinPriceRest.ToString("f2", CultureInfo.InvariantCulture));
+            root.SetAttribute("priceMinPriceFoils", priceMinPriceFoils.ToString("f2", CultureInfo.InvariantCulture));
             root.SetAttribute("priceMinSimilarItems", priceMinSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceSetPriceBy", priceSetPriceBy.ToString());
@@ -332,7 +344,9 @@ namespace MKMTool
             s.priceMaxChangeLimits.Clear(); // empty by default
             s.priceMaxDifferenceLimits.Clear(); // empty by default
 
-            s.priceMinRarePrice = 0.05;
+            s.priceMinRarePrice = 0.30;
+            s.priceMinPriceRest = 0.15;
+            s.priceMinPriceFoils = 1.00;
             s.priceMinSimilarItems = 4; // require exactly 4 items
             s.priceMaxSimilarItems = 4;
             s.priceSetPriceBy = PriceSetMethod.ByAverage;
@@ -452,6 +466,64 @@ namespace MKMTool
                 }
             }
             return myStock;
+        }
+
+        //rocky added
+        public void getActualOrderList(MainView frm1)
+        {
+            MainView.Instance.LogMainWindow("Starting buyer list output:" + Environment.NewLine);
+            var orders = MKMInteract.RequestHelper.getOrders();
+
+            //Console.WriteLine("Display the root node...");
+
+
+            /*             XmlTextWriter writer = new XmlTextWriter(@"C:\Users\servi\Desktop\testig.xml", null);
+             writer.Formatting = Formatting.Indented;
+             orders.WriteTo(writer);*/
+
+            /*XmlTextWriter consoWriter = new XmlTextWriter(Console.Out);
+            consoWriter.Formatting = Formatting.Indented;
+            orders.WriteTo(consoWriter);*/
+
+            int count = 0;
+            foreach (XmlNode order in orders["response"])
+
+            {
+                ++count;
+                /*
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "OrderID: " + order["idOrder"].InnerText + Environment.NewLine, frm1);
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Shipping: " + order["shippingMethod"]["name"].InnerText + Environment.NewLine, frm1);
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Address: " + order["shippingAddress"]["name"].InnerText + Environment.NewLine, frm1);
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Address: " + order["shippingAddress"]["street"].InnerText + Environment.NewLine, frm1);
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Address: " + order["shippingAddress"]["zip"].InnerText + Environment.NewLine, frm1);
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Address: " + order["shippingAddress"]["city"].InnerText + Environment.NewLine, frm1);
+                frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), "Article count: " + order["articleCount"].InnerText + " including following:" + Environment.NewLine, frm1);
+                foreach (XmlNode article in order.ChildNodes)
+                {
+                    if (article.Name == "article") {
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend),article["count"].InnerText + " ", frm1);
+                        frm1.logBox.Invoke(new logboxAppendCallback(logBoxAppend), article["product"]["locName"].InnerText + Environment.NewLine, frm1);
+                    }
+                }
+                */
+
+                MainView.Instance.LogMainWindow(order["shippingAddress"]["name"].InnerText + ";" + order["shippingAddress"]["street"].InnerText + ";" + order["shippingAddress"]["zip"].InnerText + ";" + order["shippingAddress"]["city"].InnerText + ";" + order["idOrder"].InnerText + ";" + order["shippingMethod"]["name"].InnerText + ";");
+                foreach (XmlNode article in order.ChildNodes)
+                {
+                    if (article.Name == "article")
+                    {
+                        if (article["product"]["locName"].InnerText == "Ultimate Masters Booster Box")
+                        {
+                            MainView.Instance.LogMainWindow(article["count"].InnerText + ";");
+                            MainView.Instance.LogMainWindow(article["product"]["locName"].InnerText + ";");
+                        }
+                    }
+                }
+                MainView.Instance.LogMainWindow(order["articleCount"].InnerText + Environment.NewLine);
+
+            }
+
+            MainView.Instance.LogMainWindow("Ordercount: " + count + Environment.NewLine + Environment.NewLine);
         }
 
         public void updatePrices()
@@ -712,9 +784,13 @@ namespace MKMTool
             priceEstimation += markupValue;
 
             string articleRarity = article.GetAttribute(MCAttribute.Rarity);
+            string articleFoil = article.GetAttribute(MCAttribute.Foil);
+            if (priceEstimation < settings.priceMinPriceRest) priceEstimation = settings.priceMinPriceRest;
             if (priceEstimation < settings.priceMinRarePrice
                 && (articleRarity == "Rare" || articleRarity == "Mythic"))
                 priceEstimation = settings.priceMinRarePrice;
+
+            if (articleFoil == "true" && priceEstimation < settings.priceMinPriceFoils) priceEstimation = settings.priceMinPriceFoils;
 
             // check the estimation is OK
             double dOldPrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
@@ -741,7 +817,7 @@ namespace MKMTool
                 if (dOldPrice < limits.Key)
                 {
                     double priceDif = dOldPrice - priceEstimation; // positive when our price is too high, negative when our price is too low
-                    if (Math.Abs(priceDif) > dOldPrice * limits.Value)
+                    if (priceDif > 0 && Math.Abs(priceDif) > dOldPrice * limits.Value)
                     {
                         priceEstimation = -1;
                         if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
@@ -802,8 +878,8 @@ namespace MKMTool
                     article.SetAttribute(MCAttribute.MinPrice, sOwnMinPrice); // restore the Min Price
                 }
 
-                // log large change or small change when enabled
-                if (settings.logUpdated && (settings.logSmallPriceChange ||
+                // log large change or small change when enabled ROCKY added only if price >= 2.5
+                if (settings.logUpdated && priceEstimation >= 2.5 && (settings.logSmallPriceChange ||
                     (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
                     MainView.Instance.LogMainWindow(
                         productID + ">>> " + articleName +

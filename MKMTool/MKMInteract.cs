@@ -413,6 +413,12 @@ namespace MKMTool
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/products/find?search=" 
                     + cardname + "&idGame=1&maxResults=100&idLanguage=" + languageID + "&start=" + start, "GET");
             }
+
+            //added rocky
+            public static XmlDocument getOrders()
+            {
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/orders/seller/paid", "GET");
+            }
         }
     }
 }
