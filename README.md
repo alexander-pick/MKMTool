@@ -3,6 +3,9 @@
 If you have just updated to 0.7.0 from older version, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
 
 ## Latest changes
+**Version 0.7.1.0, 12.12.2019**
+Bugfixes:
++ MinPrice from mystock.csv was taken into account only if no price update was computed. Now it will always be checked even just against the current price.
 
 **Version 0.7.0.5, 12.12.2019**
 + Fix Download buys outputting all the orders N times, where N was number of orders

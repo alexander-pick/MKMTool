@@ -615,204 +615,214 @@ namespace MKMTool
                 lastMatch = -1;
                 res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
             }
-            double priceEstimation = 0;
             double priceFactor = ignoreSellersCountry ? settings.priceFactorWorldwide : settings.priceFactor;
             string articleExpansion = article.GetAttribute(MCAttribute.Expansion);
             string articleLanguage = article.GetAttribute(MCAttribute.Language);
             string articlePrice = article.GetAttribute(MCAttribute.MKMPrice);
-            if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
-            {
-                priceEstimation = prices[0] * priceFactor;
-            }
-            else if (res == TraverseResult.Culled)
+            double dArticlePrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
+            double priceEstimation = dArticlePrice; // assume the price will not change -> new price is the orig price
+            string logMessage = "";
+            string isPlayset = article.GetAttribute(MCAttribute.Playset);
+            if (res == TraverseResult.Culled)
             {
                 if (settings.logLessThanMinimum)
-                    MainView.Instance.LogMainWindow(
-                            productID + ">>> " + articleName +
-                            " (" + articleExpansion + ", " +
-                            (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
-                            "Current Price: " + articlePrice + ", unchanged, only " +
-                            (lastMatch + 1) + " similar items found (but some outliers were culled)" +
-                            (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return;
+                    logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
+                        (lastMatch + 1) + " similar items found (some outliers were culled)" +
+                        (ignoreSellersCountry ? " - worldwide search!" : "");
             }
             else if (res == TraverseResult.HighVariance)
             {
                 if (settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
-                    MainView.Instance.LogMainWindow(
-                        productID + ">>> " + articleName +
-                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
-                        "NOT UPDATED - variance of prices among cheapest similar items is too high" +
-                        (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return;
+                    logMessage += "NOT UPDATED - variance of prices among cheapest similar items is too high" +
+                        (ignoreSellersCountry ? " - worldwide search!" : "");
             }
             else if (res == TraverseResult.NotEnoughSimilars)
             {
                 if (settings.logLessThanMinimum)
-                    MainView.Instance.LogMainWindow(
-                        productID + ">>> " + articleName +
-                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
-                        "Current Price: " + articlePrice + ", unchanged, only " +
+                    logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items found" +
-                        (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return;
+                        (ignoreSellersCountry ? " - worldwide search!" : "");
             }
             else if (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)
             // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
 
             {
                 if (settings.logLessThanMinimum)
-                    MainView.Instance.LogMainWindow(
-                        productID + ">>> " + articleName +
-                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
-                        "Current Price: " + articlePrice + ", unchanged, only " +
+                    logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items with an item with matching condition above them were found" +
-                        (ignoreSellersCountry ? " - worldwide search!" : ""));
-                return;
+                        (ignoreSellersCountry ? " - worldwide search!" : "");
             }
             else
             {
-                // if any condition is allowed, use the whole sequence
-                // if only matching is allowed, use whole sequence as well because it is only matching items
-                if (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove)
-                    lastMatch = prices.Count - 1;
-                if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
-                    priceEstimation = prices[lastMatch] * priceFactor;
-                else // estimation by average
+                if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
                 {
-                    for (int i = 0; i <= lastMatch; i++)
-                        priceEstimation += prices[i]; // priceEstimation is initialized to 0 above
-                    priceEstimation /= (lastMatch + 1);
-                    // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
-                    if (priceFactor > 0.5)
-                        priceEstimation += (prices[lastMatch] - priceEstimation) * (priceFactor - 0.5) * 2;
-                    else if (priceFactor < 0.5) // linear interpolation between lowest price and average
-                        priceEstimation = prices[0] + (priceEstimation - prices[0]) * (priceFactor) * 2;
+                    priceEstimation = prices[0] * priceFactor;
                 }
-            }
+                else
+                {
+                    // if any condition is allowed, use the whole sequence
+                    // if only matching is allowed, use whole sequence as well because it is only matching items
+                    if (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove)
+                        lastMatch = prices.Count - 1;
+                    if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
+                        priceEstimation = prices[lastMatch] * priceFactor;
+                    else // estimation by average
+                    {
+                        priceEstimation = 0;
+                        for (int i = 0; i <= lastMatch; i++)
+                            priceEstimation += prices[i]; // priceEstimation is initialized to 0 above
+                        priceEstimation /= lastMatch + 1;
+                        // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
+                        if (priceFactor > 0.5)
+                            priceEstimation += (prices[lastMatch] - priceEstimation) * (priceFactor - 0.5) * 2;
+                        else if (priceFactor < 0.5) // linear interpolation between lowest price and average
+                            priceEstimation = prices[0] + (priceEstimation - prices[0]) * (priceFactor) * 2;
+                    }
+                }
 
-            // increase the estimate based on how many of those articles do we have in stock
-            double markupValue = 0;
-            string isPlayset = article.GetAttribute(MCAttribute.Playset);
-            string count = article.GetAttribute(MCAttribute.Count);
-            int iCount;
-            if (settings.priceIgnorePlaysets && isPlayset == "true")
-                markupValue = priceEstimation * settings.priceMarkup4;
-            else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
-            {
-                if (iCount == 2)
-                    markupValue = priceEstimation * settings.priceMarkup2;
-                else if (iCount == 3)
-                    markupValue = priceEstimation * settings.priceMarkup3;
-                else if (iCount > 3)
+                // increase the estimate based on how many of those articles do we have in stock
+                double markupValue = 0;
+                int iCount;
+                if (settings.priceIgnorePlaysets && isPlayset == "true")
                     markupValue = priceEstimation * settings.priceMarkup4;
-            }
-            if (markupValue > settings.priceMarkupCap)
-                markupValue = settings.priceMarkupCap;
-            priceEstimation += markupValue;
-
-            string articleRarity = article.GetAttribute(MCAttribute.Rarity);
-            if (priceEstimation < settings.priceMinRarePrice
-                && (articleRarity == "Rare" || articleRarity == "Mythic"))
-                priceEstimation = settings.priceMinRarePrice;
-
-            // check the estimation is OK
-            double dOldPrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
-            string sNewPrice;
-            // just a temporary to correctly convert priceEstimation to string based on is/isn't playset; is/isn't less than minimum allowed price (0.02€)
-            double priceToSet = priceEstimation; 
-            // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
-            if (settings.priceIgnorePlaysets && isPlayset == "true")
-            {
-                dOldPrice /= 4;
-                priceToSet *= 4;
-                if (priceToSet < 0.02) // minimum price MKM accepts for a single article is 0.02€
+                else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
                 {
-                    priceToSet = 0.02;
-                    priceEstimation = 0.005; // 0.02/4
+                    if (iCount == 2)
+                        markupValue = priceEstimation * settings.priceMarkup2;
+                    else if (iCount == 3)
+                        markupValue = priceEstimation * settings.priceMarkup3;
+                    else if (iCount > 3)
+                        markupValue = priceEstimation * settings.priceMarkup4;
                 }
-            }
-            else if (priceToSet < 0.02)
-                priceToSet = priceEstimation = 0.02;
-            sNewPrice = priceToSet.ToString("f2", CultureInfo.InvariantCulture);
-            // check it is not above the max price change limits
-            foreach (var limits in settings.priceMaxChangeLimits)
-            {
-                if (dOldPrice < limits.Key)
-                {
-                    double priceDif = dOldPrice - priceEstimation; // positive when our price is too high, negative when our price is too low
-                    if (Math.Abs(priceDif) > dOldPrice * limits.Value)
-                    {
-                        priceEstimation = -1;
-                        if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
-                            settings.logLargePriceChangeTooLow && priceDif < 0)
-                            MainView.Instance.LogMainWindow(
-                                productID + ">>> " + articleName +
-                                " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
-                                "NOT UPDATED - change too large: Current Price: "
-                                + articlePrice + ", Calculated Price:" + sNewPrice +
-                                (ignoreSellersCountry ? " - worldwide search!" : ""));
+                if (markupValue > settings.priceMarkupCap)
+                    markupValue = settings.priceMarkupCap;
+                priceEstimation += markupValue;
 
-                    }
-                    break;
-                }
-            }
-            if (priceEstimation > 0 // is < 0 if change was too large
-                && Math.Abs(priceEstimation - dOldPrice) > 0.005 // don't update if it did not change - clearer log
-                )
-            {
-                // Check if the card itself has MinPrice defined - won't happen for traditional update, but can for External List Appraisal
-                double dOwnMinPrice;
-                string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
-                if (double.TryParse(sOwnMinPrice, out dOwnMinPrice))
+                string articleRarity = article.GetAttribute(MCAttribute.Rarity);
+                if (priceEstimation < settings.priceMinRarePrice
+                    && (articleRarity == "Rare" || articleRarity == "Mythic"))
+                    priceEstimation = settings.priceMinRarePrice;
+
+                // check the estimation is OK
+                double dOldPrice = dArticlePrice;
+                string sNewPrice;
+                // just a temporary to correctly convert priceEstimation to string based on is/isn't playset; is/isn't less than minimum allowed price (0.02€)
+                double priceToSet = priceEstimation;
+                // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
+                if (settings.priceIgnorePlaysets && isPlayset == "true")
                 {
-                    if (isPlayset == "true")
-                        dOwnMinPrice /= 4;
-                    if (priceEstimation < dOwnMinPrice)
+                    dOldPrice /= 4;
+                    priceToSet *= 4;
+                    if (priceToSet < 0.02) // minimum price MKM accepts for a single article is 0.02€
                     {
-                        priceEstimation = dOwnMinPrice;
-                        sNewPrice = sOwnMinPrice;
+                        priceToSet = 0.02;
+                        priceEstimation = 0.005; // 0.02/4
                     }
                 }
-                // check against minimum price from local stock database
-                List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
-                if (myStock.ContainsKey(""))
-                    listArticles.AddRange(myStock[""]); // special treatment for entries that are not for a specific card name
-                if (myStock.ContainsKey(articleName))
-                    listArticles.AddRange(myStock[articleName]);
-                if (listArticles.Count > 0)
+                else if (priceToSet < 0.02)
+                    priceToSet = priceEstimation = 0.02;
+                sNewPrice = priceToSet.ToString("f2", CultureInfo.InvariantCulture);
+                // check it is not above the max price change limits
+                bool changeTooLarge = false;
+                foreach (var limits in settings.priceMaxChangeLimits)
                 {
-                    //reset the min price - card.Equals would otherwise resolve an equal card as not equal because the cards coming from MKM do not have the Min Price
-                    article.SetAttribute(MCAttribute.MinPrice, "");
-                    foreach (MKMMetaCard card in listArticles)
+                    if (dOldPrice < limits.Key)
                     {
-                        if (card.Equals(article))
+                        double priceDif = dOldPrice - priceEstimation; // positive when our price is too high, negative when our price is too low
+                        if (Math.Abs(priceDif) > dOldPrice * limits.Value)
                         {
-                            string minPrice = card.GetAttribute(MCAttribute.MinPrice);
-                            double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
-                            if (isPlayset == "true")
-                                dminPrice /= 4;
-                            if (priceEstimation < dminPrice)
-                            {
-                                priceEstimation = dminPrice;
-                                sNewPrice = minPrice;
-                            }
+                            changeTooLarge = true;
+                            priceEstimation = dArticlePrice; // restore to no price change
+                            if (settings.logLargePriceChangeTooHigh && priceDif > 0 ||
+                                settings.logLargePriceChangeTooLow && priceDif < 0)
+                                logMessage += "NOT UPDATED - change too large: Current Price: "
+                                    + articlePrice + ", Calculated Price:" + sNewPrice +
+                                    (ignoreSellersCountry ? " - worldwide search!" : "");
+
+                        }
+                        break;
+                    }
+                }
+                if (!changeTooLarge // is < 0 if change was too large
+                    && Math.Abs(priceEstimation - dOldPrice) > 0.005) // don't update if it did not change - clearer log
+                {
+                    // log large change or small change when enabled
+                    if (settings.logUpdated && (settings.logSmallPriceChange ||
+                        priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice))
+                        logMessage += "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
+                            ", based on " + (lastMatch + 1) + " items" +
+                            (ignoreSellersCountry ? " - worldwide search!" : "");
+
+                    article.SetAttribute(MCAttribute.MKMToolPrice, sNewPrice);
+                }
+            }
+
+            // finally, check against minimum price from local stock database
+            // Check if the card itself has MinPrice defined - won't happen for traditional update, but can for External List Appraisal
+            double dOwnMinPrice;
+            string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
+            if (double.TryParse(sOwnMinPrice, out dOwnMinPrice))
+            {
+                if (isPlayset == "true")
+                    dOwnMinPrice /= 4;
+                if (priceEstimation < dOwnMinPrice)
+                {
+                    priceEstimation = dOwnMinPrice;
+                }
+            }
+            List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
+            if (myStock.ContainsKey(""))
+                listArticles.AddRange(myStock[""]); // special treatment for entries that are not for a specific card name
+            if (myStock.ContainsKey(articleName))
+                listArticles.AddRange(myStock[articleName]);
+            if (listArticles.Count > 0)
+            {
+                string sNewPrice = article.GetAttribute(MCAttribute.MKMToolPrice);
+                bool minPriceUsed = false;
+                //reset the min price - card.Equals would otherwise resolve an equal card as not equal because the cards coming from MKM do not have the Min Price
+                article.SetAttribute(MCAttribute.MinPrice, "");
+                foreach (MKMMetaCard card in listArticles)
+                {
+                    if (card.Equals(article))
+                    {
+                        string minPrice = card.GetAttribute(MCAttribute.MinPrice);
+                        double dminPrice = Convert.ToDouble(minPrice, CultureInfo.InvariantCulture);
+                        if (isPlayset == "true")
+                            dminPrice /= 4;
+                        if (priceEstimation < dminPrice)
+                        {
+                            priceEstimation = dminPrice;
+                            sNewPrice = minPrice;
+                            minPriceUsed = true;
                         }
                     }
-                    article.SetAttribute(MCAttribute.MinPrice, sOwnMinPrice); // restore the Min Price
                 }
+                article.SetAttribute(MCAttribute.MinPrice, sOwnMinPrice); // restore the Min Price
+                if (minPriceUsed)
+                {
+                    // the min price might restore the initial price, in that case don't send any update
+                    if (Math.Abs(priceEstimation - dArticlePrice) > 0.009)
+                    {
+                        article.SetAttribute(MCAttribute.MKMToolPrice, sNewPrice);
+                        if (logMessage.Length > 0)
+                            logMessage += ". Too low, using minPrice " + sNewPrice;
+                        else if (settings.logSmallPriceChange ||
+                            priceEstimation > dArticlePrice + settings.priceMinRarePrice || priceEstimation < dArticlePrice - settings.priceMinRarePrice)
+                        {
+                            logMessage += "Current Price: " + articlePrice + ", using minPrice:" + sNewPrice + ".";
+                        }
+                    }
+                    else
+                        article.SetAttribute(MCAttribute.MKMToolPrice, ""); // no new price, don't set a useless update
+                }
+            }
 
-                // log large change or small change when enabled
-                if (settings.logUpdated && (settings.logSmallPriceChange ||
-                    (priceEstimation > dOldPrice + settings.priceMinRarePrice || priceEstimation < dOldPrice - settings.priceMinRarePrice)))
-                    MainView.Instance.LogMainWindow(
-                        productID + ">>> " + articleName +
-                        " (" + articleExpansion + ", " + (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine +
-                        "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
-                        ", based on " + (lastMatch + 1) + " items" +
-                        (ignoreSellersCountry ? " - worldwide search!" : ""));
-
-                article.SetAttribute(MCAttribute.MKMToolPrice, sNewPrice);
+            if (logMessage.Length > 0)
+            {
+                logMessage = productID + ">>> " + articleName + " (" + articleExpansion + ", " + 
+                    (articleLanguage != "" ? articleLanguage : "unknown language") + ")"
+                    + Environment.NewLine + logMessage;
+                MainView.Instance.LogMainWindow(logMessage);
             }
         }
 
