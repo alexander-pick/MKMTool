@@ -80,17 +80,17 @@ namespace MKMTool
         public double priceMarkupCap; // in euro, max amount of money allowed to be added on top of the estimated price by the markup
         public bool priceIgnorePlaysets; // if set to true, articles with isPlayset=true will be treated as four single cards - both for our stock and other sellers
 
-        /// Card Condition Settings
-        
+        /// Card Condition Settings        
         public AcceptedCondition condAcceptance;
 
-
         /// Log Settings
-
         public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logLargePriceChangeTooLow, logLargePriceChangeTooHigh, logHighPriceVariance;
 
-        /// Other Settings
+        // Filtering by expansions
+        public bool filterByExpansions; // if set to true, only articles from expansions included in allowedExpansions will be updated
+        public List<string> allowedExpansions; // list of expansions to take into account when doing price update.
 
+        /// Other Settings
         public bool testMode; // if set to true, price updates will be computed and logged, but not sent to MKM
         public bool searchWorldwide; // if the minimum of items is not found in the sellers country, do a search ignoring country - used only when nothing is culled!
         public string description; // overall description of what is this setting expected to do, written in the GUI
@@ -99,6 +99,7 @@ namespace MKMTool
         {
             priceMaxChangeLimits = new SortedList<double, double>();
             priceMaxDifferenceLimits = new SortedList<double, double>();
+            allowedExpansions = new List<string>();
         }
 
         /// <summary>
@@ -107,13 +108,12 @@ namespace MKMTool
         /// <param name="refSettings">The reference settings.</param>
         public void Copy(MKMBotSettings refSettings)
         {
-            priceMaxChangeLimits.Clear();
-            foreach (var limit in refSettings.priceMaxChangeLimits)
-                priceMaxChangeLimits.Add(limit.Key, limit.Value);
+            priceMaxChangeLimits = new SortedList<double, double>(refSettings.priceMaxChangeLimits);
+            priceMaxDifferenceLimits = new SortedList<double, double>(refSettings.priceMaxDifferenceLimits);
+            allowedExpansions = new List<string>(refSettings.allowedExpansions);
 
-            priceMaxDifferenceLimits.Clear();
-            foreach (var limit in refSettings.priceMaxDifferenceLimits)
-                priceMaxDifferenceLimits.Add(limit.Key, limit.Value);
+            allowedExpansions.Clear();
+            allowedExpansions = refSettings.allowedExpansions;
 
             priceMinRarePrice = refSettings.priceMinRarePrice;
             priceMinSimilarItems = refSettings.priceMinSimilarItems;
@@ -137,6 +137,7 @@ namespace MKMTool
             testMode = refSettings.testMode;
             description = refSettings.description;
             searchWorldwide = refSettings.searchWorldwide;
+            filterByExpansions = refSettings.filterByExpansions;
         }
 
         /// <summary>
@@ -153,13 +154,13 @@ namespace MKMTool
             XmlNode root = s.GetElementsByTagName("MKMBotSettings").Item(0);
 
             double threshold, allowedChange;
-            string[] limits;
             foreach (XmlNode child in root.ChildNodes)
             {
                 switch (child.Name)
                 {
                     case "priceMaxChangeLimits":
-                        limits = child.InnerText.Split(';');
+                    {
+                        string[] limits = child.InnerText.Split(';');
                         for (int i = 1; i < limits.Length; i += 2)
                         {
                             threshold = double.Parse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture);
@@ -167,8 +168,10 @@ namespace MKMTool
                             temp.priceMaxChangeLimits.Add(threshold, allowedChange);
                         }
                         break;
+                    }
                     case "priceMaxDifferenceLimits":
-                        limits = child.InnerText.Split(';');
+                    {
+                        string[] limits = child.InnerText.Split(';');
                         for (int i = 1; i < limits.Length; i += 2)
                         {
                             threshold = double.Parse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture);
@@ -176,6 +179,12 @@ namespace MKMTool
                             temp.priceMaxDifferenceLimits.Add(threshold, allowedChange);
                         }
                         break;
+                    }
+                    case "allowedExpansions":
+                    {
+                        temp.allowedExpansions = new List<string>(child.InnerText.Split(';'));
+                        break;
+                    }
                 }
             }
             temp.priceFactorWorldwide = -1;
@@ -243,6 +252,9 @@ namespace MKMTool
                     case "searchWorldwide":
                         temp.searchWorldwide = bool.Parse(att.Value);
                         break;
+                    case "filterByExpansions":
+                        temp.filterByExpansions = bool.Parse(att.Value);
+                        break;
                     case "description":
                         temp.description = att.Value;
                         break;
@@ -275,6 +287,12 @@ namespace MKMTool
                 child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
             root.AppendChild(child);
 
+            child = s.CreateElement("allowedExpansions");
+            child.InnerText = "";
+            foreach (var expansion in allowedExpansions)
+                child.InnerText += "" + expansion + ";";
+            root.AppendChild(child);
+
             root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2", CultureInfo.InvariantCulture));
             root.SetAttribute("priceMinSimilarItems", priceMinSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString(CultureInfo.InvariantCulture));
@@ -295,6 +313,7 @@ namespace MKMTool
             root.SetAttribute("logLargePriceChangeTooLow", logLargePriceChangeTooLow.ToString());
             root.SetAttribute("logLargePriceChangeTooHigh", logLargePriceChangeTooHigh.ToString());
             root.SetAttribute("logHighPriceVariance", logHighPriceVariance.ToString());
+            root.SetAttribute("filterByExpansions", filterByExpansions.ToString());
 
             root.SetAttribute("testMode", testMode.ToString());
             root.SetAttribute("searchWorldwide", searchWorldwide.ToString());
@@ -311,7 +330,7 @@ namespace MKMTool
         
         public MKMBot()
         {
-            this.settings = GenerateDefaultSettings();
+            settings = GenerateDefaultSettings();
         }
 
         public MKMBot(MKMBotSettings settings)
@@ -328,9 +347,6 @@ namespace MKMTool
         public static MKMBotSettings GenerateDefaultSettings()
         {
             MKMBotSettings s = new MKMBotSettings();
-
-            s.priceMaxChangeLimits.Clear(); // empty by default
-            s.priceMaxDifferenceLimits.Clear(); // empty by default
 
             s.priceMinRarePrice = 0.05;
             s.priceMinSimilarItems = 4; // require exactly 4 items
@@ -353,14 +369,14 @@ namespace MKMTool
 
             s.testMode = false;
             s.searchWorldwide = false;
-
+            s.filterByExpansions = false;
 
             return s;
         }
 
         public void setSettings(MKMBotSettings s)
         {
-            this.settings = s;
+            settings = s;
         }
 
 
@@ -378,6 +394,17 @@ namespace MKMTool
                     return refPrice * limit.Value;
             }
             return double.MaxValue;
+        }
+
+        /// <summary>
+        /// Determines whether the specified expansion is allowed under current settings.
+        /// </summary>
+        /// <param name="expansion">The expansion to check.</param>
+        /// <returns><c>True</c> if it is allowed or filtering by expansions is turned off; otherwise, <c>false</c>.
+        /// </returns>
+        private bool isAllowedExpansion(string expansion)
+        {
+            return !settings.filterByExpansions || settings.allowedExpansions.Contains(expansion);
         }
 
         /// <summary>
@@ -400,16 +427,19 @@ namespace MKMTool
             Dictionary<string, List<MKMMetaCard>> myStock = useMyStock ? LoadMyStock() : new Dictionary<string, List<MKMMetaCard>>();
             foreach (MKMMetaCard mc in cardList)
             {
-                XmlNodeList similarItems = getSimilarItems(mc);
-                if (similarItems != null)
+                if (isAllowedExpansion(mc.GetAttribute(MCAttribute.Expansion)))
                 {
-                    string backupMKMPrice = mc.GetAttribute(MCAttribute.MKMPrice);
-                    mc.SetAttribute(MCAttribute.MKMPrice, "-9999");
-                    appraiseArticle(mc, similarItems, myStock);
-                    if (backupMKMPrice != "")
-                        mc.SetAttribute(MCAttribute.MKMPrice, backupMKMPrice);
-                    else
-                        mc.RemoveAttribute(MCAttribute.MKMPrice);
+                    XmlNodeList similarItems = getSimilarItems(mc);
+                    if (similarItems != null)
+                    {
+                        string backupMKMPrice = mc.GetAttribute(MCAttribute.MKMPrice);
+                        mc.SetAttribute(MCAttribute.MKMPrice, "-9999");
+                        appraiseArticle(mc, similarItems, myStock);
+                        if (backupMKMPrice != "")
+                            mc.SetAttribute(MCAttribute.MKMPrice, backupMKMPrice);
+                        else
+                            mc.RemoveAttribute(MCAttribute.MKMPrice);
+                    }
                 }
             }
 
@@ -479,23 +509,26 @@ namespace MKMTool
             string sRequestXML = "";
             foreach (MKMMetaCard MKMCard in articles)
             {
-                XmlNodeList similarItems = getSimilarItems(MKMCard);
-                if (similarItems != null)
+                if (isAllowedExpansion(MKMCard.GetAttribute(MCAttribute.Expansion)))
                 {
-                    appraiseArticle(MKMCard, similarItems, myStock);
-                    string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
-                    if (newPrice != "")
+                    XmlNodeList similarItems = getSimilarItems(MKMCard);
+                    if (similarItems != null)
                     {
-                        sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
-                        // max 100 articles is allowed to be part of a PUT call - if we are there, call it
-                        if (putCounter > 98 && !settings.testMode)
+                        appraiseArticle(MKMCard, similarItems, myStock);
+                        string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
+                        if (newPrice != "")
                         {
-                            MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
-                            putCounter = 0;
-                            sRequestXML = "";
+                            sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
+                            // max 100 articles is allowed to be part of a PUT call - if we are there, call it
+                            if (putCounter > 98 && !settings.testMode)
+                            {
+                                MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
+                                putCounter = 0;
+                                sRequestXML = "";
+                            }
+                            else
+                                putCounter++;
                         }
-                        else
-                            putCounter++;
                     }
                 }
             }

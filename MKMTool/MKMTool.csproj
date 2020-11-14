@@ -106,6 +106,12 @@
     <Compile Include="MKMCsvUtils.cs" />
     <Compile Include="MKMDatabaseManager.cs" />
     <Compile Include="MKMMetaCard.cs" />
+    <Compile Include="PopupListbox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PopupListbox.Designer.cs">
+      <DependentUpon>PopupListbox.cs</DependentUpon>
+    </Compile>
     <Compile Include="PriceExternalList.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -156,6 +162,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CheckWantsView.resx">
       <DependentUpon>CheckWantsView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PopupListbox.resx">
+      <DependentUpon>PopupListbox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PriceExternalList.resx">
       <DependentUpon>PriceExternalList.cs</DependentUpon>

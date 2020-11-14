@@ -41,6 +41,7 @@ using System.IO;
 using System.Windows.Forms;
 using static MKMTool.MKMCsvUtils;
 using static MKMTool.MKMHelpers;
+using System.Collections.Generic;
 
 namespace MKMTool
 {
@@ -339,6 +340,23 @@ namespace MKMTool
 
                 exp.Items.Add(item);
             }
+        }
+
+        /// <summary>
+        /// Gets all expansion names.
+        /// </summary>
+        /// <param name="sortByName">If set to <c>true</c>, the result will be sorted by name.</param>
+        /// <returns>List of all expansions in the database.</returns>
+        public List<string> GetAllExpansionNames(bool sortByName)
+        {
+            List<string> exp = new List<string>(expansions.Rows.Count);
+            foreach (DataRow nExpansion in expansions.Rows)
+            {
+                exp.Add(nExpansion[ExpansionsFields.Name].ToString());
+            }
+            if (sortByName)
+                exp.Sort();
+            return exp;
         }
 
         /// <summary>

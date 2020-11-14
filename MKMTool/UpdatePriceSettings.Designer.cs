@@ -63,6 +63,7 @@ namespace MKMTool
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UpdatePriceSettings));
             this.groupBoxLogSettings = new System.Windows.Forms.GroupBox();
+            this.checkBoxLogLargeChangeHigh = new System.Windows.Forms.CheckBox();
             this.checkBoxLogHighVariance = new System.Windows.Forms.CheckBox();
             this.checkBoxLogLargeChangeLow = new System.Windows.Forms.CheckBox();
             this.checkBoxLogSmallChange = new System.Windows.Forms.CheckBox();
@@ -119,7 +120,11 @@ namespace MKMTool
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.checkBoxLogLargeChangeHigh = new System.Windows.Forms.CheckBox();
+            this.groupBoxFiltering = new System.Windows.Forms.GroupBox();
+            this.buttonFilterCountries = new System.Windows.Forms.Button();
+            this.checkBoxFilterCountries = new System.Windows.Forms.CheckBox();
+            this.buttonFilterExpansions = new System.Windows.Forms.Button();
+            this.checkBoxFilterExpansions = new System.Windows.Forms.CheckBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -138,6 +143,7 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).BeginInit();
             this.groupBoxPresets.SuspendLayout();
             this.panelPresetsDescr.SuspendLayout();
+            this.groupBoxFiltering.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxLogSettings
@@ -148,12 +154,24 @@ namespace MKMTool
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogSmallChange);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogMinItems);
             this.groupBoxLogSettings.Controls.Add(this.checkBoxLogUpdated);
-            this.groupBoxLogSettings.Location = new System.Drawing.Point(12, 411);
+            this.groupBoxLogSettings.Location = new System.Drawing.Point(12, 493);
             this.groupBoxLogSettings.Name = "groupBoxLogSettings";
             this.groupBoxLogSettings.Size = new System.Drawing.Size(788, 99);
             this.groupBoxLogSettings.TabIndex = 14;
             this.groupBoxLogSettings.TabStop = false;
             this.groupBoxLogSettings.Text = "Log settings";
+            // 
+            // checkBoxLogLargeChangeHigh
+            // 
+            this.checkBoxLogLargeChangeHigh.AutoSize = true;
+            this.checkBoxLogLargeChangeHigh.Checked = true;
+            this.checkBoxLogLargeChangeHigh.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLogLargeChangeHigh.Location = new System.Drawing.Point(11, 66);
+            this.checkBoxLogLargeChangeHigh.Name = "checkBoxLogLargeChangeHigh";
+            this.checkBoxLogLargeChangeHigh.Size = new System.Drawing.Size(315, 17);
+            this.checkBoxLogLargeChangeHigh.TabIndex = 5;
+            this.checkBoxLogLargeChangeHigh.Text = "Log non-updates due to large price change (yours is too high)";
+            this.checkBoxLogLargeChangeHigh.UseVisualStyleBackColor = true;
             // 
             // checkBoxLogHighVariance
             // 
@@ -221,7 +239,7 @@ namespace MKMTool
             this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondAcceptBetterAlways);
             this.groupBoxConditionSettings.Controls.Add(this.labelMatchExplanation);
             this.groupBoxConditionSettings.Controls.Add(this.radioButtonCondMatchOnly);
-            this.groupBoxConditionSettings.Location = new System.Drawing.Point(13, 333);
+            this.groupBoxConditionSettings.Location = new System.Drawing.Point(13, 415);
             this.groupBoxConditionSettings.Name = "groupBoxConditionSettings";
             this.groupBoxConditionSettings.Size = new System.Drawing.Size(788, 72);
             this.groupBoxConditionSettings.TabIndex = 13;
@@ -247,7 +265,7 @@ namespace MKMTool
             this.radioButtonCondAcceptBetterAlways.TabIndex = 7;
             this.radioButtonCondAcceptBetterAlways.Text = "Accept better whenever";
             this.radioButtonCondAcceptBetterAlways.UseVisualStyleBackColor = true;
-            this.radioButtonCondAcceptBetterAlways.CheckedChanged += new System.EventHandler(this.checkBoxCondAcceptBetterAlways_CheckedChanged);
+            this.radioButtonCondAcceptBetterAlways.CheckedChanged += new System.EventHandler(this.CheckBoxCondAcceptBetterAlways_CheckedChanged);
             // 
             // labelMatchExplanation
             // 
@@ -269,7 +287,7 @@ namespace MKMTool
             this.radioButtonCondMatchOnly.TabStop = true;
             this.radioButtonCondMatchOnly.Text = "Accept only matches*";
             this.radioButtonCondMatchOnly.UseVisualStyleBackColor = true;
-            this.radioButtonCondMatchOnly.CheckedChanged += new System.EventHandler(this.checkBoxCondMatchOnly_CheckedChanged);
+            this.radioButtonCondMatchOnly.CheckedChanged += new System.EventHandler(this.CheckBoxCondMatchOnly_CheckedChanged);
             // 
             // groupBoxPriceEstim
             // 
@@ -473,7 +491,7 @@ namespace MKMTool
             this.trackBarPriceEstAvgWorld.Size = new System.Drawing.Size(534, 45);
             this.trackBarPriceEstAvgWorld.TabIndex = 51;
             this.trackBarPriceEstAvgWorld.Value = 25;
-            this.trackBarPriceEstAvgWorld.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvgWorld_ValueChanged);
+            this.trackBarPriceEstAvgWorld.ValueChanged += new System.EventHandler(this.TrackBarPriceEstAvgWorld_ValueChanged);
             // 
             // checkBoxPriceEstWorldwide
             // 
@@ -486,7 +504,7 @@ namespace MKMTool
             this.toolTip1.SetToolTip(this.checkBoxPriceEstWorldwide, "If minimum number of items (before any culling) is not found in your country, ite" +
         "ms from all sellers will be considered");
             this.checkBoxPriceEstWorldwide.UseVisualStyleBackColor = true;
-            this.checkBoxPriceEstWorldwide.CheckedChanged += new System.EventHandler(this.checkBoxPriceEstWorldwide_CheckedChanged);
+            this.checkBoxPriceEstWorldwide.CheckedChanged += new System.EventHandler(this.CheckBoxPriceEstWorldwide_CheckedChanged);
             // 
             // textBoxPriceEstMaxDiff
             // 
@@ -505,7 +523,7 @@ namespace MKMTool
             this.trackBarPriceEstAvg.Size = new System.Drawing.Size(535, 45);
             this.trackBarPriceEstAvg.TabIndex = 36;
             this.trackBarPriceEstAvg.Value = 25;
-            this.trackBarPriceEstAvg.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvg_ValueChanged);
+            this.trackBarPriceEstAvg.ValueChanged += new System.EventHandler(this.TrackBarPriceEstAvg_ValueChanged);
             // 
             // labelPriceEstMaximumPrice
             // 
@@ -577,7 +595,7 @@ namespace MKMTool
             this.radioButtonPriceEstHighestPrice.TabStop = true;
             this.radioButtonPriceEstHighestPrice.Text = "Set price based on highest price:";
             this.radioButtonPriceEstHighestPrice.UseVisualStyleBackColor = true;
-            this.radioButtonPriceEstHighestPrice.CheckedChanged += new System.EventHandler(this.radioButtonPriceEstHighestPrice_CheckedChanged);
+            this.radioButtonPriceEstHighestPrice.CheckedChanged += new System.EventHandler(this.RadioButtonPriceEstHighestPrice_CheckedChanged);
             // 
             // labelPriceEstLowestPrice
             // 
@@ -619,7 +637,7 @@ namespace MKMTool
             this.radioButtonPriceEstByLowestPrice.TabStop = true;
             this.radioButtonPriceEstByLowestPrice.Text = "Set price based on lowest price:";
             this.radioButtonPriceEstByLowestPrice.UseVisualStyleBackColor = true;
-            this.radioButtonPriceEstByLowestPrice.CheckedChanged += new System.EventHandler(this.radioButtonPriceByLowestPrice_CheckedChanged);
+            this.radioButtonPriceEstByLowestPrice.CheckedChanged += new System.EventHandler(this.RadioButtonPriceByLowestPrice_CheckedChanged);
             // 
             // radioButtonPriceEstPriceByAvg
             // 
@@ -632,7 +650,7 @@ namespace MKMTool
             this.radioButtonPriceEstPriceByAvg.TabStop = true;
             this.radioButtonPriceEstPriceByAvg.Text = "Set price based on average (domestic only):";
             this.radioButtonPriceEstPriceByAvg.UseVisualStyleBackColor = true;
-            this.radioButtonPriceEstPriceByAvg.CheckedChanged += new System.EventHandler(this.radioButtonPriceEstPriceByAvg_CheckedChanged);
+            this.radioButtonPriceEstPriceByAvg.CheckedChanged += new System.EventHandler(this.RadioButtonPriceEstPriceByAvg_CheckedChanged);
             // 
             // numericUpDownPriceEstMaxN
             // 
@@ -656,7 +674,7 @@ namespace MKMTool
             0,
             0,
             0});
-            this.numericUpDownPriceEstMaxN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMaxN_ValueChanged);
+            this.numericUpDownPriceEstMaxN.ValueChanged += new System.EventHandler(this.NumericUpDownPriceEstMaxN_ValueChanged);
             // 
             // numericUpDownPriceEstMinN
             // 
@@ -680,7 +698,7 @@ namespace MKMTool
             0,
             0,
             0});
-            this.numericUpDownPriceEstMinN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMinN_ValueChanged);
+            this.numericUpDownPriceEstMinN.ValueChanged += new System.EventHandler(this.NumericUpDownPriceEstMinN_ValueChanged);
             // 
             // numericUpDownPriceEstMinPrice
             // 
@@ -750,7 +768,7 @@ namespace MKMTool
             // checkBoxTestMode
             // 
             this.checkBoxTestMode.AutoSize = true;
-            this.checkBoxTestMode.Location = new System.Drawing.Point(22, 621);
+            this.checkBoxTestMode.Location = new System.Drawing.Point(22, 703);
             this.checkBoxTestMode.Name = "checkBoxTestMode";
             this.checkBoxTestMode.Size = new System.Drawing.Size(248, 17);
             this.checkBoxTestMode.TabIndex = 15;
@@ -764,7 +782,7 @@ namespace MKMTool
             this.groupBoxPresets.Controls.Add(this.buttonPresetsStore);
             this.groupBoxPresets.Controls.Add(this.buttonPresetsLoad);
             this.groupBoxPresets.Controls.Add(this.comboBoxPresets);
-            this.groupBoxPresets.Location = new System.Drawing.Point(12, 516);
+            this.groupBoxPresets.Location = new System.Drawing.Point(12, 598);
             this.groupBoxPresets.Name = "groupBoxPresets";
             this.groupBoxPresets.Size = new System.Drawing.Size(787, 99);
             this.groupBoxPresets.TabIndex = 16;
@@ -797,7 +815,7 @@ namespace MKMTool
             this.buttonPresetsDelete.TabIndex = 3;
             this.buttonPresetsDelete.Text = "Delete Preset";
             this.buttonPresetsDelete.UseVisualStyleBackColor = true;
-            this.buttonPresetsDelete.Click += new System.EventHandler(this.buttonPresetsDelete_Click);
+            this.buttonPresetsDelete.Click += new System.EventHandler(this.ButtonPresetsDelete_Click);
             // 
             // buttonPresetsStore
             // 
@@ -808,7 +826,7 @@ namespace MKMTool
             this.buttonPresetsStore.TabIndex = 2;
             this.buttonPresetsStore.Text = "Store Preset...";
             this.buttonPresetsStore.UseVisualStyleBackColor = true;
-            this.buttonPresetsStore.Click += new System.EventHandler(this.buttonPresetsStore_Click);
+            this.buttonPresetsStore.Click += new System.EventHandler(this.ButtonPresetsStore_Click);
             // 
             // buttonPresetsLoad
             // 
@@ -820,7 +838,7 @@ namespace MKMTool
             this.buttonPresetsLoad.TabIndex = 1;
             this.buttonPresetsLoad.Text = "Load Preset";
             this.buttonPresetsLoad.UseVisualStyleBackColor = true;
-            this.buttonPresetsLoad.Click += new System.EventHandler(this.buttonPresetsLoad_Click);
+            this.buttonPresetsLoad.Click += new System.EventHandler(this.ButtonPresetsLoad_Click);
             // 
             // comboBoxPresets
             // 
@@ -831,26 +849,73 @@ namespace MKMTool
             this.comboBoxPresets.Name = "comboBoxPresets";
             this.comboBoxPresets.Size = new System.Drawing.Size(351, 24);
             this.comboBoxPresets.TabIndex = 0;
-            this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
-            this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
+            this.comboBoxPresets.DropDown += new System.EventHandler(this.ComboBoxPresets_DropDown);
+            this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.ComboBoxPresets_SelectedIndexChanged);
             // 
-            // checkBoxLogLargeChangeHigh
+            // groupBoxFiltering
             // 
-            this.checkBoxLogLargeChangeHigh.AutoSize = true;
-            this.checkBoxLogLargeChangeHigh.Checked = true;
-            this.checkBoxLogLargeChangeHigh.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxLogLargeChangeHigh.Location = new System.Drawing.Point(11, 66);
-            this.checkBoxLogLargeChangeHigh.Name = "checkBoxLogLargeChangeHigh";
-            this.checkBoxLogLargeChangeHigh.Size = new System.Drawing.Size(315, 17);
-            this.checkBoxLogLargeChangeHigh.TabIndex = 5;
-            this.checkBoxLogLargeChangeHigh.Text = "Log non-updates due to large price change (yours is too high)";
-            this.checkBoxLogLargeChangeHigh.UseVisualStyleBackColor = true;
+            this.groupBoxFiltering.Controls.Add(this.buttonFilterCountries);
+            this.groupBoxFiltering.Controls.Add(this.checkBoxFilterCountries);
+            this.groupBoxFiltering.Controls.Add(this.buttonFilterExpansions);
+            this.groupBoxFiltering.Controls.Add(this.checkBoxFilterExpansions);
+            this.groupBoxFiltering.Location = new System.Drawing.Point(13, 329);
+            this.groupBoxFiltering.Name = "groupBoxFiltering";
+            this.groupBoxFiltering.Size = new System.Drawing.Size(787, 80);
+            this.groupBoxFiltering.TabIndex = 17;
+            this.groupBoxFiltering.TabStop = false;
+            this.groupBoxFiltering.Text = "Filtering";
+            // 
+            // buttonFilterCountries
+            // 
+            this.buttonFilterCountries.Enabled = false;
+            this.buttonFilterCountries.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.buttonFilterCountries.Location = new System.Drawing.Point(181, 42);
+            this.buttonFilterCountries.Name = "buttonFilterCountries";
+            this.buttonFilterCountries.Size = new System.Drawing.Size(144, 32);
+            this.buttonFilterCountries.TabIndex = 3;
+            this.buttonFilterCountries.Text = "Select Countries...";
+            this.buttonFilterCountries.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxFilterCountries
+            // 
+            this.checkBoxFilterCountries.AutoSize = true;
+            this.checkBoxFilterCountries.Location = new System.Drawing.Point(181, 19);
+            this.checkBoxFilterCountries.Name = "checkBoxFilterCountries";
+            this.checkBoxFilterCountries.Size = new System.Drawing.Size(121, 17);
+            this.checkBoxFilterCountries.TabIndex = 2;
+            this.checkBoxFilterCountries.Text = "Filter seller countries";
+            this.checkBoxFilterCountries.UseVisualStyleBackColor = true;
+            this.checkBoxFilterCountries.CheckedChanged += new System.EventHandler(this.CheckBoxFilterCountries_CheckedChanged);
+            // 
+            // buttonFilterExpansions
+            // 
+            this.buttonFilterExpansions.Enabled = false;
+            this.buttonFilterExpansions.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.buttonFilterExpansions.Location = new System.Drawing.Point(10, 42);
+            this.buttonFilterExpansions.Name = "buttonFilterExpansions";
+            this.buttonFilterExpansions.Size = new System.Drawing.Size(144, 32);
+            this.buttonFilterExpansions.TabIndex = 1;
+            this.buttonFilterExpansions.Text = "Select Expansions...";
+            this.buttonFilterExpansions.UseVisualStyleBackColor = true;
+            this.buttonFilterExpansions.Click += new System.EventHandler(this.ButtonFilterExpansions_Click);
+            // 
+            // checkBoxFilterExpansions
+            // 
+            this.checkBoxFilterExpansions.AutoSize = true;
+            this.checkBoxFilterExpansions.Location = new System.Drawing.Point(10, 19);
+            this.checkBoxFilterExpansions.Name = "checkBoxFilterExpansions";
+            this.checkBoxFilterExpansions.Size = new System.Drawing.Size(104, 17);
+            this.checkBoxFilterExpansions.TabIndex = 0;
+            this.checkBoxFilterExpansions.Text = "Filter expansions";
+            this.checkBoxFilterExpansions.UseVisualStyleBackColor = true;
+            this.checkBoxFilterExpansions.CheckedChanged += new System.EventHandler(this.CheckBoxFilterExpansions_CheckedChanged);
             // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(812, 650);
+            this.ClientSize = new System.Drawing.Size(812, 729);
+            this.Controls.Add(this.groupBoxFiltering);
             this.Controls.Add(this.groupBoxPresets);
             this.Controls.Add(this.checkBoxTestMode);
             this.Controls.Add(this.groupBoxLogSettings);
@@ -880,6 +945,8 @@ namespace MKMTool
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPriceEstMinPrice)).EndInit();
             this.groupBoxPresets.ResumeLayout(false);
             this.panelPresetsDescr.ResumeLayout(false);
+            this.groupBoxFiltering.ResumeLayout(false);
+            this.groupBoxFiltering.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -945,5 +1012,10 @@ namespace MKMTool
         private System.Windows.Forms.Label labelWorlwideAvg;
         private System.Windows.Forms.CheckBox checkBoxPricePlaysetIgnore;
         private System.Windows.Forms.CheckBox checkBoxLogLargeChangeHigh;
+        private System.Windows.Forms.GroupBox groupBoxFiltering;
+        private System.Windows.Forms.Button buttonFilterExpansions;
+        private System.Windows.Forms.CheckBox checkBoxFilterExpansions;
+        private System.Windows.Forms.Button buttonFilterCountries;
+        private System.Windows.Forms.CheckBox checkBoxFilterCountries;
     }
 }
