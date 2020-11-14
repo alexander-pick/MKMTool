@@ -169,7 +169,7 @@ namespace MKMTool
             DataTable dt;
             try
             {
-                 dt = MKMDbManager.ConvertCSVtoDataTable(filePath);
+                 dt = MKMCsvUtils.ConvertCSVtoDataTable(filePath);
             }
             catch (Exception eError)
             {
@@ -668,10 +668,11 @@ namespace MKMTool
                         else if (priceGuidesSkip)
                             continue;
                     }
-                    mc.WriteItselfIntoTable(export, checkBoxExportAll.Checked, checkBoxExportFormatDeckbox.Checked ? MCFormat.Deckbox : MCFormat.MKM);
+                    mc.WriteItselfIntoTable(export, checkBoxExportAll.Checked, 
+                        checkBoxExportFormatDeckbox.Checked ? MCFormat.Deckbox : MCFormat.MKM, false);
                 }
 
-                MKMDbManager.WriteTableAsCSV(sf.FileName, export);
+                MKMCsvUtils.WriteTableAsCSV(sf.FileName, export);
 
                 MainView.Instance.LogMainWindow("Exporting finished.");
             }

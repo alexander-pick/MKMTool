@@ -428,7 +428,7 @@ namespace MKMTool
                 MainView.Instance.LogMainWindow("Found myStock.csv, parsing minimal prices...");
                 try
                 {
-                    DataTable stock = MKMDbManager.ConvertCSVtoDataTable(@".//myStock.csv");
+                    DataTable stock = MKMCsvUtils.ConvertCSVtoDataTable(@".//myStock.csv");
                     if (stock.Columns.Contains(MCAttribute.MinPrice))
                     {
                         foreach (DataRow dr in stock.Rows)
@@ -460,72 +460,42 @@ namespace MKMTool
             {
                 MainView.Instance.LogMainWindow("Setting price according to lowest price is very risky - specify limits for maximal price change first!");
                 return;
-            }
-
-#if (DEBUG)
-            var debugCounter = 0;
-#endif
-            List<XmlNode> articles = new List<XmlNode>();
-            string sRequestXML = "";
-            XmlNodeList result;
-            var start = 1;
-            // load file with lowest prices
-            Dictionary<string, List<MKMMetaCard>> myStock = LoadMyStock();
+           }
+            List<MKMMetaCard> articles;
             try
             {
-                do
-                {
-                    var doc = MKMInteract.RequestHelper.readStock(start);
-
-                    result = doc.GetElementsByTagName("article");
-                    foreach (XmlNode article in result)
-                    {
-                        articles.Add(article);
-                    }
-                    start += result.Count;
-                } while (result.Count == 100);
+                articles = MKMInteract.RequestHelper.getAllStockSingles(MainView.Instance.Config.UseStockGetFile);
             }
             catch (Exception error)
             {
                 MKMHelpers.LogError("reading own stock, cannot continue price update", error.Message, true);
                 return;
             }
+            // load file with lowest prices
+            Dictionary<string, List<MKMMetaCard>> myStock = LoadMyStock();
 
             MainView.Instance.LogMainWindow("Updating Prices...");
             int putCounter = 0;
-            foreach (XmlNode article in articles)
+            string sRequestXML = "";
+            foreach (MKMMetaCard MKMCard in articles)
             {
-#if (DEBUG)
-                debugCounter++;
-                if (debugCounter > 3)
+                XmlNodeList similarItems = getSimilarItems(MKMCard);
+                if (similarItems != null)
                 {
-                    MainView.Instance.logMainWindow("DEBUG MODE - EXITING AFTER 3\n");
-                    break;
-                }
-#endif
-                // according to the API documentation, "The 'condition' key is only returned for single cards. "
-                // -> check if condition exists to see if this is a single card or something else
-                if (article["condition"] != null && article["idArticle"].InnerText != null && article["price"].InnerText != null)
-                {
-                    MKMMetaCard MKMCard = new MKMMetaCard(article);
-                    XmlNodeList similarItems = getSimilarItems(MKMCard);
-                    if (similarItems != null)
+                    appraiseArticle(MKMCard, similarItems, myStock);
+                    string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
+                    if (newPrice != "")
                     {
-                        appraiseArticle(MKMCard, similarItems, myStock);
-                        string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
-                        if (newPrice != "")
+                        sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
+                        // max 100 articles is allowed to be part of a PUT call - if we are there, call it
+                        if (putCounter > 98 && !settings.testMode)
                         {
-                            sRequestXML += MKMInteract.RequestHelper.changeStockArticleBody(MKMCard, newPrice);
-                            // max 100 articles is allowed to be part of a PUT call - if we are there, call it
-                            if (putCounter > 98 && !settings.testMode)
-                            {
-                                MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
-                                putCounter = 0;
-                                sRequestXML = "";
-                            }
-                            else
-                                putCounter++;
+                            MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
+                            putCounter = 0;
+                            sRequestXML = "";
                         }
+                        else
+                            putCounter++;
                     }
                 }
             }
@@ -542,7 +512,7 @@ namespace MKMTool
                 MainView.Instance.LogMainWindow("Done. No valid/meaningful price updates created.");
             }
 
-            String timeStamp = GetTimestamp(DateTime.Now);
+            string timeStamp = GetTimestamp(DateTime.Now);
 
             MainView.Instance.LogMainWindow("Last Run finished: " + timeStamp);
         }
@@ -565,6 +535,7 @@ namespace MKMTool
             string isFoil = card.GetAttribute(MCAttribute.Foil);
             string isSigned = card.GetAttribute(MCAttribute.Signed);
             string isAltered = card.GetAttribute(MCAttribute.Altered);
+            string isFirstEd = card.GetAttribute(MCAttribute.FirstEd);
             string articleName = card.GetAttribute(MCAttribute.Name);
             try
             {
@@ -572,7 +543,7 @@ namespace MKMTool
                             (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
                             (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
                             (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
-                            "&start=0&maxResults=" + maxNbItems;
+                            (isFirstEd != "" ? "&isFirstEd=" + isFirstEd : "") + "&start=0&maxResults=" + maxNbItems;
 
                 return MKMInteract.RequestHelper.makeRequest(sUrl, "GET").GetElementsByTagName("article");
             }

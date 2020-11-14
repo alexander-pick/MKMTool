@@ -50,48 +50,40 @@ namespace MKMTool
         {
             if (Visible)
             {
-                int start = 1;
                 var articles = new DataTable();
                 try
                 {
-                    while (true)
+                    // getAllStockSingles creates a DataTable and converts it to list of cards, so theoretically we are wasting some work
+                    // but it also filters out non-singles and converting to MKMcard will make sure we use the primary column names rather than synonyms
+                    var cards = MKMInteract.RequestHelper.getAllStockSingles(MainView.Instance.Config.UseStockGetFile);
+                    foreach (var card in cards)
                     {
-                        var doc = MKMInteract.RequestHelper.readStock(start);
-                        if (doc.HasChildNodes)
-                        {
-                            var result = doc.GetElementsByTagName("article");
-                            int elementCount = 0;
-                            foreach (XmlNode article in result)
-                            {
-                                if (article["condition"] != null) // is null for articles that are not cards (boosters etc.) - don't process those
-                                {
-                                    MKMMetaCard m = new MKMMetaCard(article);
-                                    m.WriteItselfIntoTable(articles, true, MCFormat.MKM);
-                                    elementCount++;
-                                }
-                            }
-                            if (elementCount != 100)
-                            {
-                                break;
-                            }
-                            start += elementCount;
-                        }
-                        else break; // document is empty -> end*/
+                        card.WriteItselfIntoTable(articles, true, MCFormat.MKM, true);
                     }
-
                     // Remove columns we don't want showing
                     // TODO - what is and isn't shown should probably be customizable and left to the user to choose in some way
-                    articles.Columns.Remove(MCAttribute.ArticleID);
-                    articles.Columns.Remove(MCAttribute.ProductID);
-                    articles.Columns.Remove(MCAttribute.LanguageID);
-                    articles.Columns.Remove(MCAttribute.CardNumber);
+                    if (articles.Columns.Contains(MCAttribute.ArticleID))
+                        articles.Columns.Remove(MCAttribute.ArticleID);
+                    if (articles.Columns.Contains(MCAttribute.LanguageID))
+                        articles.Columns.Remove(MCAttribute.LanguageID);
+                    if (articles.Columns.Contains(MCAttribute.MetaproductID))
+                        articles.Columns.Remove(MCAttribute.MetaproductID);
+                    if (articles.Columns.Contains("onSale"))
+                        articles.Columns.Remove("onSale"); // don't even know what this one is supposed to be, it's not even in the API documentation
+                    if (articles.Columns.Contains(MCAttribute.MKMCurrencyCode))
+                        articles.Columns.Remove(MCAttribute.MKMCurrencyCode);
+                    if (articles.Columns.Contains(MCAttribute.MKMCurrencyId))
+                        articles.Columns.Remove(MCAttribute.MKMCurrencyId);
 
                     var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Expansions,
                         (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
 
-                    dj.Columns.Remove(MCAttribute.ExpansionID); // duplicated
-                    dj.Columns.Remove(MKMDbManager.ExpansionsFields.ExpansionID); // ...and we don't want it anyway
-                    dj.Columns.Remove(MKMDbManager.ExpansionsFields.Name); // duplicated
+                    if (dj.Columns.Contains(MCAttribute.ExpansionID))
+                        dj.Columns.Remove(MCAttribute.ExpansionID); // duplicated
+                    if (dj.Columns.Contains(MKMDbManager.ExpansionsFields.ExpansionID))
+                        dj.Columns.Remove(MKMDbManager.ExpansionsFields.ExpansionID); // ...and we don't want it anyway
+                    if (dj.Columns.Contains(MKMDbManager.ExpansionsFields.Name))
+                        dj.Columns.Remove(MKMDbManager.ExpansionsFields.Name); // duplicated
                     
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Name)].SetOrdinal(0);
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Expansion)].SetOrdinal(1);
@@ -145,7 +137,7 @@ namespace MKMTool
             if (sf.ShowDialog() == DialogResult.OK)
             {
                 MainView.Instance.LogMainWindow("Exporting inventory...");
-                MKMDbManager.WriteTableAsCSV(sf.FileName, (DataTable)stockGridView.DataSource);
+                MKMCsvUtils.WriteTableAsCSV(sf.FileName, (DataTable)stockGridView.DataSource);
                 MainView.Instance.LogMainWindow("Inventory exported.");
             }
         }

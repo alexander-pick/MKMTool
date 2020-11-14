@@ -31,6 +31,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Net;
 using System.Xml;
@@ -342,6 +344,112 @@ namespace MKMTool
             public static XmlDocument readStock(int start = 1)
             {
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/stock/" + start, "GET");
+            }
+
+            /// <summary>
+            /// Gets the stock file csv.
+            /// Warning: the Language column in the returned csv is actually Language ID and boolean vars (foil etc. are empty for "false").
+            /// Prefer using the wrapper getAllStockSingles.
+            /// </summary>
+            /// <returns>Decompressed data containing the stock file. Can either be written directly to an output stream.
+            /// Null if the reading failed (this method logs the error).</returns>
+            private static byte[] getStockFile()
+            {
+                var doc = makeRequest("https://api.cardmarket.com/ws/v2.0/stock/file", "GET");
+
+                var node = doc.GetElementsByTagName("response");
+                                
+                if (node.Count > 0 && node.Item(0)["stock"].InnerText != null)
+                {
+                    var data = Convert.FromBase64String(node.Item(0)["stock"].InnerText);
+                    var aDecompressed = MKMHelpers.gzDecompress(data);
+
+                    return aDecompressed;
+                }
+                else
+                {
+                    MKMHelpers.LogError("getting stock file", "failed to get the stock file from MKM.", false);
+                    return null;
+                }
+            }
+
+            /// <summary>
+            /// Returns all single cards in our stock as meta cards. This is just a convenience wrapper on getStockFile/readStock.
+            /// </summary>
+            /// <param name="useFile">This is for legacy support. If set to false, it will use the old way of getting stock
+            /// by the readStock method. New way is to use getStockFile as it takes only a single API request.</param>
+            /// <returns>List of all single cards in our stock</returns>
+            public static List<MKMMetaCard> getAllStockSingles(bool useFile)
+            {
+                List<MKMMetaCard> cards = new List<MKMMetaCard>();
+                if (useFile)
+                {
+                    byte[] stock = getStockFile();
+                    if (stock != null)
+                    {
+                        var articleTable = MKMCsvUtils.ConvertCSVtoDataTable(stock);
+                        // the GET STOCK FILE has language ID named Language, fix that
+                        articleTable.Columns["Language"].ColumnName = MCAttribute.LanguageID;
+                        foreach (DataRow row in articleTable.Rows)
+                        {
+                            MKMMetaCard mc = new MKMMetaCard(row);
+                            // according to the API documentation, "The 'condition' key is only returned for single cards. "
+                            // -> check if condition exists to see if this is a single card or something else
+                            if (mc.GetAttribute(MCAttribute.Condition) != "" && mc.GetAttribute(MCAttribute.ArticleID) != "")
+                            {
+                                // sanitize the false booleans - the empty ones mean no, while in MKMMEtaCard empty means "any"
+                                if (articleTable.Columns.Contains("Foil?") && mc.GetAttribute(MCAttribute.Foil) == "")
+                                {
+                                    mc.SetBoolAttribute(MCAttribute.Foil, "false");
+                                }
+                                if (articleTable.Columns.Contains("Altered?") && mc.GetAttribute(MCAttribute.Altered) == "")
+                                {
+                                    mc.SetBoolAttribute(MCAttribute.Altered, "false");
+                                }
+                                if (articleTable.Columns.Contains("Signed?") && mc.GetAttribute(MCAttribute.Signed) == "")
+                                {
+                                    mc.SetBoolAttribute(MCAttribute.Signed, "false");
+                                }
+                                if (articleTable.Columns.Contains("Playset?") && mc.GetAttribute(MCAttribute.Playset) == "")
+                                {
+                                    mc.SetBoolAttribute(MCAttribute.Playset, "false");
+                                }
+                                // this is just a guess, not sure how isFirstEd is written there, or if at all
+                                if (articleTable.Columns.Contains("FirstEd?") && mc.GetAttribute(MCAttribute.FirstEd) == "")
+                                {
+                                    mc.SetBoolAttribute(MCAttribute.FirstEd, "false");
+                                }
+                                cards.Add(mc);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var start = 1;
+                    XmlNodeList result;
+                    var count = 0;
+                    do
+                    {
+                        var doc = readStock(start);
+                        if (doc.HasChildNodes)
+                        {
+                            result = doc.GetElementsByTagName("article");
+                            foreach (XmlNode article in result)
+                            {
+                                // according to the API documentation, "The 'condition' key is only returned for single cards. "
+                                // -> check if condition exists to see if this is a single card or something else
+                                if (article["condition"] != null && article["idArticle"].InnerText != null)
+                                {
+                                    cards.Add(new MKMMetaCard(article));
+                                }
+                            }
+                            count = result.Count;
+                            start += count;
+                        }
+                    } while (count == 100);
+                }
+                return cards;
             }
 
             /// <summary>

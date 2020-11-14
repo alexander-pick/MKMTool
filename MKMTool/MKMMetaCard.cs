@@ -70,6 +70,11 @@ namespace MKMTool
         public static string ExpansionID { get { return "Expansion ID"; } }
 
         /// <summary>
+        /// The MKM's expansion abbreviation.
+        /// </summary>
+        public static string ExpansionAbb { get { return "abbreviation"; } }
+
+        /// <summary>
         /// English name of the language, first letters capital, i.e. one of the following strings:
         /// (English;French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese) 
         /// </summary>
@@ -110,7 +115,13 @@ namespace MKMTool
         /// The string "true" (lowercase) if the card is treated as a playset, "false" if it isn't and an empty string if either is accepted.
         /// </summary>
         public static string Playset { get { return "Playset"; } }
-                
+
+        /// <summary>
+        /// The string "true" (lowercase) if the card is treated as first edition, "false" if it isn't and an empty string if either is accepted.
+        /// Only relevant for Yu-Gi-Oh
+        /// </summary>
+        public static string FirstEd { get { return "FirstEd"; } }
+
         /// <summary>
         /// The MKM's product ID.
         /// </summary>
@@ -156,6 +167,16 @@ namespace MKMTool
         /// The price of the card on MKM (relevant only for exact card article).
         /// </summary>
         public static string MKMPrice { get { return "Price"; } }
+
+        /// <summary>
+        /// The string EUR or GBP.
+        /// </summary>
+        public static string MKMCurrencyCode { get { return "Currency Code"; } }
+
+        /// <summary>
+        /// The currency id, 1 for EUR, 2 for GBP.
+        /// </summary>
+        public static string MKMCurrencyId { get { return "idCurrency"; } }
 
         /// <summary>
         /// For MKM articles, this is what is inside the "comments" field.
@@ -231,7 +252,12 @@ namespace MKMTool
         // If a recognized attribute has a synonym, add it to this dictionary, key == synonym, value == the recognized attribute to which this synonym maps.
         private static Dictionary<string, string> synonyms = new Dictionary<string, string>
         {
-            { "enName", MCAttribute.Name }, { "Edition", MCAttribute.Expansion }, { "Altered Art", MCAttribute.Altered }
+            { "enName", MCAttribute.Name }, { "Edition", MCAttribute.Expansion }, { "Altered Art", MCAttribute.Altered },
+            // the following 10 are used by GET STOCK FILE
+            { "Foil?", MCAttribute.Foil }, { "Signed?", MCAttribute.Signed }, { "Playset?", MCAttribute.Playset },
+            { "Altered?", MCAttribute.Altered }, { "FirstEd?", MCAttribute.FirstEd }, { "English Name", MCAttribute.Name },
+            { "Exp. Name", MCAttribute.Expansion }, { "Amount", MCAttribute.Count }, { "Exp.", MCAttribute.ExpansionAbb },
+            { "Local Name", MCAttribute.LocName }
         };
 
         // literal dictionary of conditions - translates any supported condition denomination to its equivalent in the two-letter format MKM uses
@@ -310,7 +336,7 @@ namespace MKMTool
                     else if (attName == MCAttribute.LanguageID)
                         SetLanguageID(columnVal);
                     else if (attName == MCAttribute.Foil || attName == MCAttribute.Signed
-                        || attName == MCAttribute.Altered || attName == MCAttribute.Playset)
+                        || attName == MCAttribute.Altered || attName == MCAttribute.Playset || attName == MCAttribute.FirstEd)
                         SetBoolAttribute(attName, columnVal);
                     // all other attributes
                     else
@@ -434,6 +460,8 @@ NOT STORED      links: { }                           // HATEOAS links
                 data[MCAttribute.Altered] = MKMArticle["isAltered"].InnerText;
             if (MKMArticle["isPlayset"] != null)
                 data[MCAttribute.Playset] = MKMArticle["isPlayset"].InnerText;
+            if (MKMArticle["isFirstEd"] != null)
+                data[MCAttribute.FirstEd] = MKMArticle["isFirstEd"].InnerText;
             if (MKMArticle["product"] != null) // based on which API call was used, this can be null
             {
                 data[MCAttribute.Name] = MKMArticle["product"]["enName"].InnerText;
@@ -614,51 +642,45 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         }
 
         /// <summary>
-        /// Sets an attribute that has boolean value.
+        /// Sets an attribute that has boolean value. Also sets all existing synonyms to that value.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="value">The value. Can be in any recognized format, any capitalization, it will be transformed to lowercase true/false/"".
         /// Recognized values: empty string always == "any"; true/false/null; yes/no/any; foil/signed/altered all equal true.</param>
         public void SetBoolAttribute(string name, string value)
         {
-
             value = value.ToLower(); // MKM API is returning boolean values always as "false/true/null"
+            string toWrite = value;
             switch (value)
             {
-                case "false":
-                case "true":
-                    data[name] = value;
-                    break;
                 case "null": // means "any"
-                    data[name] = "";
+                    toWrite = "";
                     break;
                 case "yes":
-                    data[name] = "true";
+                case "x": // this is used by GET STOCK FILE
+                    toWrite = "true";
                     break;
                 case "no":
-                    data[name] = "false";
+                    toWrite = "false";
                     break;
                 case "any":
-                    data[name] = "";
+                    toWrite = "";
                     break;
                 // deckbox.org says the word if it is true and leaves the field blank if it is false
                 // note that we are deviating for the empty field case from their system because it is wrong:
                 // for example, they leave blank foil field even for cards that are available only in foil like all kinds of promos
                 // therefore we understand empty string or "null" as meaning "Any"
                 case "foil":
-                    data[name] = "true";
-                    break;
                 case "signed":
-                    data[name] = "true";
-                    break;
                 case "altered":
-                    data[name] = "true";
+                    toWrite = "true";
                     break;
             }
+            SetAttribute(name, toWrite);
         }
 
         /// <summary>
-        /// Sets the specified attribute to the specified value.
+        /// Sets the specified attribute to the specified value. Also sets all existing synonyms to that value.
         /// DOES NOT PERFORM ANY CHECKS ON VALIDITY - if there is a Set*** method available for a particular attribute (like language, condition),
         /// use that instead of this method to perform a check that the value is valid and that all related attributes will be set to correct values.
         /// Use SetBoolAttribute where applicable: foil, playset, signed, altered...
@@ -668,6 +690,24 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         public void SetAttribute(string name, string value)
         {
             data[name] = value;
+            // get the main name
+            string mainName;
+            if (synonyms.TryGetValue(name, out mainName)) // check if this is a registered synonym
+            {
+                data[mainName] = value; // don't forget to write it in the main name, not just other synonyms
+            }
+            else  // if it fails, then this is a main name
+            {
+                mainName = name;
+            }
+            // now look for all synonyms for the main name
+            foreach (var entry in synonyms)
+            {
+                if (entry.Value == mainName)
+                {
+                    data[entry.Key] = value; // key are synonyms, values are main names
+                }
+            }
         }
 
         /// <summary>
@@ -724,7 +764,10 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         /// in the table will be written. If this card does not have a value for that attribute, an empty string will be set as the value.
         /// If set to true, all attributes will be written - new columns will be added if they are missing.</param>
         /// <param name="format">Specific format - if not set to MKM, some fields will have reformatted output.</param>
-        public void WriteItselfIntoTable(DataTable table, bool writeAllAttributes, MCFormat format)
+        /// <param name="noSynonyms">If a given attribute is a synonym of an already existing one, do not write it if noSynonyms is true.
+        /// However, if the column with the synonym attribute is already in the table, it will be written, i.e. this has effect 
+        /// only if writeAllAttributes is set to true</param>
+        public void WriteItselfIntoTable(DataTable table, bool writeAllAttributes, MCFormat format, bool noSynonyms)
         {
             List<string> attributes = new List<string>();
             foreach (DataColumn dc in table.Columns) // first we collect all attributes that are already in the table
@@ -739,6 +782,16 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
                 {
                     if (att.Value != "" && !table.Columns.Contains(att.Key))
                     {
+                        if (noSynonyms)
+                        {
+                            // check if this attribute is a synonym, if it is, write it only if the "parent" (the main name) is non-empty
+                            string synonymRoot;
+                            if (synonyms.TryGetValue(att.Key, out synonymRoot))
+                            {
+                                if (GetAttribute(synonymRoot) != "")
+                                    continue;
+                            }
+                        }
                         DataColumn newColumn = new DataColumn(att.Key, typeof(string));
                         newColumn.DefaultValue = "";
                         table.Columns.Add(newColumn);
