@@ -55,8 +55,8 @@ public class MKMAuth
         /// <summary>App Token</summary>
         protected string appToken = "";
 
-        /// <summary>All Header params compiled into a Dictionary</summary>
-        protected IDictionary<string, string> headerParams;
+        /// <summary>Header params deduced from config</summary>
+        protected Dictionary<string, string> configHeaderParams;
 
         /// <summary>OAuth Signature Method</summary>
         protected string signatureMethod = "HMAC-SHA1";
@@ -83,13 +83,13 @@ public class MKMAuth
             // String timestamp = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
             var timestamp = "1407917892";
             /// Initialize all class members
-            headerParams = new Dictionary<string, string>();
-            headerParams.Add("oauth_consumer_key", appToken);
-            headerParams.Add("oauth_token", accessToken);
-            headerParams.Add("oauth_nonce", nonce);
-            headerParams.Add("oauth_timestamp", timestamp);
-            headerParams.Add("oauth_signature_method", signatureMethod);
-            headerParams.Add("oauth_version", version);
+            configHeaderParams = new Dictionary<string, string>();
+            configHeaderParams.Add("oauth_consumer_key", appToken);
+            configHeaderParams.Add("oauth_token", accessToken);
+            configHeaderParams.Add("oauth_nonce", nonce);
+            configHeaderParams.Add("oauth_timestamp", timestamp);
+            configHeaderParams.Add("oauth_signature_method", signatureMethod);
+            configHeaderParams.Add("oauth_version", version);
         }
 
         public static SortedDictionary<string, string> ParseQueryString(string query)
@@ -123,7 +123,7 @@ public class MKMAuth
             var baseUri = uri.GetLeftPart(UriPartial.Path);
 
             //MessageBox.Show(baseUri);
-
+            Dictionary<string, string> headerParams = new Dictionary<string, string>(configHeaderParams);
             /// Add the realm parameter to the header params
             headerParams.Add("realm", baseUri);
 

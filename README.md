@@ -1,11 +1,16 @@
-# Welcome to MKMTool 0.7.0
+# Welcome to MKMTool 0.8
 
-If you have just updated to 0.7.0 from older version, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
+If you have just updated from older version than 0.8.0, do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file (you don't have to modify them, see [Installation and starting off](#Installation-and-starting-off) for details).
+If you have just updated from older version than 0.7.0, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
 
 ## Latest changes
-**Version 0.7.1.0, 12.12.2019**
-Bugfixes:
+**Version 0.8.0.0, 30.11.2020**
+New/improved features:
++ Added generic configuration settings for MKMTool that can be specified in the config.xml. Right now there is only one new setting, might be more in the future.
 + MinPrice from mystock.csv was taken into account only if no price update was computed. Now it will always be checked even just against the current price.
+
+<details><summary><i>Show older changelogs</i></summary>
+<p>
 
 **Version 0.7.0.5, 12.12.2019**
 + Fix Download buys outputting all the orders N times, where N was number of orders
@@ -28,10 +33,6 @@ Bugfixes:
 **Version 0.7.0.1, 13.7.2019**
 + When reading a card from CSV and product ID, expansion ID or expansion name is not recognized, a warning will be displayed.
 + Some more clarifications on limitations of Price External List
-
-
-<details><summary><i>Show older changelogs</i></summary>
-<p>
 
 **Version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
 
@@ -110,7 +111,7 @@ First a small disclaimer and things to remember:
 
 ## Installation and starting off
 
-You can simply open the project in Microsoft Visual Studio Community 2015 (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
+You can simply open the project in Microsoft Visual Studio Community 2015 or newer (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
 
 If you are too lazy to compile, here is a build for Windows (64-bit):
 
@@ -124,7 +125,7 @@ Before you can use the tool please rename config_template.xml to config.xml and 
 + unzip everything to a folder
 + at MKM go to your account -> profile -> get a token for a dedicated (!) app
 + rename config_template.xml to config.xml
-+ open config.xml with an editor and put the token details in the file - field names should be self explaining and this is simple xml
++ open config.xml with an editor and put the token details in the file. There are four values you need to enter: appToken, appSecret, accessToken and accessSecret. Enter the values from your MKM account instead of the ENTER_YOUR_xxxx_INSTEAD_OF_THIS_TEXT, where xxxx are the names of the values. 
 + run the tool - should work!
 
 The first startup takes a bit since 3 MB of data is downloaded and unzipped, but there should be no problem on Win7 or 10 beyond this.

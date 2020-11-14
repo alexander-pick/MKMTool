@@ -41,8 +41,27 @@ using Timer = System.Timers.Timer;
 
 namespace MKMTool
 {
+    
+
     public partial class MainView : Form
     {
+        public class MKMToolConfig
+        {
+            public MKMToolConfig()
+            {
+                     var xConfigFile = new System.Xml.XmlDocument();
+
+                     xConfigFile.Load(@".//config.xml");
+                     if (xConfigFile["config"]["settings"] != null && xConfigFile["config"]["settings"]["UseStockGetFile"] != null)
+                     {
+                         bool stockGetMethod;
+                         if (bool.TryParse(xConfigFile["config"]["settings"]["UseStockGetFile"].InnerText, out stockGetMethod))
+                             UseStockGetFile = stockGetMethod;
+                     }
+            }
+
+            public bool UseStockGetFile { get; } = true;
+        }
         private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
 
@@ -58,7 +77,6 @@ namespace MKMTool
         private CheckDisplayPrices checkDisplayPricesWindow = new CheckDisplayPrices();
         private WantlistEditorView wantlistEditorViewWindow = new WantlistEditorView();
         private PriceExternalList priceExternalListWindow = new PriceExternalList();
-
         internal MKMBot bot;
 
         /// <summary>
@@ -74,6 +92,12 @@ namespace MKMTool
                 return bot;
             }
         }
+
+        /// <summary>
+        /// Gets the configuration loaded from config.xml.
+        /// </summary>
+        /// <value>The configuration loaded at start of MKMTool.</value>
+        public MKMToolConfig Config { get; } = new MKMToolConfig();
 
         private static MainView instance = null; // singleton instance of the main app window
 
@@ -103,8 +127,8 @@ namespace MKMTool
         {
             InitializeComponent();
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
-            this.Text = "MKMTool " + fileVersionInfo.ProductVersion + " - Alexander Pick 2017 - Licensed under GPL v3";
+            FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            Text = "MKMTool " + fileVersionInfo.ProductVersion + " - Alexander Pick 2017 - Licensed under GPL v3";
 
 #if DEBUG
             logBox.AppendText("DEBUG MODE ON!\n");

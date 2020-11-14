@@ -44,6 +44,7 @@ namespace MKMTool
         {
             private static bool denyAdditionalRequests = false; // this switches to true once requests limit is reached for the day
             private static System.DateTime denyTime; // to know when denyAdditionalRequests was switched, if we pass to another day, reset it 
+            private static MKMAuth.OAuthHeader header = new MKMAuth.OAuthHeader();
 
             /// <summary>
             /// Makes a request from MKM's API. 
@@ -73,7 +74,6 @@ namespace MKMTool
                 var request = WebRequest.CreateHttp(url);
                 request.Method = method;
 
-                var header = new MKMAuth.OAuthHeader();
                 request.Headers.Add(HttpRequestHeader.Authorization, header.getAuthorizationHeader(method, url));
                 request.Method = method;
 

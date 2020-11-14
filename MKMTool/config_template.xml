@@ -31,8 +31,11 @@
     Programm erhalten haben. Wenn nicht, siehe <http://www.gnu.org/licenses/>.
 -->
 <config>
-  <appToken></appToken>
-  <appSecret></appSecret>
-  <accessToken></accessToken>
-  <accessSecret></accessSecret>
+  <settings>
+    <UseStockGetFile>true</UseStockGetFile><!--Values can be: true, false -->
+  </settings>
+  <appToken>ENTER_YOUR_APP_TOKEN_INSTEAD_OF_THIS_TEXT</appToken>
+  <appSecret>ENTER_YOUR_APP_SECRET_INSTEAD_OF_THIS_TEXT</appSecret>
+  <accessToken>ENTER_YOUR_ACCESS_TOKEN_INSTEAD_OF_THIS_TEXT</accessToken>
+  <accessSecret>ENTER_YOUR_ACCESS_SECRET_INSTEAD_OF_THIS_TEXT</accessSecret>
 </config>
