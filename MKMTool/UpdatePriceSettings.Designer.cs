@@ -128,6 +128,8 @@ namespace MKMTool
             this.checkBoxFilterPrivSeller = new System.Windows.Forms.CheckBox();
             this.checkBoxFilterProfSeller = new System.Windows.Forms.CheckBox();
             this.checkBoxFilterPowerseller = new System.Windows.Forms.CheckBox();
+            this.labelPriceEstUpdateMode = new System.Windows.Forms.Label();
+            this.comboBoxPriceEstUpdateMode = new System.Windows.Forms.ComboBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -294,6 +296,8 @@ namespace MKMTool
             // 
             // groupBoxPriceEstim
             // 
+            this.groupBoxPriceEstim.Controls.Add(this.comboBoxPriceEstUpdateMode);
+            this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstUpdateMode);
             this.groupBoxPriceEstim.Controls.Add(this.labelWorlwideAvg);
             this.groupBoxPriceEstim.Controls.Add(this.checkBoxPricePlaysetIgnore);
             this.groupBoxPriceEstim.Controls.Add(this.labelMultCopiesCap);
@@ -957,6 +961,31 @@ namespace MKMTool
             this.checkBoxFilterPowerseller.Text = "Include powersellers";
             this.checkBoxFilterPowerseller.UseVisualStyleBackColor = true;
             // 
+            // labelPriceEstUpdateMode
+            // 
+            this.labelPriceEstUpdateMode.AutoSize = true;
+            this.labelPriceEstUpdateMode.Location = new System.Drawing.Point(516, 126);
+            this.labelPriceEstUpdateMode.Name = "labelPriceEstUpdateMode";
+            this.labelPriceEstUpdateMode.Size = new System.Drawing.Size(74, 13);
+            this.labelPriceEstUpdateMode.TabIndex = 7;
+            this.labelPriceEstUpdateMode.Text = "Update mode:";
+            this.toolTip1.SetToolTip(this.labelPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
+            // 
+            // comboBoxPriceEstUpdateMode
+            // 
+            this.comboBoxPriceEstUpdateMode.CausesValidation = false;
+            this.comboBoxPriceEstUpdateMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPriceEstUpdateMode.FormattingEnabled = true;
+            this.comboBoxPriceEstUpdateMode.Items.AddRange(new object[] {
+            "Full update",
+            "Update only below minPrice",
+            "Only ensure minPrice"});
+            this.comboBoxPriceEstUpdateMode.Location = new System.Drawing.Point(591, 123);
+            this.comboBoxPriceEstUpdateMode.Name = "comboBoxPriceEstUpdateMode";
+            this.comboBoxPriceEstUpdateMode.Size = new System.Drawing.Size(191, 21);
+            this.comboBoxPriceEstUpdateMode.TabIndex = 65;
+            this.toolTip1.SetToolTip(this.comboBoxPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
+            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1067,5 +1096,7 @@ namespace MKMTool
         private System.Windows.Forms.CheckBox checkBoxFilterPowerseller;
         private System.Windows.Forms.CheckBox checkBoxFilterProfSeller;
         private System.Windows.Forms.CheckBox checkBoxFilterPrivSeller;
+        private System.Windows.Forms.ComboBox comboBoxPriceEstUpdateMode;
+        private System.Windows.Forms.Label labelPriceEstUpdateMode;
     }
 }

@@ -184,6 +184,19 @@ namespace MKMTool
             s.testMode = checkBoxTestMode.Checked;
             s.searchWorldwide = checkBoxPriceEstWorldwide.Checked;
 
+            switch(comboBoxPriceEstUpdateMode.SelectedIndex)
+            {
+                case 0:
+                    s.updateMode = MKMBotSettings.UpdateMode.FullUpdate;
+                    break; 
+                case 1:
+                    s.updateMode = MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice;
+                    break;
+                case 2:
+                    s.updateMode = MKMBotSettings.UpdateMode.OnlyEnsureMinPrice;
+                    break;
+            }
+
             return true;
         }
 
@@ -273,6 +286,19 @@ namespace MKMTool
             checkBoxTestMode.Checked = settings.testMode;
             checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
             trackBarPriceEstAvgWorld.Enabled = settings.searchWorldwide;
+
+            switch (settings.updateMode)
+            {
+                case MKMBotSettings.UpdateMode.FullUpdate:
+                    comboBoxPriceEstUpdateMode.SelectedIndex = 0;
+                    break;
+                case MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice:
+                    comboBoxPriceEstUpdateMode.SelectedIndex = 1;
+                    break;
+                case MKMBotSettings.UpdateMode.OnlyEnsureMinPrice:
+                    comboBoxPriceEstUpdateMode.SelectedIndex = 2;
+                    break;
+            }
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
