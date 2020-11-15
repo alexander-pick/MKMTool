@@ -206,7 +206,7 @@ namespace MKMTool
 
         private void updatePriceRun()
         {
-            bot.updatePrices();
+            bot.UpdatePrices();
         }
 
         private async void updatePriceButton_Click(object sender, EventArgs e)
@@ -214,7 +214,7 @@ namespace MKMTool
             MKMBotSettings s;
             if (settingsWindow.GenerateBotSettings(out s))
             {
-                bot.setSettings(s);
+                bot.SetSettings(s);
                 updatePriceButton.Enabled = false;
                 updatePriceButton.Text = "Updating...";
                 await Task.Run(() => updatePriceRun());
@@ -286,9 +286,9 @@ namespace MKMTool
             MKMBotSettings s;
             if (settingsWindow.GenerateBotSettings(out s))
             {
-                bot.setSettings(s);
+                bot.SetSettings(s);
                 updatePriceButton.Text = "Updating...";
-                bot.updatePrices(); //mainForm
+                bot.UpdatePrices(); //mainForm
                 updatePriceButton.Text = "Update Prices";
             }
             else
@@ -329,7 +329,7 @@ namespace MKMTool
         {
             logBox.AppendText("Downloading Buys data." + Environment.NewLine);
 
-            string sFilename = MKMBot.getBuys(this, "8"); //mainForm
+            string sFilename = MKMBot.GetBuys(this, "8"); //mainForm
             if (sFilename != "")
                 Process.Start(sFilename);
         }

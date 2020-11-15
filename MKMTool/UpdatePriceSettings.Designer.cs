@@ -265,7 +265,7 @@ namespace MKMTool
             this.radioButtonCondAcceptBetterAlways.TabIndex = 7;
             this.radioButtonCondAcceptBetterAlways.Text = "Accept better whenever";
             this.radioButtonCondAcceptBetterAlways.UseVisualStyleBackColor = true;
-            this.radioButtonCondAcceptBetterAlways.CheckedChanged += new System.EventHandler(this.CheckBoxCondAcceptBetterAlways_CheckedChanged);
+            this.radioButtonCondAcceptBetterAlways.CheckedChanged += new System.EventHandler(this.checkBoxCondAcceptBetterAlways_CheckedChanged);
             // 
             // labelMatchExplanation
             // 
@@ -287,7 +287,7 @@ namespace MKMTool
             this.radioButtonCondMatchOnly.TabStop = true;
             this.radioButtonCondMatchOnly.Text = "Accept only matches*";
             this.radioButtonCondMatchOnly.UseVisualStyleBackColor = true;
-            this.radioButtonCondMatchOnly.CheckedChanged += new System.EventHandler(this.CheckBoxCondMatchOnly_CheckedChanged);
+            this.radioButtonCondMatchOnly.CheckedChanged += new System.EventHandler(this.checkBoxCondMatchOnly_CheckedChanged);
             // 
             // groupBoxPriceEstim
             // 
@@ -491,7 +491,7 @@ namespace MKMTool
             this.trackBarPriceEstAvgWorld.Size = new System.Drawing.Size(534, 45);
             this.trackBarPriceEstAvgWorld.TabIndex = 51;
             this.trackBarPriceEstAvgWorld.Value = 25;
-            this.trackBarPriceEstAvgWorld.ValueChanged += new System.EventHandler(this.TrackBarPriceEstAvgWorld_ValueChanged);
+            this.trackBarPriceEstAvgWorld.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvgWorld_ValueChanged);
             // 
             // checkBoxPriceEstWorldwide
             // 
@@ -504,7 +504,7 @@ namespace MKMTool
             this.toolTip1.SetToolTip(this.checkBoxPriceEstWorldwide, "If minimum number of items (before any culling) is not found in your country, ite" +
         "ms from all sellers will be considered");
             this.checkBoxPriceEstWorldwide.UseVisualStyleBackColor = true;
-            this.checkBoxPriceEstWorldwide.CheckedChanged += new System.EventHandler(this.CheckBoxPriceEstWorldwide_CheckedChanged);
+            this.checkBoxPriceEstWorldwide.CheckedChanged += new System.EventHandler(this.checkBoxPriceEstWorldwide_CheckedChanged);
             // 
             // textBoxPriceEstMaxDiff
             // 
@@ -523,7 +523,7 @@ namespace MKMTool
             this.trackBarPriceEstAvg.Size = new System.Drawing.Size(535, 45);
             this.trackBarPriceEstAvg.TabIndex = 36;
             this.trackBarPriceEstAvg.Value = 25;
-            this.trackBarPriceEstAvg.ValueChanged += new System.EventHandler(this.TrackBarPriceEstAvg_ValueChanged);
+            this.trackBarPriceEstAvg.ValueChanged += new System.EventHandler(this.trackBarPriceEstAvg_ValueChanged);
             // 
             // labelPriceEstMaximumPrice
             // 
@@ -595,7 +595,7 @@ namespace MKMTool
             this.radioButtonPriceEstHighestPrice.TabStop = true;
             this.radioButtonPriceEstHighestPrice.Text = "Set price based on highest price:";
             this.radioButtonPriceEstHighestPrice.UseVisualStyleBackColor = true;
-            this.radioButtonPriceEstHighestPrice.CheckedChanged += new System.EventHandler(this.RadioButtonPriceEstHighestPrice_CheckedChanged);
+            this.radioButtonPriceEstHighestPrice.CheckedChanged += new System.EventHandler(this.radioButtonPriceEstHighestPrice_CheckedChanged);
             // 
             // labelPriceEstLowestPrice
             // 
@@ -637,7 +637,7 @@ namespace MKMTool
             this.radioButtonPriceEstByLowestPrice.TabStop = true;
             this.radioButtonPriceEstByLowestPrice.Text = "Set price based on lowest price:";
             this.radioButtonPriceEstByLowestPrice.UseVisualStyleBackColor = true;
-            this.radioButtonPriceEstByLowestPrice.CheckedChanged += new System.EventHandler(this.RadioButtonPriceByLowestPrice_CheckedChanged);
+            this.radioButtonPriceEstByLowestPrice.CheckedChanged += new System.EventHandler(this.radioButtonPriceByLowestPrice_CheckedChanged);
             // 
             // radioButtonPriceEstPriceByAvg
             // 
@@ -645,12 +645,12 @@ namespace MKMTool
             this.radioButtonPriceEstPriceByAvg.Checked = true;
             this.radioButtonPriceEstPriceByAvg.Location = new System.Drawing.Point(11, 148);
             this.radioButtonPriceEstPriceByAvg.Name = "radioButtonPriceEstPriceByAvg";
-            this.radioButtonPriceEstPriceByAvg.Size = new System.Drawing.Size(232, 17);
+            this.radioButtonPriceEstPriceByAvg.Size = new System.Drawing.Size(192, 17);
             this.radioButtonPriceEstPriceByAvg.TabIndex = 25;
             this.radioButtonPriceEstPriceByAvg.TabStop = true;
-            this.radioButtonPriceEstPriceByAvg.Text = "Set price based on average (domestic only):";
+            this.radioButtonPriceEstPriceByAvg.Text = "Price based on average - domestic:";
             this.radioButtonPriceEstPriceByAvg.UseVisualStyleBackColor = true;
-            this.radioButtonPriceEstPriceByAvg.CheckedChanged += new System.EventHandler(this.RadioButtonPriceEstPriceByAvg_CheckedChanged);
+            this.radioButtonPriceEstPriceByAvg.CheckedChanged += new System.EventHandler(this.radioButtonPriceEstPriceByAvg_CheckedChanged);
             // 
             // numericUpDownPriceEstMaxN
             // 
@@ -674,7 +674,7 @@ namespace MKMTool
             0,
             0,
             0});
-            this.numericUpDownPriceEstMaxN.ValueChanged += new System.EventHandler(this.NumericUpDownPriceEstMaxN_ValueChanged);
+            this.numericUpDownPriceEstMaxN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMaxN_ValueChanged);
             // 
             // numericUpDownPriceEstMinN
             // 
@@ -698,7 +698,7 @@ namespace MKMTool
             0,
             0,
             0});
-            this.numericUpDownPriceEstMinN.ValueChanged += new System.EventHandler(this.NumericUpDownPriceEstMinN_ValueChanged);
+            this.numericUpDownPriceEstMinN.ValueChanged += new System.EventHandler(this.numericUpDownPriceEstMinN_ValueChanged);
             // 
             // numericUpDownPriceEstMinPrice
             // 
@@ -815,7 +815,7 @@ namespace MKMTool
             this.buttonPresetsDelete.TabIndex = 3;
             this.buttonPresetsDelete.Text = "Delete Preset";
             this.buttonPresetsDelete.UseVisualStyleBackColor = true;
-            this.buttonPresetsDelete.Click += new System.EventHandler(this.ButtonPresetsDelete_Click);
+            this.buttonPresetsDelete.Click += new System.EventHandler(this.buttonPresetsDelete_Click);
             // 
             // buttonPresetsStore
             // 
@@ -826,7 +826,7 @@ namespace MKMTool
             this.buttonPresetsStore.TabIndex = 2;
             this.buttonPresetsStore.Text = "Store Preset...";
             this.buttonPresetsStore.UseVisualStyleBackColor = true;
-            this.buttonPresetsStore.Click += new System.EventHandler(this.ButtonPresetsStore_Click);
+            this.buttonPresetsStore.Click += new System.EventHandler(this.buttonPresetsStore_Click);
             // 
             // buttonPresetsLoad
             // 
@@ -838,7 +838,7 @@ namespace MKMTool
             this.buttonPresetsLoad.TabIndex = 1;
             this.buttonPresetsLoad.Text = "Load Preset";
             this.buttonPresetsLoad.UseVisualStyleBackColor = true;
-            this.buttonPresetsLoad.Click += new System.EventHandler(this.ButtonPresetsLoad_Click);
+            this.buttonPresetsLoad.Click += new System.EventHandler(this.buttonPresetsLoad_Click);
             // 
             // comboBoxPresets
             // 
@@ -849,8 +849,8 @@ namespace MKMTool
             this.comboBoxPresets.Name = "comboBoxPresets";
             this.comboBoxPresets.Size = new System.Drawing.Size(351, 24);
             this.comboBoxPresets.TabIndex = 0;
-            this.comboBoxPresets.DropDown += new System.EventHandler(this.ComboBoxPresets_DropDown);
-            this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.ComboBoxPresets_SelectedIndexChanged);
+            this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
+            this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
             // groupBoxFiltering
             // 
@@ -875,6 +875,7 @@ namespace MKMTool
             this.buttonFilterCountries.TabIndex = 3;
             this.buttonFilterCountries.Text = "Select Countries...";
             this.buttonFilterCountries.UseVisualStyleBackColor = true;
+            this.buttonFilterCountries.Click += new System.EventHandler(this.buttonFilterCountries_Click);
             // 
             // checkBoxFilterCountries
             // 
@@ -884,8 +885,10 @@ namespace MKMTool
             this.checkBoxFilterCountries.Size = new System.Drawing.Size(121, 17);
             this.checkBoxFilterCountries.TabIndex = 2;
             this.checkBoxFilterCountries.Text = "Filter seller countries";
+            this.toolTip1.SetToolTip(this.checkBoxFilterCountries, "Use the button below to choose countries. Only sellers from countries will be use" +
+        "d to compute price. Worlwide search must be activated.");
             this.checkBoxFilterCountries.UseVisualStyleBackColor = true;
-            this.checkBoxFilterCountries.CheckedChanged += new System.EventHandler(this.CheckBoxFilterCountries_CheckedChanged);
+            this.checkBoxFilterCountries.CheckedChanged += new System.EventHandler(this.checkBoxFilterCountries_CheckedChanged);
             // 
             // buttonFilterExpansions
             // 
@@ -897,7 +900,7 @@ namespace MKMTool
             this.buttonFilterExpansions.TabIndex = 1;
             this.buttonFilterExpansions.Text = "Select Expansions...";
             this.buttonFilterExpansions.UseVisualStyleBackColor = true;
-            this.buttonFilterExpansions.Click += new System.EventHandler(this.ButtonFilterExpansions_Click);
+            this.buttonFilterExpansions.Click += new System.EventHandler(this.buttonFilterExpansions_Click);
             // 
             // checkBoxFilterExpansions
             // 
@@ -907,8 +910,10 @@ namespace MKMTool
             this.checkBoxFilterExpansions.Size = new System.Drawing.Size(104, 17);
             this.checkBoxFilterExpansions.TabIndex = 0;
             this.checkBoxFilterExpansions.Text = "Filter expansions";
+            this.toolTip1.SetToolTip(this.checkBoxFilterExpansions, "Use the button below to select expansions. Only cards from those expansions will " +
+        "be updated.");
             this.checkBoxFilterExpansions.UseVisualStyleBackColor = true;
-            this.checkBoxFilterExpansions.CheckedChanged += new System.EventHandler(this.CheckBoxFilterExpansions_CheckedChanged);
+            this.checkBoxFilterExpansions.CheckedChanged += new System.EventHandler(this.checkBoxFilterExpansions_CheckedChanged);
             // 
             // UpdatePriceSettings
             // 

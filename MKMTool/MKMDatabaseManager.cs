@@ -147,7 +147,7 @@ namespace MKMTool
                     }
                     
                 var file = File.ReadAllBytes(zipPath);
-                var aDecompressed = gzDecompress(file);
+                var aDecompressed = GzDecompress(file);
 
                 File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
 

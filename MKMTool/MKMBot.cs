@@ -86,9 +86,11 @@ namespace MKMTool
         /// Log Settings
         public bool logUpdated, logLessThanMinimum, logSmallPriceChange, logLargePriceChangeTooLow, logLargePriceChangeTooHigh, logHighPriceVariance;
 
-        // Filtering by expansions
+        // Filtering
         public bool filterByExpansions; // if set to true, only articles from expansions included in allowedExpansions will be updated
         public List<string> allowedExpansions; // list of expansions to take into account when doing price update.
+        public bool filterByCountries; // if set to true, only articles from sellers from the allowedCountryNames will be taken into account when doing worldwide search
+        public List<string> allowedCountryNames; // list of countries to take into account when doing worldwide price update.
 
         /// Other Settings
         public bool testMode; // if set to true, price updates will be computed and logged, but not sent to MKM
@@ -100,6 +102,7 @@ namespace MKMTool
             priceMaxChangeLimits = new SortedList<double, double>();
             priceMaxDifferenceLimits = new SortedList<double, double>();
             allowedExpansions = new List<string>();
+            allowedCountryNames = new List<string>();
         }
 
         /// <summary>
@@ -111,9 +114,7 @@ namespace MKMTool
             priceMaxChangeLimits = new SortedList<double, double>(refSettings.priceMaxChangeLimits);
             priceMaxDifferenceLimits = new SortedList<double, double>(refSettings.priceMaxDifferenceLimits);
             allowedExpansions = new List<string>(refSettings.allowedExpansions);
-
-            allowedExpansions.Clear();
-            allowedExpansions = refSettings.allowedExpansions;
+            allowedCountryNames = new List<string>(refSettings.allowedCountryNames);
 
             priceMinRarePrice = refSettings.priceMinRarePrice;
             priceMinSimilarItems = refSettings.priceMinSimilarItems;
@@ -138,6 +139,7 @@ namespace MKMTool
             description = refSettings.description;
             searchWorldwide = refSettings.searchWorldwide;
             filterByExpansions = refSettings.filterByExpansions;
+            filterByCountries = refSettings.filterByCountries;
         }
 
         /// <summary>
@@ -183,6 +185,11 @@ namespace MKMTool
                     case "allowedExpansions":
                     {
                         temp.allowedExpansions = new List<string>(child.InnerText.Split(';'));
+                        break;
+                    }
+                    case "allowedCountryNames":
+                    {
+                        temp.allowedCountryNames = new List<string>(child.InnerText.Split(';'));
                         break;
                     }
                 }
@@ -255,6 +262,9 @@ namespace MKMTool
                     case "filterByExpansions":
                         temp.filterByExpansions = bool.Parse(att.Value);
                         break;
+                    case "filterByCountries":
+                        temp.filterByCountries = bool.Parse(att.Value);
+                        break;
                     case "description":
                         temp.description = att.Value;
                         break;
@@ -279,18 +289,28 @@ namespace MKMTool
             child.InnerText = "";
             foreach (var limitPair in priceMaxChangeLimits)
                 child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
+            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
             root.AppendChild(child);
 
             child = s.CreateElement("priceMaxDifferenceLimits");
             child.InnerText = "";
             foreach (var limitPair in priceMaxDifferenceLimits)
                 child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
+            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
             root.AppendChild(child);
 
             child = s.CreateElement("allowedExpansions");
             child.InnerText = "";
             foreach (var expansion in allowedExpansions)
                 child.InnerText += "" + expansion + ";";
+            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
+            root.AppendChild(child);
+
+            child = s.CreateElement("allowedCountryNames");
+            child.InnerText = "";
+            foreach (var country in allowedCountryNames)
+                child.InnerText += "" + country + ";";
+            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1);
             root.AppendChild(child);
 
             root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2", CultureInfo.InvariantCulture));
@@ -314,6 +334,7 @@ namespace MKMTool
             root.SetAttribute("logLargePriceChangeTooHigh", logLargePriceChangeTooHigh.ToString());
             root.SetAttribute("logHighPriceVariance", logHighPriceVariance.ToString());
             root.SetAttribute("filterByExpansions", filterByExpansions.ToString());
+            root.SetAttribute("filterByCountries", filterByCountries.ToString());
 
             root.SetAttribute("testMode", testMode.ToString());
             root.SetAttribute("searchWorldwide", searchWorldwide.ToString());
@@ -346,35 +367,36 @@ namespace MKMTool
         /// <returns>Default settings for all parameters of MKMBot</returns>
         public static MKMBotSettings GenerateDefaultSettings()
         {
-            MKMBotSettings s = new MKMBotSettings();
+            return new MKMBotSettings
+            {
+                priceMinRarePrice = 0.05,
+                priceMinSimilarItems = 4, // require exactly 4 items
+                priceMaxSimilarItems = 4,
+                priceSetPriceBy = PriceSetMethod.ByAverage,
+                priceFactor = 0.5,
+                priceFactorWorldwide = 0.5,
+                priceMarkup2 = 0,
+                priceMarkup3 = 0,
+                priceMarkup4 = 0,
+                priceMarkupCap = 0,
+                priceIgnorePlaysets = false,
+                condAcceptance = AcceptedCondition.OnlyMatching,
 
-            s.priceMinRarePrice = 0.05;
-            s.priceMinSimilarItems = 4; // require exactly 4 items
-            s.priceMaxSimilarItems = 4;
-            s.priceSetPriceBy = PriceSetMethod.ByAverage;
-            s.priceFactor = 0.5;
-            s.priceFactorWorldwide = 0.5;
-            s.priceMarkup2 = s.priceMarkup3 = s.priceMarkup4 = 0;
-            s.priceMarkupCap = 0;
-            s.priceIgnorePlaysets = false;
+                logUpdated = true,
+                logLessThanMinimum = true,
+                logSmallPriceChange = true,
+                logLargePriceChangeTooLow = true,
+                logLargePriceChangeTooHigh = true,
+                logHighPriceVariance = true,
 
-            s.condAcceptance = AcceptedCondition.OnlyMatching;
-
-            s.logUpdated = true;
-            s.logLessThanMinimum = true;
-            s.logSmallPriceChange = true;
-            s.logLargePriceChangeTooLow = true;
-            s.logLargePriceChangeTooHigh = true;
-            s.logHighPriceVariance = true;
-
-            s.testMode = false;
-            s.searchWorldwide = false;
-            s.filterByExpansions = false;
-
-            return s;
+                testMode = false,
+                searchWorldwide = false,
+                filterByExpansions = false,
+                filterByCountries = false
+            };
         }
 
-        public void setSettings(MKMBotSettings s)
+        public void SetSettings(MKMBotSettings s)
         {
             settings = s;
         }
@@ -417,14 +439,14 @@ namespace MKMTool
         /// and also from domestic seller if worldwide search is not enabled in the settings.</param>
         /// <param name="useMyStock">If set to true, the MyStock.csv file will be used during the appraisal to 
         /// limit minimum prices of appraised cards.</param>
-        public void generatePrices(List<MKMMetaCard> cardList, bool useMyStock)
+        public void GeneratePrices(List<MKMMetaCard> cardList, bool useMyStock)
         {
             settings.priceMaxChangeLimits.Clear();
             settings.logLargePriceChangeTooHigh = false;
             settings.logLargePriceChangeTooLow = false;
 
             MainView.Instance.LogMainWindow("Appraising card list...");
-            Dictionary<string, List<MKMMetaCard>> myStock = useMyStock ? LoadMyStock() : new Dictionary<string, List<MKMMetaCard>>();
+            Dictionary<string, List<MKMMetaCard>> myStock = useMyStock ? loadMyStock() : new Dictionary<string, List<MKMMetaCard>>();
             foreach (MKMMetaCard mc in cardList)
             {
                 if (isAllowedExpansion(mc.GetAttribute(MCAttribute.Expansion)))
@@ -450,7 +472,7 @@ namespace MKMTool
         /// Reads the myStock.csv file used for setting minimal prices during appraisal.
         /// </summary>
         /// <returns>Dictionary of cards, key == card name or empty string for MetaCards that should ignore names.</returns>
-        private Dictionary<string, List<MKMMetaCard>> LoadMyStock()
+        private Dictionary<string, List<MKMMetaCard>> loadMyStock()
         {
             Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>();
             if (File.Exists(@".//myStock.csv"))
@@ -484,7 +506,7 @@ namespace MKMTool
             return myStock;
         }
 
-        public void updatePrices()
+        public void UpdatePrices()
         {
             if (settings.priceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.priceMaxChangeLimits.Count == 0)
             {
@@ -502,7 +524,7 @@ namespace MKMTool
                 return;
             }
             // load file with lowest prices
-            Dictionary<string, List<MKMMetaCard>> myStock = LoadMyStock();
+            Dictionary<string, List<MKMMetaCard>> myStock = loadMyStock();
 
             MainView.Instance.LogMainWindow("Updating Prices...");
             int putCounter = 0;
@@ -545,7 +567,7 @@ namespace MKMTool
                 MainView.Instance.LogMainWindow("Done. No valid/meaningful price updates created.");
             }
 
-            string timeStamp = GetTimestamp(DateTime.Now);
+            string timeStamp = getTimestamp(DateTime.Now);
 
             MainView.Instance.LogMainWindow("Last Run finished: " + timeStamp);
         }
@@ -686,10 +708,10 @@ namespace MKMTool
 
                 // increase the estimate based on how many of those articles do we have in stock
                 double markupValue = 0;
-                int iCount;
                 if (settings.priceIgnorePlaysets && isPlayset == "true")
                     markupValue = priceEstimation * settings.priceMarkup4;
-                else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any, CultureInfo.InvariantCulture, out iCount))
+                else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any, 
+                    CultureInfo.InvariantCulture, out int iCount))
                 {
                     if (iCount == 2)
                         markupValue = priceEstimation * settings.priceMarkup2;
@@ -763,9 +785,8 @@ namespace MKMTool
 
             // finally, check against minimum price from local stock database
             // Check if the card itself has MinPrice defined - won't happen for traditional update, but can for External List Appraisal
-            double dOwnMinPrice;
             string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
-            if (double.TryParse(sOwnMinPrice, out dOwnMinPrice))
+            if (double.TryParse(sOwnMinPrice, out double dOwnMinPrice))
             {
                 if (isPlayset == "true")
                     dOwnMinPrice /= 4;
@@ -839,8 +860,18 @@ namespace MKMTool
             bool ignorePlaysets = settings.priceIgnorePlaysets || (isPlayset == "");
             foreach (XmlNode offer in similarItems)
             {
-                if ((ignoreSellersCountry || offer["seller"]["address"]["country"].InnerText == MKMHelpers.sMyOwnCountry)
-                    && (ignorePlaysets || ((offer["isPlayset"] != null) && (offer["isPlayset"].InnerText == isPlayset))) // isPlayset can be null for some games (not MTG)
+                string sellerCountryCode = offer["seller"]["address"]["country"].InnerText;
+                bool isntFromMyCountry = sellerCountryCode != MKMHelpers.sMyOwnCountry;
+                if (ignoreSellersCountry)
+                {
+                    // if we are ignoring seller's country, check the country filter
+                    if (settings.filterByCountries &&
+                        !settings.allowedCountryNames.Contains(MKMHelpers.countryNames[sellerCountryCode]))
+                        continue;
+                }
+                else if (isntFromMyCountry)
+                    continue;
+                if ((ignorePlaysets || ((offer["isPlayset"] != null) && (offer["isPlayset"].InnerText == isPlayset))) // isPlayset can be null for some games (not MTG)
                     && offer["seller"]["idUser"].InnerText != MKMHelpers.sMyId // skip items listed by myself
                     )
                 {
@@ -916,30 +947,29 @@ namespace MKMTool
                 return TraverseResult.SequenceFound;
         }
 
-        private string GetTimestamp(DateTime now)
+        private string getTimestamp(DateTime now)
         {
             return now.ToString("dd.MM.yyyy HH:mm:ss");
         }
 
-        public static string getBuys(MainView mainView, string iType)
+        public static string GetBuys(MainView mainView, string iType)
         {
-            /*
-                bought or 1
-                paid or 2
-                sent or 4
-                received or 8
-                lost or 32
-                cancelled or 128
-            */
-
-            int count = 0;
-
             int iPage = 1;
 
             string sFilename = ".\\mcmbuys_" + DateTime.Now.ToString("yyyyMMddTHHmmss") + ".csv";
 
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(sFilename))
             {
+                /*
+                    bought or 1
+                    paid or 2
+                    sent or 4
+                    received or 8
+                    lost or 32
+                    cancelled or 128
+                */
+
+                int count;
                 do
                 {
                     string sUrl = "https://api.cardmarket.com/ws/v1.1/output.xml/orders/2/" + iType + "/" + iPage;
@@ -956,7 +986,7 @@ namespace MKMTool
 
                     count = doc.SelectNodes("response/order").Count;
 
-                    iPage = iPage + 100;
+                    iPage += 100;
 
                     //Console.WriteLine(count);
 

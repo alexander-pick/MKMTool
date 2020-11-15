@@ -47,7 +47,8 @@ namespace MKMTool
         private double priceByAvg = 0.5;
         private Dictionary<string, MKMBotSettings> presets;
         private readonly string lastPresetName; // name of the last preset under which it is stored in Properties.Settings.Default
-        private PopupListbox allowedExpansionsWindow; // pop-up window managing allowed expansions for filtering
+        private readonly PopupListbox allowedExpansionsWindow; // pop-up window managing allowed expansions for filtering
+        private readonly PopupListbox allowedCountriesWindow; // pop-up window managing allowed countries for filtering
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdatePriceSettings"/> class.
@@ -57,9 +58,15 @@ namespace MKMTool
         public UpdatePriceSettings(string lastPresetName, string title)
         {
             InitializeComponent();
-            LoadPresets();
+            loadPresets();
             Text = title;
-            allowedExpansionsWindow = new PopupListbox("Allowed Expansions"); 
+            allowedExpansionsWindow = new PopupListbox("Allowed Expansions");
+            allowedCountriesWindow = new PopupListbox("Allowed Countries");
+            List<string> countryNames = new List<string>(MKMHelpers.countryNames.Count);
+            foreach (var code in MKMHelpers.countryNames)
+                countryNames.Add(code.Value);
+            allowedCountriesWindow.SetDataSource(countryNames);
+
             this.lastPresetName = lastPresetName;
             string lastPreset = Properties.Settings.Default[lastPresetName].ToString();
             if (comboBoxPresets.Items.Contains(lastPreset))
@@ -86,7 +93,7 @@ namespace MKMTool
         }
 
         /// <summary>
-        /// Gathers data from the gui and creates their appropriate representation as the MKMBotSettings object.
+        /// Gathers data from the GUI and creates their appropriate representation as the MKMBotSettings object.
         /// </summary>
         /// <param name="s">The settings object after the method successfully executes.</param>
         /// <returns>True if all settings were read, false in case of parsing error.</returns>
@@ -169,6 +176,10 @@ namespace MKMTool
             s.filterByExpansions = checkBoxFilterExpansions.Checked;
             if (checkBoxFilterExpansions.Checked) // set this only if we are filtering by expansions
                 s.allowedExpansions = allowedExpansionsWindow.GetSelected();
+
+            s.filterByCountries = checkBoxFilterCountries.Checked;
+            if (checkBoxFilterCountries.Checked) // set this only if we are filtering by countries
+                s.allowedCountryNames = allowedCountriesWindow.GetSelected();
 
             return true;
         }
@@ -253,9 +264,12 @@ namespace MKMTool
             allowedExpansionsWindow.SetDataSource(MKMDbManager.Instance.GetAllExpansionNames(true)); // to make sure we are up to date
             checkBoxFilterExpansions.Checked = settings.filterByExpansions;
             allowedExpansionsWindow.SetSelected(settings.allowedExpansions);
+
+            checkBoxFilterCountries.Checked = settings.filterByCountries;
+            allowedCountriesWindow.SetSelected(settings.allowedCountryNames);
         }
                 
-        private void CheckBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)
         {
             if (radioButtonCondMatchOnly.Checked)
             {
@@ -264,7 +278,7 @@ namespace MKMTool
             }
         }
 
-        private void CheckBoxCondAcceptBetterAlways_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxCondAcceptBetterAlways_CheckedChanged(object sender, EventArgs e)
         {
             if (radioButtonCondAcceptBetterAlways.Checked)
             {
@@ -273,7 +287,7 @@ namespace MKMTool
             }
         }
 
-        private void TrackBarPriceEstAvg_ValueChanged(object sender, EventArgs e)
+        private void trackBarPriceEstAvg_ValueChanged(object sender, EventArgs e)
         {
             priceByAvg = (double)trackBarPriceEstAvg.Value / (trackBarPriceEstAvg.Maximum - trackBarPriceEstAvg.Minimum);
             if (priceByAvg == 1)
@@ -288,7 +302,7 @@ namespace MKMTool
                 labelPriceEstSliderValue.Text = "AVG";
         }
 
-        private void TrackBarPriceEstAvgWorld_ValueChanged(object sender, EventArgs e)
+        private void trackBarPriceEstAvgWorld_ValueChanged(object sender, EventArgs e)
         {
             priceByAvg = (double)trackBarPriceEstAvgWorld.Value / (trackBarPriceEstAvgWorld.Maximum - trackBarPriceEstAvgWorld.Minimum);
             if (priceByAvg == 1)
@@ -303,7 +317,7 @@ namespace MKMTool
                 labelPriceEstSliderValueWorld.Text = "AVG";
         }
 
-        private void RadioButtonPriceEstPriceByAvg_CheckedChanged(object sender, EventArgs e)
+        private void radioButtonPriceEstPriceByAvg_CheckedChanged(object sender, EventArgs e)
         {
             if (radioButtonPriceEstPriceByAvg.Checked)
             {
@@ -319,7 +333,7 @@ namespace MKMTool
             }
         }
 
-        private void RadioButtonPriceByLowestPrice_CheckedChanged(object sender, EventArgs e)
+        private void radioButtonPriceByLowestPrice_CheckedChanged(object sender, EventArgs e)
         {
             if (radioButtonPriceEstByLowestPrice.Checked)
             {
@@ -338,7 +352,7 @@ namespace MKMTool
             }
         }
 
-        private void RadioButtonPriceEstHighestPrice_CheckedChanged(object sender, EventArgs e)
+        private void radioButtonPriceEstHighestPrice_CheckedChanged(object sender, EventArgs e)
         {
             if (radioButtonPriceEstHighestPrice.Checked)
             {
@@ -352,14 +366,14 @@ namespace MKMTool
             }
         }
 
-        private void NumericUpDownPriceEstMinN_ValueChanged(object sender, EventArgs e)
+        private void numericUpDownPriceEstMinN_ValueChanged(object sender, EventArgs e)
         {
             // make sure maximum items is not lower than minimum
             if (numericUpDownPriceEstMinN.Value > numericUpDownPriceEstMaxN.Value)
                 numericUpDownPriceEstMaxN.Value = numericUpDownPriceEstMinN.Value;
         }
 
-        private void NumericUpDownPriceEstMaxN_ValueChanged(object sender, EventArgs e)
+        private void numericUpDownPriceEstMaxN_ValueChanged(object sender, EventArgs e)
         {
             // make sure maximum items is not lower than minimum
             if (numericUpDownPriceEstMaxN.Value < numericUpDownPriceEstMinN.Value)
@@ -368,9 +382,9 @@ namespace MKMTool
 
         /// <summary>
         /// Loads all setting presets stored as .xml files in /Presets/ folder
-        /// and populates the combobox with their names.
+        /// and populates the drop-down list with their names.
         /// </summary>
-        private void LoadPresets()
+        private void loadPresets()
         {
             DirectoryInfo d = new DirectoryInfo(@".//Presets");
             FileInfo[] Files = d.GetFiles("*.xml");
@@ -395,7 +409,7 @@ namespace MKMTool
             comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Add("Choose Preset...");
         }
 
-        private void ComboBoxPresets_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBoxPresets_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comboBoxPresets.SelectedIndex >= 0)
             {
@@ -416,13 +430,13 @@ namespace MKMTool
             }
         }
 
-        private void ComboBoxPresets_DropDown(object sender, EventArgs e)
+        private void comboBoxPresets_DropDown(object sender, EventArgs e)
         {
             if (comboBoxPresets.Items.Contains("Choose Preset..."))
                 comboBoxPresets.Items.Remove("Choose Preset...");
         }
 
-        private void ButtonPresetsLoad_Click(object sender, EventArgs e)
+        private void buttonPresetsLoad_Click(object sender, EventArgs e)
         {
             string name = comboBoxPresets.SelectedItem.ToString();
             UpdateSettingsGUI(presets[name]);
@@ -430,7 +444,7 @@ namespace MKMTool
             Properties.Settings.Default.Save();
         }
 
-        private void ButtonPresetsStore_Click(object sender, EventArgs e)
+        private void buttonPresetsStore_Click(object sender, EventArgs e)
         {
             if (GenerateBotSettings(out MKMBotSettings settings))
             {
@@ -449,7 +463,7 @@ namespace MKMTool
             }
         }
 
-        private void ButtonPresetsDelete_Click(object sender, EventArgs e)
+        private void buttonPresetsDelete_Click(object sender, EventArgs e)
         {
             string name = comboBoxPresets.SelectedItem.ToString();
             if (MessageBox.Show("Are you sure you want to delete preset '" + name + "'? This cannot be undone.",
@@ -472,26 +486,37 @@ namespace MKMTool
             }
         }
 
-        private void CheckBoxPriceEstWorldwide_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxPriceEstWorldwide_CheckedChanged(object sender, EventArgs e)
         {
             trackBarPriceEstAvgWorld.Enabled = checkBoxPriceEstWorldwide.Checked && radioButtonPriceEstPriceByAvg.Checked;
+            checkBoxFilterCountries.Enabled = checkBoxPriceEstWorldwide.Checked;
+            if (!checkBoxPriceEstWorldwide.Checked)
+            {
+                checkBoxFilterCountries.Checked = false;
+            }
         }
 
-        private void CheckBoxFilterExpansions_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxFilterExpansions_CheckedChanged(object sender, EventArgs e)
         {
             buttonFilterExpansions.Enabled = checkBoxFilterExpansions.Checked;
         }
 
-        private void CheckBoxFilterCountries_CheckedChanged(object sender, EventArgs e)
+        private void checkBoxFilterCountries_CheckedChanged(object sender, EventArgs e)
         {
             buttonFilterCountries.Enabled = checkBoxFilterCountries.Checked;
         }
 
-        private void ButtonFilterExpansions_Click(object sender, EventArgs e)
+        private void buttonFilterExpansions_Click(object sender, EventArgs e)
         {
             // maybe some expansions were added due to update of database
             allowedExpansionsWindow.UpdateDataSource(MKMDbManager.Instance.GetAllExpansionNames(true));
             allowedExpansionsWindow.ShowDialog();
+        }
+
+        private void buttonFilterCountries_Click(object sender, EventArgs e)
+        {
+            // country codes are hard-coded, no need to update them
+            allowedCountriesWindow.ShowDialog();
         }
     }
 }

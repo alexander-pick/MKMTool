@@ -69,9 +69,14 @@ namespace MKMTool
         /// Items in this list not existing in the data source of this PopupListbox will be ignored.</param>
         public void SetSelected(List<string> selected)
         {
-            for (int i = 0; i < listBoxContent.Items.Count; i++)
+            listBoxContent.ClearSelected();
+            // for each selected string, find if it is in the listbox's list and if so, set to true
+            // this is more efficient assuming selected.Count << listBoxContent.Items.Count
+            foreach (string s in selected)
             {
-                listBoxContent.SetSelected(i, selected.Contains(listBoxContent.Items[i].ToString()));
+                int index = listBoxContent.Items.IndexOf(s);
+                if (index != -1)
+                    listBoxContent.SetSelected(index, true);
             }            
         }
 

@@ -69,6 +69,68 @@ namespace MKMTool
             { "Korean", "10" }, { "Traditional Chinese", "11" }
         };
 
+        // only countries currently supported by MKM are uncommented. 
+        // sorted by alphabet by country name manually - when adding a country, put it at the right spot
+    /*    public static Dictionary<string, string> countryCodes = new Dictionary<string, string>
+        {
+            //{ "Afghanistan", "AF" },   { "Albania", "AL" },{ "Algeria", "DZ" }, 
+            //{ "U.A.E.", "AE" },   { "Argentina", "AR" },    { "Armenia", "AM" }, { "Australia", "AU" },
+            { "Austria", "AT" },
+            //{ "Azerbaijan", "AZ" },
+            { "Belgium", "BE" }, { "Bulgaria", "BG" },
+            // { "Bangladesh", "BD" }, { "Bahrain", "BH" },  { "Bosnia and Herzegovina", "BA" }, { "Belarus", "BY" },
+            // { "Belize", "BZ" }, { "Bolivia", "BO" },  { "Brazil", "BR" }, { "Brunei Darussalam", "BN" }, 
+            { "Canada", "CA" }, { "Croatia", "HR" }, { "Cyprus", "CY" },{ "Czech Republic", "CZ" },
+            //{ "Chile", "CL" }, { "People's Republic of China", "CN" }, { "Colombia", "CO" }, { "Costa Rica", "CR" }, 
+            { "Denmark", "DK" }, { "Estonia", "EE" },
+            //{ "Dominican Republic", "DO" }, { "Ecuador", "EC" }, { "Egypt", "EG" }, { "Ethiopia", "ET" }, { "Faroe Islands", "FO" }, 
+            { "Finland", "FI" }, { "France", "FR" },
+            { "Germany", "D" },  { "Greece", "GR" },   // MKM's exception, ISO code for Germany is DE
+            { "Hungary", "HU" }, 
+            //{ "Hong Kong S.A.R.", "HK" }, { "Honduras", "HN" }, 
+            //{ "Georgia", "GE" }, { "Greenland", "GL" }, { "Guatemala", "GT" },            
+            { "Iceland", "IS" }, { "Ireland", "IE" }, { "Italy", "IT" }, 
+            //{ "Indonesia", "ID" }, { "India", "IN" }, { "Iran", "IR" }, { "Iraq", "IQ" }, { "Israel", "IL" },             
+            //{ "Jamaica", "JM" }, { "Jordan", "JO" }, 
+            { "Japan", "JP" },
+            { "Latvia", "LV" }, { "Liechtenstein", "LI" }, { "Lithuania", "LT" }, { "Luxembourg", "LU" },
+            //{ "Kazakhstan", "KZ" },  { "Kenya", "KE" },  { "Kyrgyzstan", "KG" },  { "Cambodia", "KH" }, { "Korea", "KR" }, 
+            //{ "Kuwait", "KW" }, { "Lao P.D.R.", "LA" }, { "Lebanon", "LB" }, { "Libya", "LY" },             
+            //{ "Macao S.A.R.", "MO" }, { "Morocco", "MA" }, { "Principality of Monaco", "MC" }, { "Maldives", "MV" }, { "Mexico", "MX" }, 
+            //{ "Macedonia (FYROM)", "MK" }, 
+            { "Malta", "MT" }, { "Netherlands", "NL" }, { "Norway", "NO" }, 
+            //{ "Montenegro", "ME" }, { "Mongolia", "MN" }, { "Malaysia", "MY" }, { "Nigeria", "NG" }, { "Nicaragua", "NI" },             
+            //{ "Nepal", "NP" }, { "New Zealand", "NZ" }, { "Oman", "OM" }, { "Islamic Republic of Pakistan", "PK" }, { "Panama", "PA" }, 
+            //{ "Peru", "PE" }, { "Republic of the Philippines", "PH" }, 
+            { "Poland", "PL" },  { "Portugal", "PT" }, { "Romania", "RO" }, 
+            //{ "Puerto Rico", "PR" }, { "Paraguay", "PY" }, { "Qatar", "QA" },             
+            //{ "Russia", "RU" }, { "Rwanda", "RW" }, { "Saudi Arabia", "SA" },  { "Senegal", "SN" }, 
+            //{ "El Salvador", "SV" }, { "Serbia", "RS" },{ "Sri Lanka", "LK" }, 
+            { "Singapore", "SG" }, { "Slovakia", "SK" }, { "Slovenia", "SI" },{ "Spain", "ES" }, 
+            { "Sweden", "SE" },{ "Switzerland", "CH" }, { "United Kingdom", "GB" },
+            //{ "Syria", "SY" }, { "Tajikistan", "TJ" }, { "Thailand", "TH" }, { "Turkmenistan", "TM" }, { "Trinidad and Tobago", "TT" },
+            //{ "Tunisia", "TN" }, { "Turkey", "TR" }, { "Taiwan", "TW" }, { "Ukraine", "UA" }, { "Uruguay", "UY" },
+            //{ "United States of America", "US" },  { "Uzbekistan", "UZ" }, { "Bolivarian Republic of Venezuela", "VE" },
+            //{ "Vietnam", "VN" }, { "Yemen", "YE" },  { "South Africa", "ZA" }, { "Zimbabwe", "ZW" } 
+        };*/
+        public static Dictionary<string, string> countryNames = new Dictionary<string, string>
+        {
+            { "AT", "Austria"  },
+            { "BE", "Belgium" }, { "BG", "Bulgaria" },
+            { "CA", "Canada"}, { "HR", "Croatia" }, { "CY", "Cyprus" },{ "CZ", "Czech Republic" },
+            { "DK", "Denmark" }, { "EE", "Estonia" },
+            { "FI", "Finland" }, { "FR", "France" },
+            { "D", "Germany" },  { "GR", "Greece"  },   // MKM's exception, ISO code for Germany is DE
+            { "HU", "Hungary" },
+            { "IS", "Iceland" }, { "IE", "Ireland" }, {"IT", "Italy" },
+            { "JP", "Japan" },
+            { "LV", "Latvia" }, { "LI", "Liechtenstein" }, {"LT", "Lithuania" }, { "LU", "Luxembourg" },
+            { "MT", "Malta" }, {"NL", "Netherlands" }, { "NO", "Norway" }, 
+            { "PL", "Poland"},  {"PT", "Portugal" }, {"RO", "Romania" }, 
+            { "SG", "Singapore"}, { "SK", "Slovakia" }, {"SI", "Slovenia" },{"ES", "Spain" },
+            { "SE", "Sweden" }, {"CH", "Switzerland" }, { "GB", "United Kingdom" }
+        };
+
 
         /// <summary>
         /// A three-state boolean allowing "any" as the third state.
@@ -154,10 +216,12 @@ namespace MKMTool
 
             var element = XElement.Parse(xml);
 
-            var settings = new XmlWriterSettings();
-            settings.OmitXmlDeclaration = true;
-            settings.Indent = true;
-            settings.NewLineOnAttributes = true;
+            var settings = new XmlWriterSettings
+            {
+                OmitXmlDeclaration = true,
+                Indent = true,
+                NewLineOnAttributes = true
+            };
 
             using (var xmlWriter = XmlWriter.Create(stringBuilder, settings))
             {
@@ -167,7 +231,7 @@ namespace MKMTool
             return stringBuilder.ToString();
         }
         
-        public static byte[] gzDecompress(byte[] gzip)
+        public static byte[] GzDecompress(byte[] gzip)
         {
             // Create a GZIP stream with decompression mode.
             // ... Then create a buffer and write into while reading from the GZIP stream.

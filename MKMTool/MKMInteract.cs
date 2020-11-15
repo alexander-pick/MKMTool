@@ -362,7 +362,7 @@ namespace MKMTool
                 if (node.Count > 0 && node.Item(0)["stock"].InnerText != null)
                 {
                     var data = Convert.FromBase64String(node.Item(0)["stock"].InnerText);
-                    var aDecompressed = MKMHelpers.gzDecompress(data);
+                    var aDecompressed = MKMHelpers.GzDecompress(data);
 
                     return aDecompressed;
                 }

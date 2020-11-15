@@ -540,7 +540,7 @@ namespace MKMTool
                 MKMBotSettings s;
                 if (botSettings.GenerateBotSettings(out s))
                 {
-                    bot.setSettings(s);
+                    bot.SetSettings(s);
                     buttonImport.Enabled = false;
                     buttonAppraise.Enabled = false;
                     buttonExport.Enabled = false;
@@ -617,7 +617,7 @@ namespace MKMTool
             if (MKMToolPrice)
             {
                 MainView.Instance.LogMainWindow("Generating MKMTool prices for the imported list...");
-                bot.generatePrices(importedValidOnly, checkBoxMyStock.Enabled && checkBoxMyStock.Checked); // the checkbox can be checked, but not enabled if user does not want MKMTool prices
+                bot.GeneratePrices(importedValidOnly, checkBoxMyStock.Enabled && checkBoxMyStock.Checked); // the checkbox can be checked, but not enabled if user does not want MKMTool prices
                 toolPriceGenerated = true;
                 MainView.Instance.LogMainWindow("Prices generated.");
             }
