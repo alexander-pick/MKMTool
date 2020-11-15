@@ -120,11 +120,14 @@ namespace MKMTool
             this.buttonPresetsLoad = new System.Windows.Forms.Button();
             this.comboBoxPresets = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.checkBoxFilterCountries = new System.Windows.Forms.CheckBox();
+            this.checkBoxFilterExpansions = new System.Windows.Forms.CheckBox();
             this.groupBoxFiltering = new System.Windows.Forms.GroupBox();
             this.buttonFilterCountries = new System.Windows.Forms.Button();
-            this.checkBoxFilterCountries = new System.Windows.Forms.CheckBox();
             this.buttonFilterExpansions = new System.Windows.Forms.Button();
-            this.checkBoxFilterExpansions = new System.Windows.Forms.CheckBox();
+            this.checkBoxFilterPrivSeller = new System.Windows.Forms.CheckBox();
+            this.checkBoxFilterProfSeller = new System.Windows.Forms.CheckBox();
+            this.checkBoxFilterPowerseller = new System.Windows.Forms.CheckBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -852,8 +855,37 @@ namespace MKMTool
             this.comboBoxPresets.DropDown += new System.EventHandler(this.comboBoxPresets_DropDown);
             this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
             // 
+            // checkBoxFilterCountries
+            // 
+            this.checkBoxFilterCountries.AutoSize = true;
+            this.checkBoxFilterCountries.Location = new System.Drawing.Point(181, 19);
+            this.checkBoxFilterCountries.Name = "checkBoxFilterCountries";
+            this.checkBoxFilterCountries.Size = new System.Drawing.Size(121, 17);
+            this.checkBoxFilterCountries.TabIndex = 2;
+            this.checkBoxFilterCountries.Text = "Filter seller countries";
+            this.toolTip1.SetToolTip(this.checkBoxFilterCountries, "Use the button below to choose countries. Only sellers from countries will be use" +
+        "d to compute price. Worlwide search must be activated.");
+            this.checkBoxFilterCountries.UseVisualStyleBackColor = true;
+            this.checkBoxFilterCountries.CheckedChanged += new System.EventHandler(this.checkBoxFilterCountries_CheckedChanged);
+            // 
+            // checkBoxFilterExpansions
+            // 
+            this.checkBoxFilterExpansions.AutoSize = true;
+            this.checkBoxFilterExpansions.Location = new System.Drawing.Point(10, 19);
+            this.checkBoxFilterExpansions.Name = "checkBoxFilterExpansions";
+            this.checkBoxFilterExpansions.Size = new System.Drawing.Size(104, 17);
+            this.checkBoxFilterExpansions.TabIndex = 0;
+            this.checkBoxFilterExpansions.Text = "Filter expansions";
+            this.toolTip1.SetToolTip(this.checkBoxFilterExpansions, "Use the button below to select expansions. Only cards from those expansions will " +
+        "be updated.");
+            this.checkBoxFilterExpansions.UseVisualStyleBackColor = true;
+            this.checkBoxFilterExpansions.CheckedChanged += new System.EventHandler(this.checkBoxFilterExpansions_CheckedChanged);
+            // 
             // groupBoxFiltering
             // 
+            this.groupBoxFiltering.Controls.Add(this.checkBoxFilterPowerseller);
+            this.groupBoxFiltering.Controls.Add(this.checkBoxFilterProfSeller);
+            this.groupBoxFiltering.Controls.Add(this.checkBoxFilterPrivSeller);
             this.groupBoxFiltering.Controls.Add(this.buttonFilterCountries);
             this.groupBoxFiltering.Controls.Add(this.checkBoxFilterCountries);
             this.groupBoxFiltering.Controls.Add(this.buttonFilterExpansions);
@@ -877,19 +909,6 @@ namespace MKMTool
             this.buttonFilterCountries.UseVisualStyleBackColor = true;
             this.buttonFilterCountries.Click += new System.EventHandler(this.buttonFilterCountries_Click);
             // 
-            // checkBoxFilterCountries
-            // 
-            this.checkBoxFilterCountries.AutoSize = true;
-            this.checkBoxFilterCountries.Location = new System.Drawing.Point(181, 19);
-            this.checkBoxFilterCountries.Name = "checkBoxFilterCountries";
-            this.checkBoxFilterCountries.Size = new System.Drawing.Size(121, 17);
-            this.checkBoxFilterCountries.TabIndex = 2;
-            this.checkBoxFilterCountries.Text = "Filter seller countries";
-            this.toolTip1.SetToolTip(this.checkBoxFilterCountries, "Use the button below to choose countries. Only sellers from countries will be use" +
-        "d to compute price. Worlwide search must be activated.");
-            this.checkBoxFilterCountries.UseVisualStyleBackColor = true;
-            this.checkBoxFilterCountries.CheckedChanged += new System.EventHandler(this.checkBoxFilterCountries_CheckedChanged);
-            // 
             // buttonFilterExpansions
             // 
             this.buttonFilterExpansions.Enabled = false;
@@ -902,18 +921,41 @@ namespace MKMTool
             this.buttonFilterExpansions.UseVisualStyleBackColor = true;
             this.buttonFilterExpansions.Click += new System.EventHandler(this.buttonFilterExpansions_Click);
             // 
-            // checkBoxFilterExpansions
+            // checkBoxFilterPrivSeller
             // 
-            this.checkBoxFilterExpansions.AutoSize = true;
-            this.checkBoxFilterExpansions.Location = new System.Drawing.Point(10, 19);
-            this.checkBoxFilterExpansions.Name = "checkBoxFilterExpansions";
-            this.checkBoxFilterExpansions.Size = new System.Drawing.Size(104, 17);
-            this.checkBoxFilterExpansions.TabIndex = 0;
-            this.checkBoxFilterExpansions.Text = "Filter expansions";
-            this.toolTip1.SetToolTip(this.checkBoxFilterExpansions, "Use the button below to select expansions. Only cards from those expansions will " +
-        "be updated.");
-            this.checkBoxFilterExpansions.UseVisualStyleBackColor = true;
-            this.checkBoxFilterExpansions.CheckedChanged += new System.EventHandler(this.checkBoxFilterExpansions_CheckedChanged);
+            this.checkBoxFilterPrivSeller.AutoSize = true;
+            this.checkBoxFilterPrivSeller.Checked = true;
+            this.checkBoxFilterPrivSeller.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFilterPrivSeller.Location = new System.Drawing.Point(404, 19);
+            this.checkBoxFilterPrivSeller.Name = "checkBoxFilterPrivSeller";
+            this.checkBoxFilterPrivSeller.Size = new System.Drawing.Size(128, 17);
+            this.checkBoxFilterPrivSeller.TabIndex = 4;
+            this.checkBoxFilterPrivSeller.Text = "Include private sellers";
+            this.checkBoxFilterPrivSeller.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxFilterProfSeller
+            // 
+            this.checkBoxFilterProfSeller.AutoSize = true;
+            this.checkBoxFilterProfSeller.Checked = true;
+            this.checkBoxFilterProfSeller.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFilterProfSeller.Location = new System.Drawing.Point(404, 38);
+            this.checkBoxFilterProfSeller.Name = "checkBoxFilterProfSeller";
+            this.checkBoxFilterProfSeller.Size = new System.Drawing.Size(152, 17);
+            this.checkBoxFilterProfSeller.TabIndex = 5;
+            this.checkBoxFilterProfSeller.Text = "Include professional sellers";
+            this.checkBoxFilterProfSeller.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxFilterPowerseller
+            // 
+            this.checkBoxFilterPowerseller.AutoSize = true;
+            this.checkBoxFilterPowerseller.Checked = true;
+            this.checkBoxFilterPowerseller.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFilterPowerseller.Location = new System.Drawing.Point(404, 57);
+            this.checkBoxFilterPowerseller.Name = "checkBoxFilterPowerseller";
+            this.checkBoxFilterPowerseller.Size = new System.Drawing.Size(122, 17);
+            this.checkBoxFilterPowerseller.TabIndex = 6;
+            this.checkBoxFilterPowerseller.Text = "Include powersellers";
+            this.checkBoxFilterPowerseller.UseVisualStyleBackColor = true;
             // 
             // UpdatePriceSettings
             // 
@@ -1022,5 +1064,8 @@ namespace MKMTool
         private System.Windows.Forms.CheckBox checkBoxFilterExpansions;
         private System.Windows.Forms.Button buttonFilterCountries;
         private System.Windows.Forms.CheckBox checkBoxFilterCountries;
+        private System.Windows.Forms.CheckBox checkBoxFilterPowerseller;
+        private System.Windows.Forms.CheckBox checkBoxFilterProfSeller;
+        private System.Windows.Forms.CheckBox checkBoxFilterPrivSeller;
     }
 }

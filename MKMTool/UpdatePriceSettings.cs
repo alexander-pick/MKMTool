@@ -162,7 +162,18 @@ namespace MKMTool
                 s.condAcceptance = AcceptedCondition.Anything;
             else
                 s.condAcceptance = AcceptedCondition.SomeMatchesAbove;
-            
+
+            s.filterByExpansions = checkBoxFilterExpansions.Checked;
+            if (checkBoxFilterExpansions.Checked) // set this only if we are filtering by expansions
+                s.allowedExpansions = allowedExpansionsWindow.GetSelected();
+
+            s.filterByCountries = checkBoxFilterCountries.Checked;
+            if (checkBoxFilterCountries.Checked) // set this only if we are filtering by countries
+                s.allowedCountryNames = allowedCountriesWindow.GetSelected();
+            s.includePrivateSellers = checkBoxFilterPrivSeller.Checked;
+            s.includeProfessionalSellers = checkBoxFilterProfSeller.Checked;
+            s.includePowersellers = checkBoxFilterPowerseller.Checked;
+
             s.logUpdated = checkBoxLogUpdated.Checked;
             s.logLessThanMinimum = checkBoxLogMinItems.Checked;
             s.logSmallPriceChange = checkBoxLogSmallChange.Checked;
@@ -172,14 +183,6 @@ namespace MKMTool
             
             s.testMode = checkBoxTestMode.Checked;
             s.searchWorldwide = checkBoxPriceEstWorldwide.Checked;
-
-            s.filterByExpansions = checkBoxFilterExpansions.Checked;
-            if (checkBoxFilterExpansions.Checked) // set this only if we are filtering by expansions
-                s.allowedExpansions = allowedExpansionsWindow.GetSelected();
-
-            s.filterByCountries = checkBoxFilterCountries.Checked;
-            if (checkBoxFilterCountries.Checked) // set this only if we are filtering by countries
-                s.allowedCountryNames = allowedCountriesWindow.GetSelected();
 
             return true;
         }
@@ -250,6 +253,16 @@ namespace MKMTool
                 radioButtonCondMatchesAbove.Checked = true;
             }
 
+            allowedExpansionsWindow.SetDataSource(MKMDbManager.Instance.GetAllExpansionNames(true)); // to make sure we are up to date
+            checkBoxFilterExpansions.Checked = settings.filterByExpansions;
+            allowedExpansionsWindow.SetSelected(settings.allowedExpansions);
+
+            checkBoxFilterCountries.Checked = settings.filterByCountries;
+            allowedCountriesWindow.SetSelected(settings.allowedCountryNames);
+            checkBoxFilterPrivSeller.Checked = settings.includePrivateSellers;
+            checkBoxFilterProfSeller.Checked = settings.includeProfessionalSellers;
+            checkBoxFilterPowerseller.Checked = settings.includePowersellers;
+
             checkBoxLogUpdated.Checked = settings.logUpdated;
             checkBoxLogMinItems.Checked = settings.logLessThanMinimum;
             checkBoxLogSmallChange.Checked = settings.logSmallPriceChange;
@@ -260,13 +273,6 @@ namespace MKMTool
             checkBoxTestMode.Checked = settings.testMode;
             checkBoxPriceEstWorldwide.Checked = settings.searchWorldwide;
             trackBarPriceEstAvgWorld.Enabled = settings.searchWorldwide;
-
-            allowedExpansionsWindow.SetDataSource(MKMDbManager.Instance.GetAllExpansionNames(true)); // to make sure we are up to date
-            checkBoxFilterExpansions.Checked = settings.filterByExpansions;
-            allowedExpansionsWindow.SetSelected(settings.allowedExpansions);
-
-            checkBoxFilterCountries.Checked = settings.filterByCountries;
-            allowedCountriesWindow.SetSelected(settings.allowedCountryNames);
         }
                 
         private void checkBoxCondMatchOnly_CheckedChanged(object sender, EventArgs e)

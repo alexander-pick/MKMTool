@@ -91,6 +91,7 @@ namespace MKMTool
         public List<string> allowedExpansions; // list of expansions to take into account when doing price update.
         public bool filterByCountries; // if set to true, only articles from sellers from the allowedCountryNames will be taken into account when doing worldwide search
         public List<string> allowedCountryNames; // list of countries to take into account when doing worldwide price update.
+        public bool includePrivateSellers, includeProfessionalSellers, includePowersellers;
 
         /// Other Settings
         public bool testMode; // if set to true, price updates will be computed and logged, but not sent to MKM
@@ -103,6 +104,35 @@ namespace MKMTool
             priceMaxDifferenceLimits = new SortedList<double, double>();
             allowedExpansions = new List<string>();
             allowedCountryNames = new List<string>();
+
+            priceMinRarePrice = 0.05;
+            priceMinSimilarItems = 4; // require exactly 4 items
+            priceMaxSimilarItems = 4;
+            priceSetPriceBy = PriceSetMethod.ByAverage;
+            priceFactor = 0.5;
+            priceFactorWorldwide = 0.5;
+            priceMarkup2 = 0;
+            priceMarkup3 = 0;
+            priceMarkup4 = 0;
+            priceMarkupCap = 0;
+            priceIgnorePlaysets = false;
+            condAcceptance = AcceptedCondition.OnlyMatching;
+
+            searchWorldwide = false;
+            filterByExpansions = false;
+            filterByCountries = false;
+            includePrivateSellers = true;
+            includeProfessionalSellers = true;
+            includePowersellers = true;
+
+            logUpdated = true;
+            logLessThanMinimum = true;
+            logSmallPriceChange = true;
+            logLargePriceChangeTooLow = true;
+            logLargePriceChangeTooHigh = true;
+            logHighPriceVariance = true;
+
+            testMode = false;
         }
 
         /// <summary>
@@ -129,6 +159,13 @@ namespace MKMTool
             priceIgnorePlaysets = refSettings.priceIgnorePlaysets;
 
             condAcceptance = refSettings.condAcceptance;
+
+            filterByExpansions = refSettings.filterByExpansions;
+            filterByCountries = refSettings.filterByCountries;
+            includePrivateSellers = refSettings.includePrivateSellers;
+            includeProfessionalSellers = refSettings.includeProfessionalSellers;
+            includePowersellers = refSettings.includePowersellers;
+
             logUpdated = refSettings.logUpdated;
             logLessThanMinimum = refSettings.logLessThanMinimum;
             logSmallPriceChange = refSettings.logSmallPriceChange;
@@ -138,8 +175,6 @@ namespace MKMTool
             testMode = refSettings.testMode;
             description = refSettings.description;
             searchWorldwide = refSettings.searchWorldwide;
-            filterByExpansions = refSettings.filterByExpansions;
-            filterByCountries = refSettings.filterByCountries;
         }
 
         /// <summary>
@@ -232,6 +267,24 @@ namespace MKMTool
                     case "priceIgnorePlaysets":
                         temp.priceIgnorePlaysets = bool.Parse(att.Value);
                         break;
+                    case "searchWorldwide":
+                        temp.searchWorldwide = bool.Parse(att.Value);
+                        break;
+                    case "filterByExpansions":
+                        temp.filterByExpansions = bool.Parse(att.Value);
+                        break;
+                    case "filterByCountries":
+                        temp.filterByCountries = bool.Parse(att.Value);
+                        break;
+                    case "includePrivateSellers":
+                        temp.includePrivateSellers = bool.Parse(att.Value);
+                        break;
+                    case "includeProfessionalSellers":
+                        temp.includeProfessionalSellers = bool.Parse(att.Value);
+                        break;
+                    case "includePowersellers":
+                        temp.includePowersellers = bool.Parse(att.Value);
+                        break;
                     case "condAcceptance":
                         temp.condAcceptance = (AcceptedCondition)Enum.Parse(typeof(AcceptedCondition), att.Value);
                         break;
@@ -255,15 +308,6 @@ namespace MKMTool
                         break;
                     case "testMode":
                         temp.testMode = bool.Parse(att.Value);
-                        break;
-                    case "searchWorldwide":
-                        temp.searchWorldwide = bool.Parse(att.Value);
-                        break;
-                    case "filterByExpansions":
-                        temp.filterByExpansions = bool.Parse(att.Value);
-                        break;
-                    case "filterByCountries":
-                        temp.filterByCountries = bool.Parse(att.Value);
                         break;
                     case "description":
                         temp.description = att.Value;
@@ -325,6 +369,12 @@ namespace MKMTool
             root.SetAttribute("priceMarkupCap", priceMarkupCap.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceIgnorePlaysets", priceIgnorePlaysets.ToString());
 
+            root.SetAttribute("filterByExpansions", filterByExpansions.ToString());
+            root.SetAttribute("filterByCountries", filterByCountries.ToString());
+            root.SetAttribute("includePrivateSellers", includePrivateSellers.ToString());
+            root.SetAttribute("includeProfessionalSellers", includeProfessionalSellers.ToString());
+            root.SetAttribute("includePowersellers", includePowersellers.ToString());
+
             root.SetAttribute("condAcceptance", condAcceptance.ToString());
 
             root.SetAttribute("logUpdated", logUpdated.ToString());
@@ -333,8 +383,6 @@ namespace MKMTool
             root.SetAttribute("logLargePriceChangeTooLow", logLargePriceChangeTooLow.ToString());
             root.SetAttribute("logLargePriceChangeTooHigh", logLargePriceChangeTooHigh.ToString());
             root.SetAttribute("logHighPriceVariance", logHighPriceVariance.ToString());
-            root.SetAttribute("filterByExpansions", filterByExpansions.ToString());
-            root.SetAttribute("filterByCountries", filterByCountries.ToString());
 
             root.SetAttribute("testMode", testMode.ToString());
             root.SetAttribute("searchWorldwide", searchWorldwide.ToString());
@@ -342,6 +390,26 @@ namespace MKMTool
 
             s.AppendChild(root);
             return s;
+        }
+
+        /// <summary>
+        /// Determines whether the specified user type is allowed under current settings.
+        /// </summary>
+        /// <param name="isCommercial">Type of user obtained from the isCommercial field of the User entity.</param>
+        /// <returns><c>True</c> if the specified user type is allowed; otherwise, <c>false</c>.</returns>
+        public bool IsAllowedUserType(string isCommercial)
+        {
+            switch (isCommercial)
+            {
+                case "0":
+                    return includePrivateSellers;
+                case "1":
+                    return includeProfessionalSellers;
+                case "2":
+                    return includePowersellers;
+                default:
+                    return false;
+            }
         }
     }
 
@@ -351,49 +419,12 @@ namespace MKMTool
         
         public MKMBot()
         {
-            settings = GenerateDefaultSettings();
+            settings = new MKMBotSettings();
         }
 
         public MKMBot(MKMBotSettings settings)
         {
             this.settings = settings;
-        }
-
-
-        /// <summary>
-        /// Generates the default settings for MKMBot.
-        /// To be used when GUI is not available / relevant.
-        /// </summary>
-        /// <returns>Default settings for all parameters of MKMBot</returns>
-        public static MKMBotSettings GenerateDefaultSettings()
-        {
-            return new MKMBotSettings
-            {
-                priceMinRarePrice = 0.05,
-                priceMinSimilarItems = 4, // require exactly 4 items
-                priceMaxSimilarItems = 4,
-                priceSetPriceBy = PriceSetMethod.ByAverage,
-                priceFactor = 0.5,
-                priceFactorWorldwide = 0.5,
-                priceMarkup2 = 0,
-                priceMarkup3 = 0,
-                priceMarkup4 = 0,
-                priceMarkupCap = 0,
-                priceIgnorePlaysets = false,
-                condAcceptance = AcceptedCondition.OnlyMatching,
-
-                logUpdated = true,
-                logLessThanMinimum = true,
-                logSmallPriceChange = true,
-                logLargePriceChangeTooLow = true,
-                logLargePriceChangeTooHigh = true,
-                logHighPriceVariance = true,
-
-                testMode = false,
-                searchWorldwide = false,
-                filterByExpansions = false,
-                filterByCountries = false
-            };
         }
 
         public void SetSettings(MKMBotSettings s)
@@ -594,11 +625,32 @@ namespace MKMTool
             string articleName = card.GetAttribute(MCAttribute.Name);
             try
             {
+                // from API documentation:
+                // only articles from sellers with the specified user type are returned
+                // (private for private sellers only;
+                // commercial for all commercial sellers, including powersellers; 
+                // powerseller for powersellers only)
+                //
+                // So we can't get an arbitrary combination, so let's do the best we can in a single request
+                string userType = "";
+                if (settings.includePrivateSellers)
+                {
+                    // we can use "private" only if we want neither professional nor powersellers, otherwise we have to get all
+                    if (!(settings.includePowersellers || settings.includeProfessionalSellers))
+                        userType = "private";
+                }
+                else if (settings.includeProfessionalSellers)
+                    userType = "commercial"; // includes professional sellers and powersellers
+                else if (settings.includePowersellers)
+                    userType = "powerseller";
+                else
+                    return null; // if nothing is selected, return null
                 sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
                             (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
                             (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
                             (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
-                            (isFirstEd != "" ? "&isFirstEd=" + isFirstEd : "") + "&start=0&maxResults=" + maxNbItems;
+                            (isFirstEd != "" ? "&isFirstEd=" + isFirstEd : "") + (userType != "" ? "&userType=" + userType : "") +
+                            "&start=0&maxResults=" + maxNbItems;
 
                 return MKMInteract.RequestHelper.makeRequest(sUrl, "GET").GetElementsByTagName("article");
             }
@@ -860,6 +912,8 @@ namespace MKMTool
             bool ignorePlaysets = settings.priceIgnorePlaysets || (isPlayset == "");
             foreach (XmlNode offer in similarItems)
             {
+                if (!settings.IsAllowedUserType(offer["seller"]["isCommercial"].InnerText))
+                    continue;
                 string sellerCountryCode = offer["seller"]["address"]["country"].InnerText;
                 bool isntFromMyCountry = sellerCountryCode != MKMHelpers.sMyOwnCountry;
                 if (ignoreSellersCountry)
