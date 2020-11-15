@@ -990,7 +990,7 @@ namespace MKMTool
                 if (!settings.IsAllowedUserType(offer["seller"]["isCommercial"].InnerText))
                     continue;
                 string sellerCountryCode = offer["seller"]["address"]["country"].InnerText;
-                bool isntFromMyCountry = sellerCountryCode != MKMHelpers.sMyOwnCountry;
+                bool isntFromMyCountry = sellerCountryCode != MainView.Instance.Config.MyCountryCode;
                 if (ignoreSellersCountry)
                 {
                     // if we are ignoring seller's country, check the country filter

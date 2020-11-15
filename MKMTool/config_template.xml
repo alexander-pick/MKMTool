@@ -32,7 +32,14 @@
 -->
 <config>
   <settings>
-    <UseStockGetFile>true</UseStockGetFile><!--Values can be: true, false -->
+    <!--true or false. see documentation for details-->
+    <UseStockGetFile>true</UseStockGetFile>
+    <!--only relevant if UseStockGetFile is true. 1 for MtG, 2 World of Warcraft, 3 Yu-Gi-Oh, experiment to get the rest -->
+    <idGame>1</idGame>
+    <!--separator for columns for exported CSVs, should be ; or , use anything else at your own risk-->
+    <CSVExportSeparator>,</CSVExportSeparator>
+    <!--for pretending you are from somewhere else, leave it empty to have it read from MKM. Use D for Germany, otherwise codes from here:https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 -->
+    <MyCountryCode></MyCountryCode>
   </settings>
   <appToken>ENTER_YOUR_APP_TOKEN_INSTEAD_OF_THIS_TEXT</appToken>
   <appSecret>ENTER_YOUR_APP_SECRET_INSTEAD_OF_THIS_TEXT</appSecret>

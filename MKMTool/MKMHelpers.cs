@@ -43,13 +43,10 @@ namespace MKMTool
 {
     public static class MKMHelpers
     {
-        // My origin country (to find domestic deals)
-        public static string sMyOwnCountry = "D";
-
         // My userId (to disregard items listed by myself when setting a new price)
         public static string sMyId = "0";
 
-        private static object errorLogLock = new object();
+        private static readonly object errorLogLock = new object();
 
         // key = language ID, value = language name
         public static Dictionary<string, string> languagesNames = new Dictionary<string, string>

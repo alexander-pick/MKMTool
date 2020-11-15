@@ -434,7 +434,7 @@ namespace MKMTool
                 sUrl += "&idLanguage=" + idLanguages[0];
             }
 
-            XmlDocument doc2 = null;
+            XmlDocument doc2;
             try
             {
                 doc2 = MKMInteract.RequestHelper.makeRequest(sUrl, "GET");
@@ -466,7 +466,8 @@ namespace MKMTool
                     * false    = no
                     */
 
-                if (offer["seller"]["address"]["country"].InnerText != MKMHelpers.sMyOwnCountry && domesticCheck.Checked)
+                if (offer["seller"]["address"]["country"].InnerText != MainView.Instance.Config.MyCountryCode
+                    && domesticCheck.Checked)
                     continue;
 
                 bool languageOk = true;

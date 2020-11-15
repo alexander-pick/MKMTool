@@ -37,6 +37,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
+using System.Xml;
 using Timer = System.Timers.Timer;
 
 namespace MKMTool
@@ -54,18 +55,27 @@ namespace MKMTool
                 xConfigFile.Load(@".//config.xml");
                 if (xConfigFile["config"]["settings"] != null)
                 {
-                    if (xConfigFile["config"]["settings"]["UseStockGetFile"] != null)
+                    var settings = xConfigFile["config"]["settings"];
+                    foreach (XmlNode setting in settings)
                     {
-                        if (bool.TryParse(xConfigFile["config"]["settings"]["UseStockGetFile"].InnerText, out bool stockGetMethod))
-                            UseStockGetFile = stockGetMethod;
-                    }
-                    if (xConfigFile["config"]["settings"]["idGame"] != null)
-                    {
-                        GameID = xConfigFile["config"]["settings"]["idGame"].InnerText;
-                    }
-                    if (xConfigFile["config"]["settings"]["CSVExportSeparator"] != null)
-                    {
-                        CSVExportSeparator = xConfigFile["config"]["settings"]["CSVExportSeparator"].InnerText;
+                        switch (setting.Name)
+                        {
+                            case "UseStockGetFile":
+                                if (bool.TryParse(setting.InnerText, out bool stockGetMethod))
+                                    UseStockGetFile = stockGetMethod;
+                                break;
+                            case "idGame":
+                                GameID = setting.InnerText;
+                                break;
+                            case "CSVExportSeparator":
+                                CSVExportSeparator = setting.InnerText;
+                                break;
+                            case "MyCountryCode":
+                                if (setting.InnerText != "" && MKMHelpers.countryNames.ContainsKey(setting.InnerText))
+                                    MyCountryCode = setting.InnerText;
+                                // else leave the default, i.e. ""
+                                break;
+                        }
                     }
                 }
             }
@@ -73,6 +83,7 @@ namespace MKMTool
             public bool UseStockGetFile { get; } = true;
             public string GameID { get; } = "1";
             public string CSVExportSeparator { get; } = ",";
+            public string MyCountryCode { get; set; } = ""; // to find domestic deals, empty to be automatically detected
         }
         private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
@@ -168,7 +179,8 @@ namespace MKMTool
             {
                 var doc2 = MKMInteract.RequestHelper.getAccount();
 
-                MKMHelpers.sMyOwnCountry = doc2["response"]["account"]["country"].InnerText;
+                if (Config.MyCountryCode == "") // signifies user wants auto-detect, otherwise the chosen setting overrides what we get from MKM
+                    Config.MyCountryCode = doc2["response"]["account"]["country"].InnerText;
                 MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
             }
             catch (Exception eError)
@@ -223,8 +235,7 @@ namespace MKMTool
 
         private async void updatePriceButton_Click(object sender, EventArgs e)
         {
-            MKMBotSettings s;
-            if (settingsWindow.GenerateBotSettings(out s))
+            if (settingsWindow.GenerateBotSettings(out MKMBotSettings s))
             {
                 bot.SetSettings(s);
                 updatePriceButton.Enabled = false;
@@ -295,8 +306,7 @@ namespace MKMTool
         {
             LogMainWindow("Starting scheduled MKM Update Job...");
 
-            MKMBotSettings s;
-            if (settingsWindow.GenerateBotSettings(out s))
+            if (settingsWindow.GenerateBotSettings(out MKMBotSettings s))
             {
                 bot.SetSettings(s);
                 updatePriceButton.Text = "Updating...";
@@ -359,8 +369,7 @@ namespace MKMTool
         // validate that it is numerical
         private void runtimeIntervall_TextChanged(object sender, EventArgs e)
         {
-            int res;
-            if (Int32.TryParse(runtimeIntervall.Text, out res))
+            if (int.TryParse(runtimeIntervall.Text, out int res))
                 timer.Interval = res * 1000 * 60;
             else
                 runtimeIntervall.Text = "" + (int)(timer.Interval / 60000);
@@ -371,7 +380,7 @@ namespace MKMTool
         /// </summary>
         /// <param name="requestsPerformed">The requests performed since last reset (0:00 CET).</param>
         /// <param name="requestsLimit">The requests limit (based on the account type).</param>
-        public void updateRequestCount(int requestsPerformed, int requestsLimit)
+        public void UpdateRequestCount(int requestsPerformed, int requestsLimit)
         {
             labelRequestCounter.Text = "API Requests made/allowed: " + requestsPerformed + "/" + requestsLimit;
             if (requestsLimit - requestsPerformed < 50)
