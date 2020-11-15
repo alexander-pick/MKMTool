@@ -1108,7 +1108,7 @@ namespace MKMTool
                     //Console.WriteLine(count);
 
                     var oNodes = doc.GetElementsByTagName("order");
-
+                    string separ = "\"" + MainView.Instance.Config.CSVExportSeparator + "\"";
                     foreach (XmlNode order in oNodes)
                     {
                         var aNodes = order.SelectNodes("article");
@@ -1136,10 +1136,10 @@ namespace MKMTool
                                         expansion = article["product"]["expansion"].InnerText;
                                 }
                                 // else only single cards have expansion -> leave it empty for displays etc.
-                                file.WriteLine("\"" + oID + "\";\"" + sOdate + "\";\"" + name
-                                    + "\";\"" + expansion
-                                    + "\";\"" + article["language"]["languageName"].InnerText
-                                    + "\";\"" + article["price"].InnerText + "\"");
+                                file.WriteLine("\"" + oID + separ + sOdate + separ + name
+                                    + separ + expansion
+                                    + separ + article["language"]["languageName"].InnerText
+                                    + separ + article["price"].InnerText + "\"");
                             }
                             catch (Exception eError)
                             {

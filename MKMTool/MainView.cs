@@ -63,11 +63,16 @@ namespace MKMTool
                     {
                         GameID = xConfigFile["config"]["settings"]["idGame"].InnerText;
                     }
+                    if (xConfigFile["config"]["settings"]["CSVExportSeparator"] != null)
+                    {
+                        CSVExportSeparator = xConfigFile["config"]["settings"]["CSVExportSeparator"].InnerText;
+                    }
                 }
             }
 
             public bool UseStockGetFile { get; } = true;
             public string GameID { get; } = "1";
+            public string CSVExportSeparator { get; } = ",";
         }
         private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
