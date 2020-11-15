@@ -1,6 +1,6 @@
 # Welcome to MKMTool 0.8
 
-If you have just updated from older version than 0.8.0, do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file (you don't have to modify them, see [Installation and starting off](#Installation-and-starting-off) for details).
+If you have just updated from older version than 0.8.0, do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation.
 If you have just updated from older version than 0.7.0, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
 
 ## Latest changes
@@ -9,7 +9,7 @@ New/improved features:
 + All CSV lists used by MKMTool can now also use semicolon (the character ';') as a separator. MKMTool automatically detects if your file uses ';' or ','. ';' must NOT be contained in column names.
 + Added generic configuration settings for MKMTool that can be specified in the config.xml. Right now there is only one new setting, might be more in the future.
 + Fetching our own stock is now more efficient by using the GET STOCK FILE API request, which downloads entire stock as a single CSV file, which MKMTool than parses. This reduces the number of API requests used by 1 per each 100 articles in your stock, which also decreases the processing time. This is used in the Update Price and the View Inventory. If you have some problems, you can switch to the old way by opening your config.xml and setting the UseStockGetFile to false.
-+ View Inventory now includes the idProduct. If UseStockGetFile is set to true (now default), it will no longer include Rarity, lastEdited and inShoppingCart columns. If you need those, you will have to switch UseStockGetFile to false (this will however significantly increase the time it takes to show the inventory).
++ View Inventory now includes the idProduct. If UseStockGetFile is set to true (now default), it will no longer include Rarity, LocName, lastEdited and inShoppingCart columns. If you need those, you will have to switch UseStockGetFile to false (this will however significantly increase the time it takes to show the inventory).
 + Added "Filter expansions" to [Price Update](#Price-Update) / [Price External List](#Price-External-List): only cards from selected expansions will be processed.
 + Added "Filter seller countries" to [Price Update](#Price-Update) / [Price External List](#Price-External-List): when doing "worldwide search", only sellers from the selected countries will be taken into account. See documentation in the [Price Update](#Price-Update)section before using this feature.
 + Added filtering by user type - private, professional and commercial - to [Price Update](#Price-Update) / [Price External List](#Price-External-List): only articles by sellers of the selected types will be used for price update.
@@ -150,6 +150,9 @@ MKMTool has several features/modules, click the links to bring you to documentat
 + [Want List Editor](#Want-List-Editor): Adds or removes cards from any of your want lists.
 + [View Inventory](#View-Inventory): Downloads your entire stock from MKM and visualizes it in a table with a search function. Also allows you to export the inventory to a CSV file.
 
+### Settings
+But first, let's see settings you can choose in the config.xml file (values are entered without quotes):
++ **UseStockGetFile:** values can be "true" or "false", true by default. It is relevant for Price Update and View Inventory modules. It is a faster method of getting all of your stock in a single API request. The alternative uses 1 API request per 100 articles. However, it includes more information. While it is irrelevant for Price Update, in View Inventory the following can be seen only when setting UseStockGetFile to false: Rarity, LocName (name in the language of the card), inShoppingCart (true or false if the item is currently in shopping card) and lastEdited (time you last edited the article). Also, by default it will only get magic cards. If you want to see inventory including cards from other games, set this to false.
 
 ### Price Update
 This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accessible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.updatePrices() method).
@@ -325,7 +328,7 @@ The following is the list of all recognized attributes. **Note that all of the a
 
 + **idProduct**: MKM's identification number of the product. If it is assigned, MKMTool will also internally fill the Name, Expansion and Expansion ID fields. You can still have them in the list, but MKMTool will use the ones found based on this ID. 
 + **Name**: the name of the card, in English. In some cases can be case sensitive, preferably use the name exactly as you can find it on MKM's product page, i.e. first letters capitalized except for prepositions. Synonyms: enName, English Name.
-+ **LocName**: the name of the card in the language in which it is printed. In some cases can be case sensitive. Note that different languages have different rules about the capitalization - some are like English, but some have only first letter of the first word capitalized. Synonyms: Local Name.
++ **LocName**: the name of the card in the language in which it is printed. In some cases can be case sensitive. Note that different languages have different rules about the capitalization - some are like English, but some have only first letter of the first word capitalized.
 + **Language**: English name of the language, first letters capital, i.e. one of the following: English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese
 + **LanguageID**: MKM's language ID, an integer with values 1-11: 1 for English, 2 for French, 3 for German, 4 for Spanish, 5 for Italian, 6 for Simplified Chinese, 7 for Japanese, 8 for Portuguese, 9 for Russian, 10 for Korean, 11 for Traditional Chinese.
 + **Expansion**: the expansion of the card. Case sensitive. Use the name in exactly the form you can find on MKM product pages, i.e. first letters capitalized except for prepositions. If it is assigned, MKMTool will also internally fill in the **Expansion ID** field. Synonyms: Edition, Exp. Name.

@@ -348,7 +348,9 @@ namespace MKMTool
 
             /// <summary>
             /// Gets the stock file csv.
-            /// Warning: the Language column in the returned csv is actually Language ID and boolean vars (foil etc. are empty for "false").
+            /// Warning: the Language column in the returned csv is actually Language ID and boolean vars 
+            /// (foil etc. are empty for "false"); the Local Name column is not the local name based on card language,
+            /// but based on our request (so always English).
             /// Prefer using the wrapper getAllStockSingles.
             /// </summary>
             /// <returns>Decompressed data containing the stock file. Can either be written directly to an output stream.
@@ -390,6 +392,7 @@ namespace MKMTool
                         var articleTable = MKMCsvUtils.ConvertCSVtoDataTable(stock);
                         // the GET STOCK FILE has language ID named Language, fix that
                         articleTable.Columns["Language"].ColumnName = MCAttribute.LanguageID;
+                        articleTable.Columns.Remove("Local Name"); // this is in the language of the request...which is always english
                         foreach (DataRow row in articleTable.Rows)
                         {
                             MKMMetaCard mc = new MKMMetaCard(row);

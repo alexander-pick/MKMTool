@@ -256,8 +256,7 @@ namespace MKMTool
             // the following 10 are used by GET STOCK FILE
             { "Foil?", MCAttribute.Foil }, { "Signed?", MCAttribute.Signed }, { "Playset?", MCAttribute.Playset },
             { "Altered?", MCAttribute.Altered }, { "FirstEd?", MCAttribute.FirstEd }, { "English Name", MCAttribute.Name },
-            { "Exp. Name", MCAttribute.Expansion }, { "Amount", MCAttribute.Count }, { "Exp.", MCAttribute.ExpansionAbb },
-            { "Local Name", MCAttribute.LocName }
+            { "Exp. Name", MCAttribute.Expansion }, { "Amount", MCAttribute.Count }, { "Exp.", MCAttribute.ExpansionAbb }
         };
 
         // literal dictionary of conditions - translates any supported condition denomination to its equivalent in the two-letter format MKM uses
