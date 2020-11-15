@@ -607,8 +607,20 @@ namespace MKMTool
             MainView.Instance.LogMainWindow("Updating Prices...");
             int putCounter = 0;
             string sRequestXML = "";
+// to process only a limited amount of articles (to save on API requests) change the "false" on next line to "true"
+#if false
+            int startFrom = 0; // first item that will be processed - you only need to change this
+            int batchSize = 3000; // size of the batch to process at one go
+            int end = startFrom + batchSize;
+            if (end > articles.Count)
+                end = articles.Count;
+            for (; startFrom < end; startFrom++)
+            {
+                MKMMetaCard MKMCard = articles[startFrom];
+#else
             foreach (MKMMetaCard MKMCard in articles)
             {
+#endif
                 if (isAllowedExpansion(MKMCard.GetAttribute(MCAttribute.Expansion)))
                 {
                     appraiseArticle(MKMCard, myStock);
