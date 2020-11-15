@@ -49,18 +49,25 @@ namespace MKMTool
         {
             public MKMToolConfig()
             {
-                     var xConfigFile = new System.Xml.XmlDocument();
+                var xConfigFile = new System.Xml.XmlDocument();
 
-                     xConfigFile.Load(@".//config.xml");
-                     if (xConfigFile["config"]["settings"] != null && xConfigFile["config"]["settings"]["UseStockGetFile"] != null)
-                     {
-                         bool stockGetMethod;
-                         if (bool.TryParse(xConfigFile["config"]["settings"]["UseStockGetFile"].InnerText, out stockGetMethod))
-                             UseStockGetFile = stockGetMethod;
-                     }
+                xConfigFile.Load(@".//config.xml");
+                if (xConfigFile["config"]["settings"] != null)
+                {
+                    if (xConfigFile["config"]["settings"]["UseStockGetFile"] != null)
+                    {
+                        if (bool.TryParse(xConfigFile["config"]["settings"]["UseStockGetFile"].InnerText, out bool stockGetMethod))
+                            UseStockGetFile = stockGetMethod;
+                    }
+                    if (xConfigFile["config"]["settings"]["idGame"] != null)
+                    {
+                        GameID = xConfigFile["config"]["settings"]["idGame"].InnerText;
+                    }
+                }
             }
 
             public bool UseStockGetFile { get; } = true;
+            public string GameID { get; } = "1";
         }
         private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);

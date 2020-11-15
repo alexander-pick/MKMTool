@@ -32,7 +32,6 @@
 using System;
 using System.Data;
 using System.Windows.Forms;
-using System.Xml;
 
 namespace MKMTool
 {
@@ -46,7 +45,7 @@ namespace MKMTool
         }
 
         // reload data each time the form is made visible in case the user's stock has changed so they can reload the stockview this way
-        private void StockView_VisibleChanged(object sender, EventArgs e)
+        private void stockView_VisibleChanged(object sender, EventArgs e)
         {
             if (Visible)
             {
@@ -56,6 +55,11 @@ namespace MKMTool
                     // getAllStockSingles creates a DataTable and converts it to list of cards, so theoretically we are wasting some work
                     // but it also filters out non-singles and converting to MKMcard will make sure we use the primary column names rather than synonyms
                     var cards = MKMInteract.RequestHelper.getAllStockSingles(MainView.Instance.Config.UseStockGetFile);
+                    if (cards.Count == 0)
+                    {
+                        MainView.Instance.LogMainWindow("Stock is empty. Did you select correct idGame in config.xml?");
+                        return;
+                    }
                     foreach (var card in cards)
                     {
                         card.WriteItselfIntoTable(articles, true, MCFormat.MKM, true);
@@ -132,8 +136,10 @@ namespace MKMTool
 
         private void buttonExport_Click(object sender, EventArgs e)
         {
-            SaveFileDialog sf = new SaveFileDialog();
-            sf.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+            SaveFileDialog sf = new SaveFileDialog
+            {
+                Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*"
+            };
             if (sf.ShowDialog() == DialogResult.OK)
             {
                 MainView.Instance.LogMainWindow("Exporting inventory...");

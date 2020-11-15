@@ -354,10 +354,11 @@ namespace MKMTool
             /// Prefer using the wrapper getAllStockSingles.
             /// </summary>
             /// <returns>Decompressed data containing the stock file. Can either be written directly to an output stream.
-            /// Null if the reading failed (this method logs the error).</returns>
+            /// Null if the reading failed (this method logs the error). Empty array if no items are in the stock.</returns>
             private static byte[] getStockFile()
             {
-                var doc = makeRequest("https://api.cardmarket.com/ws/v2.0/stock/file", "GET");
+                var doc = makeRequest("https://api.cardmarket.com/ws/v2.0/stock/file?idGame=" 
+                    + MainView.Instance.Config.GameID, "GET");
 
                 var node = doc.GetElementsByTagName("response");
                                 
@@ -387,7 +388,7 @@ namespace MKMTool
                 if (useFile)
                 {
                     byte[] stock = getStockFile();
-                    if (stock != null)
+                    if (stock != null && stock.Length > 0)
                     {
                         var articleTable = MKMCsvUtils.ConvertCSVtoDataTable(stock);
                         // the GET STOCK FILE has language ID named Language, fix that
