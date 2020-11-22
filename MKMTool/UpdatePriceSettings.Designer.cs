@@ -75,6 +75,8 @@ namespace MKMTool
             this.labelMatchExplanation = new System.Windows.Forms.Label();
             this.radioButtonCondMatchOnly = new System.Windows.Forms.RadioButton();
             this.groupBoxPriceEstim = new System.Windows.Forms.GroupBox();
+            this.comboBoxPriceEstUpdateMode = new System.Windows.Forms.ComboBox();
+            this.labelPriceEstUpdateMode = new System.Windows.Forms.Label();
             this.labelWorlwideAvg = new System.Windows.Forms.Label();
             this.checkBoxPricePlaysetIgnore = new System.Windows.Forms.CheckBox();
             this.labelMultCopiesCap = new System.Windows.Forms.Label();
@@ -123,13 +125,11 @@ namespace MKMTool
             this.checkBoxFilterCountries = new System.Windows.Forms.CheckBox();
             this.checkBoxFilterExpansions = new System.Windows.Forms.CheckBox();
             this.groupBoxFiltering = new System.Windows.Forms.GroupBox();
+            this.checkBoxFilterPowerseller = new System.Windows.Forms.CheckBox();
+            this.checkBoxFilterProfSeller = new System.Windows.Forms.CheckBox();
+            this.checkBoxFilterPrivSeller = new System.Windows.Forms.CheckBox();
             this.buttonFilterCountries = new System.Windows.Forms.Button();
             this.buttonFilterExpansions = new System.Windows.Forms.Button();
-            this.checkBoxFilterPrivSeller = new System.Windows.Forms.CheckBox();
-            this.checkBoxFilterProfSeller = new System.Windows.Forms.CheckBox();
-            this.checkBoxFilterPowerseller = new System.Windows.Forms.CheckBox();
-            this.labelPriceEstUpdateMode = new System.Windows.Forms.Label();
-            this.comboBoxPriceEstUpdateMode = new System.Windows.Forms.ComboBox();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -339,6 +339,31 @@ namespace MKMTool
             this.groupBoxPriceEstim.TabStop = false;
             this.groupBoxPriceEstim.Text = "Price estimation";
             // 
+            // comboBoxPriceEstUpdateMode
+            // 
+            this.comboBoxPriceEstUpdateMode.CausesValidation = false;
+            this.comboBoxPriceEstUpdateMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPriceEstUpdateMode.FormattingEnabled = true;
+            this.comboBoxPriceEstUpdateMode.Items.AddRange(new object[] {
+            "Full update",
+            "Update only below minPrice",
+            "Only ensure minPrice"});
+            this.comboBoxPriceEstUpdateMode.Location = new System.Drawing.Point(591, 123);
+            this.comboBoxPriceEstUpdateMode.Name = "comboBoxPriceEstUpdateMode";
+            this.comboBoxPriceEstUpdateMode.Size = new System.Drawing.Size(191, 21);
+            this.comboBoxPriceEstUpdateMode.TabIndex = 65;
+            this.toolTip1.SetToolTip(this.comboBoxPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
+            // 
+            // labelPriceEstUpdateMode
+            // 
+            this.labelPriceEstUpdateMode.AutoSize = true;
+            this.labelPriceEstUpdateMode.Location = new System.Drawing.Point(516, 126);
+            this.labelPriceEstUpdateMode.Name = "labelPriceEstUpdateMode";
+            this.labelPriceEstUpdateMode.Size = new System.Drawing.Size(74, 13);
+            this.labelPriceEstUpdateMode.TabIndex = 7;
+            this.labelPriceEstUpdateMode.Text = "Update mode:";
+            this.toolTip1.SetToolTip(this.labelPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
+            // 
             // labelWorlwideAvg
             // 
             this.labelWorlwideAvg.AutoSize = true;
@@ -366,7 +391,7 @@ namespace MKMTool
             this.labelMultCopiesCap.Name = "labelMultCopiesCap";
             this.labelMultCopiesCap.Size = new System.Drawing.Size(93, 13);
             this.labelMultCopiesCap.TabIndex = 62;
-            this.labelMultCopiesCap.Text = "Markup cap (in €):";
+            this.labelMultCopiesCap.Text = "Markup cap (€/£):";
             this.toolTip1.SetToolTip(this.labelMultCopiesCap, "If the estimated price would increased by more than the specified cap by the adde" +
         "d markup, it is increased only by the cap value");
             // 
@@ -750,9 +775,9 @@ namespace MKMTool
             this.labelPriceEstMinPrice.AutoSize = true;
             this.labelPriceEstMinPrice.Location = new System.Drawing.Point(8, 21);
             this.labelPriceEstMinPrice.Name = "labelPriceEstMinPrice";
-            this.labelPriceEstMinPrice.Size = new System.Drawing.Size(147, 13);
+            this.labelPriceEstMinPrice.Size = new System.Drawing.Size(141, 13);
             this.labelPriceEstMinPrice.TabIndex = 15;
-            this.labelPriceEstMinPrice.Text = "Minimum price of rares [EUR]:";
+            this.labelPriceEstMinPrice.Text = "Minimum price of rares [€/£]:";
             // 
             // labelPriceEstMinN
             // 
@@ -901,6 +926,42 @@ namespace MKMTool
             this.groupBoxFiltering.TabStop = false;
             this.groupBoxFiltering.Text = "Filtering";
             // 
+            // checkBoxFilterPowerseller
+            // 
+            this.checkBoxFilterPowerseller.AutoSize = true;
+            this.checkBoxFilterPowerseller.Checked = true;
+            this.checkBoxFilterPowerseller.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFilterPowerseller.Location = new System.Drawing.Point(404, 57);
+            this.checkBoxFilterPowerseller.Name = "checkBoxFilterPowerseller";
+            this.checkBoxFilterPowerseller.Size = new System.Drawing.Size(122, 17);
+            this.checkBoxFilterPowerseller.TabIndex = 6;
+            this.checkBoxFilterPowerseller.Text = "Include powersellers";
+            this.checkBoxFilterPowerseller.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxFilterProfSeller
+            // 
+            this.checkBoxFilterProfSeller.AutoSize = true;
+            this.checkBoxFilterProfSeller.Checked = true;
+            this.checkBoxFilterProfSeller.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFilterProfSeller.Location = new System.Drawing.Point(404, 38);
+            this.checkBoxFilterProfSeller.Name = "checkBoxFilterProfSeller";
+            this.checkBoxFilterProfSeller.Size = new System.Drawing.Size(152, 17);
+            this.checkBoxFilterProfSeller.TabIndex = 5;
+            this.checkBoxFilterProfSeller.Text = "Include professional sellers";
+            this.checkBoxFilterProfSeller.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxFilterPrivSeller
+            // 
+            this.checkBoxFilterPrivSeller.AutoSize = true;
+            this.checkBoxFilterPrivSeller.Checked = true;
+            this.checkBoxFilterPrivSeller.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFilterPrivSeller.Location = new System.Drawing.Point(404, 19);
+            this.checkBoxFilterPrivSeller.Name = "checkBoxFilterPrivSeller";
+            this.checkBoxFilterPrivSeller.Size = new System.Drawing.Size(128, 17);
+            this.checkBoxFilterPrivSeller.TabIndex = 4;
+            this.checkBoxFilterPrivSeller.Text = "Include private sellers";
+            this.checkBoxFilterPrivSeller.UseVisualStyleBackColor = true;
+            // 
             // buttonFilterCountries
             // 
             this.buttonFilterCountries.Enabled = false;
@@ -924,67 +985,6 @@ namespace MKMTool
             this.buttonFilterExpansions.Text = "Select Expansions...";
             this.buttonFilterExpansions.UseVisualStyleBackColor = true;
             this.buttonFilterExpansions.Click += new System.EventHandler(this.buttonFilterExpansions_Click);
-            // 
-            // checkBoxFilterPrivSeller
-            // 
-            this.checkBoxFilterPrivSeller.AutoSize = true;
-            this.checkBoxFilterPrivSeller.Checked = true;
-            this.checkBoxFilterPrivSeller.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFilterPrivSeller.Location = new System.Drawing.Point(404, 19);
-            this.checkBoxFilterPrivSeller.Name = "checkBoxFilterPrivSeller";
-            this.checkBoxFilterPrivSeller.Size = new System.Drawing.Size(128, 17);
-            this.checkBoxFilterPrivSeller.TabIndex = 4;
-            this.checkBoxFilterPrivSeller.Text = "Include private sellers";
-            this.checkBoxFilterPrivSeller.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxFilterProfSeller
-            // 
-            this.checkBoxFilterProfSeller.AutoSize = true;
-            this.checkBoxFilterProfSeller.Checked = true;
-            this.checkBoxFilterProfSeller.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFilterProfSeller.Location = new System.Drawing.Point(404, 38);
-            this.checkBoxFilterProfSeller.Name = "checkBoxFilterProfSeller";
-            this.checkBoxFilterProfSeller.Size = new System.Drawing.Size(152, 17);
-            this.checkBoxFilterProfSeller.TabIndex = 5;
-            this.checkBoxFilterProfSeller.Text = "Include professional sellers";
-            this.checkBoxFilterProfSeller.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxFilterPowerseller
-            // 
-            this.checkBoxFilterPowerseller.AutoSize = true;
-            this.checkBoxFilterPowerseller.Checked = true;
-            this.checkBoxFilterPowerseller.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFilterPowerseller.Location = new System.Drawing.Point(404, 57);
-            this.checkBoxFilterPowerseller.Name = "checkBoxFilterPowerseller";
-            this.checkBoxFilterPowerseller.Size = new System.Drawing.Size(122, 17);
-            this.checkBoxFilterPowerseller.TabIndex = 6;
-            this.checkBoxFilterPowerseller.Text = "Include powersellers";
-            this.checkBoxFilterPowerseller.UseVisualStyleBackColor = true;
-            // 
-            // labelPriceEstUpdateMode
-            // 
-            this.labelPriceEstUpdateMode.AutoSize = true;
-            this.labelPriceEstUpdateMode.Location = new System.Drawing.Point(516, 126);
-            this.labelPriceEstUpdateMode.Name = "labelPriceEstUpdateMode";
-            this.labelPriceEstUpdateMode.Size = new System.Drawing.Size(74, 13);
-            this.labelPriceEstUpdateMode.TabIndex = 7;
-            this.labelPriceEstUpdateMode.Text = "Update mode:";
-            this.toolTip1.SetToolTip(this.labelPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
-            // 
-            // comboBoxPriceEstUpdateMode
-            // 
-            this.comboBoxPriceEstUpdateMode.CausesValidation = false;
-            this.comboBoxPriceEstUpdateMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxPriceEstUpdateMode.FormattingEnabled = true;
-            this.comboBoxPriceEstUpdateMode.Items.AddRange(new object[] {
-            "Full update",
-            "Update only below minPrice",
-            "Only ensure minPrice"});
-            this.comboBoxPriceEstUpdateMode.Location = new System.Drawing.Point(591, 123);
-            this.comboBoxPriceEstUpdateMode.Name = "comboBoxPriceEstUpdateMode";
-            this.comboBoxPriceEstUpdateMode.Size = new System.Drawing.Size(191, 21);
-            this.comboBoxPriceEstUpdateMode.TabIndex = 65;
-            this.toolTip1.SetToolTip(this.comboBoxPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
             // 
             // UpdatePriceSettings
             // 
