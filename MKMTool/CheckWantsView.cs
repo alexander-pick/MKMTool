@@ -62,14 +62,15 @@ namespace MKMTool
         }
 
         // this is done only once, when it is first shown - populate language combobox, it never changes
-        private void CheckWantsView_Shown(object sender, EventArgs e)
+        private void checkWantsView_Shown(object sender, EventArgs e)
         {
             foreach (var Lang in MKMHelpers.languagesNames)
             {
-                var item = new MKMHelpers.ComboboxItem();
-
-                item.Text = Lang.Value;
-                item.Value = Lang.Key;
+                var item = new MKMHelpers.ComboboxItem
+                {
+                    Text = Lang.Value,
+                    Value = Lang.Key
+                };
 
                 langCombo.Items.Add(item);
             }
@@ -78,7 +79,7 @@ namespace MKMTool
         }
 
         // this is done whenever it is shown/hidden - in case it is made visible, reload all data in case something has changed in the meantime
-        private void CheckWantsView_VisibleChanged(object sender, EventArgs e)
+        private void checkWantsView_VisibleChanged(object sender, EventArgs e)
         {
             if (Visible)
             {
@@ -94,13 +95,13 @@ namespace MKMTool
                 }
 
                 conditionCombo.SelectedIndex = 4;
-                initWantLists();
+                InitWantLists();
             }
         }
 
-        public void initWantLists()
+        public void InitWantLists()
         {
-            XmlDocument doc = null;
+            XmlDocument doc;
             try
             {
                 doc = MKMInteract.RequestHelper.getWantsLists();
@@ -116,10 +117,11 @@ namespace MKMTool
 
             foreach (XmlNode nWantlist in node)
             {
-                var item = new MKMHelpers.ComboboxItem();
-
-                item.Text = nWantlist["name"].InnerText;
-                item.Value = nWantlist["idWantslist"].InnerText;
+                var item = new MKMHelpers.ComboboxItem
+                {
+                    Text = nWantlist["name"].InnerText,
+                    Value = nWantlist["idWantslist"].InnerText
+                };
 
                 wantListsBox2.Items.Add(item);
 
@@ -132,7 +134,7 @@ namespace MKMTool
         /// </summary>
         private void checkListRun(string listID, double maxAllowedPrice, double shippingAdd, double percentBelow, bool checkTrend)
         {
-            XmlDocument doc = null;
+            XmlDocument doc;
             try
             {
                 doc = MKMInteract.RequestHelper.getWantsListByID(listID);
@@ -174,10 +176,10 @@ namespace MKMTool
                     // We can use this to prune lot of useless calls that will end up in empty responses from searching for non foils in promo (foil only) sets
                     int total = int.Parse(product["countArticles"].InnerText);
                     int foils = int.Parse(product["countFoils"].InnerText);
-                    if ((article["isFoil"].InnerText == "true" && foils == 0) || // there are only non-foils of this article and we want foils
-                        (article["isFoil"].InnerText == "false" && foils == total)) // there are only foils and we want non-foil
+                    string artFoil = article["isFoil"] == null ? "" : article["isFoil"].InnerText;
+                    if ((artFoil == "true" && foils == 0) || // there are only non-foils of this article and we want foils
+                        (artFoil == "false" && foils == total)) // there are only foils and we want non-foil
                         continue;
-
                     MainView.Instance.LogMainWindow("checking:" + product["enName"].InnerText + " from " + product["expansionName"].InnerText + "...");
 
                     // a wantlist item can have more idLanguage entries, one for each wanted language
@@ -187,8 +189,10 @@ namespace MKMTool
                         if (langNodes.Name == "idLanguage")
                             selectedLanguages.Add(langNodes.InnerText);
                     }
+                    string artSigned = article["isSigned"] == null ? "" : article["isSigned"].InnerText;
+                    string artAltered = article["isAltered"] == null ? "" : article["isAltered"].InnerText;
                     checkArticle(product["idProduct"].InnerText, selectedLanguages, article["minCondition"].InnerText,
-                        article["isFoil"].InnerText, article["isSigned"].InnerText, article["isAltered"].InnerText,
+                        artFoil, artSigned, artAltered,
                         // isPlayset seems to no longer be part of the API, instead there is a count of how many times is the card wanted, let's use it
                         int.Parse(article["count"].InnerText) == 4 ? "true" : "false",
                         "", maxAllowedPrice, shippingAdd, percentBelow, checkTrend);
@@ -251,7 +255,7 @@ namespace MKMTool
             while (true)
             {
                 String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
-                XmlDocument doc2 = null;
+                XmlDocument doc2;
                 try
                 {
                     // get the users stock, filtered by the selected parameters
@@ -302,7 +306,7 @@ namespace MKMTool
         /// For actually performing the check for cheap deals, expected to be run in its separate thread
         /// </summary>
         private void checkExpansionRun(string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
-            bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
+            double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
             System.Collections.Generic.List<string> selectedLanguage)
         {
             DataRow[] sT = MKMDbManager.Instance.GetCardsInExpansion(selectedExpansionID);
@@ -345,11 +349,13 @@ namespace MKMTool
             if (playsetBox.Checked)
                 isPlayset = "true";
 
-            System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>();
-            selectedLanguage.Add((langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
+            System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>
+            {
+                (langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString()
+            };
 
             await Task.Run(() => checkExpansionRun(isFoil, isSigned, isAltered, isPlayset, minCondition, 
-                domesticCheck.Checked, maxAllowedPrice, shippingAdd, percentBelow, checkTrend, selectedExpansionID,
+                maxAllowedPrice, shippingAdd, percentBelow, checkTrend, selectedExpansionID,
                 selectedLanguage));
 
             checkEditionButton.Text = "Check now";
@@ -387,8 +393,10 @@ namespace MKMTool
             if (playsetBox.Checked)
                 isPlayset = "true";
 
-            System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>();
-            selectedLanguage.Add((langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString());
+            System.Collections.Generic.List<string> selectedLanguage = new System.Collections.Generic.List<string>
+            {
+                (langCombo.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString()
+            };
 
             await Task.Run(() => checkUserRun(textBoxUser.Text, isFoil, isSigned, isAltered, isPlayset, minCondition,
                 domesticCheck.Checked, maxAllowedPrice, shippingAdd, percentBelow, checkTrend,

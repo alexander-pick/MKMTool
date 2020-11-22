@@ -8,8 +8,8 @@ If you have just updated from older version than 0.7.0, please delete the "mkmto
 New/improved features:
 + All CSV lists used by MKMTool can now also use semicolon (the character ';') as a separator. MKMTool automatically detects if your file uses ';' or ','. ';' must NOT be contained in column names.
 + Added generic configuration settings for MKMTool that can be specified in the config.xml. Documentation is in the [Settings](#Settings) section.
-+ Added setting to config.xml choose the CSV separator to use when exporting files (currently used in View Inventory, Price External List and Download Buys).
-+ Fetching our own stock is now more efficient by using the GET STOCK FILE API request, which downloads entire stock as a single CSV file, which MKMTool than parses. This reduces the number of API requests used by 1 per each 100 articles in your stock, which also decreases the processing time. This is used in the Update Price and the View Inventory. If you have some problems, you can switch to the old way by opening your config.xml and setting the UseStockGetFile to false.
++ Added setting to config.xml for choosing the CSV separator to use when exporting files (currently used in View Inventory, Price External List and Download Buys).
++ Fetching our own stock is now more efficient by using the GET STOCK FILE API request, which downloads the entire stock as a single CSV file, which MKMTool then parses. This reduces the number of API requests used by 1 per each 100 articles in your stock, which also decreases the processing time. This is used in the Update Price and the View Inventory. If you have some problems, you can switch to the old way by opening your config.xml and setting the UseStockGetFile to false.
 + View Inventory now includes the idProduct. If UseStockGetFile is set to true (now default), it will no longer include Rarity, LocName, lastEdited and inShoppingCart columns. If you need those, you will have to switch UseStockGetFile to false (this will however significantly increase the time it takes to show the inventory).
 + Added "Filter expansions" to [Price Update](#Price-Update) / [Price External List](#Price-External-List): only cards from selected expansions will be processed.
 + Added "Filter seller countries" to [Price Update](#Price-Update) / [Price External List](#Price-External-List): when doing "worldwide search", only sellers from the selected countries will be taken into account. See documentation in the [Price Update](#Price-Update)section before using this feature.
@@ -19,6 +19,7 @@ New/improved features:
 + When updating price, the FirstEd parameter is taken into account when looking for similar items (relevant only for Yu-Gi-Oh).
 Bug-fixes:
 + MinPrice from mystock.csv was taken into account only if no price update was computed. Now it will always be checked even just against the current price.
++ Fixed crashes when Checking for Cheap Deals by wantlist when article in wantlist had "Any" as isFoil, isSigned or isAltered.
 
 <details><summary><i>Show older changelogs</i></summary>
 <p>
