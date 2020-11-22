@@ -53,7 +53,7 @@ namespace MKMTool
     class MKMDbManager
     {
 #region initialization
-        private static MKMDbManager instance = new MKMDbManager();
+        private static readonly MKMDbManager instance = new MKMDbManager();
 
         private DataTable inventory = new DataTable();
         private DataTable expansions = new DataTable(); // all expansions of products in inventory
@@ -132,6 +132,7 @@ namespace MKMTool
         {
             try
             {
+                MainView.Instance.LogMainWindow("Updating MKM inventory database...");
                 // build inventory
                 var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
 
@@ -152,6 +153,7 @@ namespace MKMTool
                 File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
 
                 MainView.Instance.LogMainWindow("MKM inventory database updated.");
+                MainView.Instance.LogMainWindow("Updating MKM expansions database...");
 
                 // build expansions
                 doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
@@ -168,7 +170,7 @@ namespace MKMTool
                             + nExpansion[ExpansionsFields.ReleaseDate].InnerText + "\"");
                     }
                 }
-                MainView.Instance.LogMainWindow("MKM expansion database updated.");
+                MainView.Instance.LogMainWindow("MKM expansions database updated.");
             }
             catch (Exception eError)
             {
@@ -333,10 +335,11 @@ namespace MKMTool
         {
             foreach (DataRow nExpansion in expansions.Rows)
             {
-                ComboboxItem item = new ComboboxItem();
-
-                item.Text = nExpansion[ExpansionsFields.Name].ToString();
-                item.Value = nExpansion[ExpansionsFields.ExpansionID].ToString();
+                ComboboxItem item = new ComboboxItem
+                {
+                    Text = nExpansion[ExpansionsFields.Name].ToString(),
+                    Value = nExpansion[ExpansionsFields.ExpansionID].ToString()
+                };
 
                 exp.Items.Add(item);
             }

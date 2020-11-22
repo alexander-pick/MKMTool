@@ -17,6 +17,7 @@ New/improved features:
 + Added an "update mode" setting which allows you to control how is minPrice from myStock.csv used (among others, this allows you to bypass the price calculation algorithm and use myStock as a way to updated prices to whatever value you set in your CSV, as long as you are increasing prices).
 + Added setting to config.xml to fake your own country.
 + When updating price, the FirstEd parameter is taken into account when looking for similar items (relevant only for Yu-Gi-Oh).
++ The "Update local database" and "View Inventory" buttons switched places.
 Bug-fixes:
 + MinPrice from mystock.csv was taken into account only if no price update was computed. Now it will always be checked even just against the current price.
 + Fixed crashes when Checking for Cheap Deals by wantlist when article in wantlist had "Any" as isFoil, isSigned or isAltered.

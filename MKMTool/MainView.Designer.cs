@@ -30,11 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainView));
             this.loginButton = new System.Windows.Forms.Button();
-            this.readStockButton = new System.Windows.Forms.Button();
+            this.updateDatabaseButton = new System.Windows.Forms.Button();
             this.logBox = new System.Windows.Forms.TextBox();
             this.updatePriceButton = new System.Windows.Forms.Button();
             this.statusLabel = new System.Windows.Forms.Label();
-            this.getProductListButton = new System.Windows.Forms.Button();
+            this.viewInventoryButton = new System.Windows.Forms.Button();
             this.runtimeIntervall = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.autoUpdateCheck = new System.Windows.Forms.CheckBox();
@@ -53,7 +53,7 @@
             // loginButton
             // 
             this.loginButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.loginButton.Location = new System.Drawing.Point(532, 392);
+            this.loginButton.Location = new System.Drawing.Point(526, 392);
             this.loginButton.Margin = new System.Windows.Forms.Padding(2);
             this.loginButton.Name = "loginButton";
             this.loginButton.Size = new System.Drawing.Size(102, 22);
@@ -62,17 +62,17 @@
             this.loginButton.UseVisualStyleBackColor = true;
             this.loginButton.Click += new System.EventHandler(this.loginButton_Click);
             // 
-            // readStockButton
+            // updateDatabaseButton
             // 
-            this.readStockButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.readStockButton.Location = new System.Drawing.Point(638, 392);
-            this.readStockButton.Margin = new System.Windows.Forms.Padding(2);
-            this.readStockButton.Name = "readStockButton";
-            this.readStockButton.Size = new System.Drawing.Size(102, 22);
-            this.readStockButton.TabIndex = 3;
-            this.readStockButton.Text = "View Inventory Stock";
-            this.readStockButton.UseVisualStyleBackColor = true;
-            this.readStockButton.Click += new System.EventHandler(this.readStockButton_Click);
+            this.updateDatabaseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.updateDatabaseButton.Location = new System.Drawing.Point(630, 392);
+            this.updateDatabaseButton.Margin = new System.Windows.Forms.Padding(2);
+            this.updateDatabaseButton.Name = "updateDatabaseButton";
+            this.updateDatabaseButton.Size = new System.Drawing.Size(112, 22);
+            this.updateDatabaseButton.TabIndex = 3;
+            this.updateDatabaseButton.Text = "Update Local Data";
+            this.updateDatabaseButton.UseVisualStyleBackColor = true;
+            this.updateDatabaseButton.Click += new System.EventHandler(this.updateDatabaseButton_Click);
             // 
             // logBox
             // 
@@ -107,16 +107,16 @@
             this.statusLabel.Size = new System.Drawing.Size(0, 13);
             this.statusLabel.TabIndex = 8;
             // 
-            // getProductListButton
+            // viewInventoryButton
             // 
-            this.getProductListButton.Location = new System.Drawing.Point(3, 294);
-            this.getProductListButton.Margin = new System.Windows.Forms.Padding(2);
-            this.getProductListButton.Name = "getProductListButton";
-            this.getProductListButton.Size = new System.Drawing.Size(102, 41);
-            this.getProductListButton.TabIndex = 9;
-            this.getProductListButton.Text = "Update local MKM Product List";
-            this.getProductListButton.UseVisualStyleBackColor = true;
-            this.getProductListButton.Click += new System.EventHandler(this.getProductListButton_Click);
+            this.viewInventoryButton.Location = new System.Drawing.Point(3, 294);
+            this.viewInventoryButton.Margin = new System.Windows.Forms.Padding(2);
+            this.viewInventoryButton.Name = "viewInventoryButton";
+            this.viewInventoryButton.Size = new System.Drawing.Size(102, 41);
+            this.viewInventoryButton.TabIndex = 9;
+            this.viewInventoryButton.Text = "View Inventory";
+            this.viewInventoryButton.UseVisualStyleBackColor = true;
+            this.viewInventoryButton.Click += new System.EventHandler(this.viewInventoryButton_Click);
             // 
             // runtimeIntervall
             // 
@@ -216,7 +216,7 @@
             // buttonSettings
             // 
             this.buttonSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSettings.Location = new System.Drawing.Point(426, 392);
+            this.buttonSettings.Location = new System.Drawing.Point(423, 392);
             this.buttonSettings.Margin = new System.Windows.Forms.Padding(2);
             this.buttonSettings.Name = "buttonSettings";
             this.buttonSettings.Size = new System.Drawing.Size(102, 22);
@@ -262,11 +262,11 @@
             this.Controls.Add(this.autoUpdateCheck);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.runtimeIntervall);
-            this.Controls.Add(this.getProductListButton);
+            this.Controls.Add(this.viewInventoryButton);
             this.Controls.Add(this.statusLabel);
             this.Controls.Add(this.updatePriceButton);
             this.Controls.Add(this.logBox);
-            this.Controls.Add(this.readStockButton);
+            this.Controls.Add(this.updateDatabaseButton);
             this.Controls.Add(this.loginButton);
             this.Controls.Add(this.groupBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -285,10 +285,10 @@
         #endregion
 
         private System.Windows.Forms.Button loginButton;
-        private System.Windows.Forms.Button readStockButton;
+        private System.Windows.Forms.Button updateDatabaseButton;
         private System.Windows.Forms.Button updatePriceButton;
         private System.Windows.Forms.Label statusLabel;
-        private System.Windows.Forms.Button getProductListButton;
+        private System.Windows.Forms.Button viewInventoryButton;
         public System.Windows.Forms.TextBox logBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label status;

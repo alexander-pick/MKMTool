@@ -218,7 +218,7 @@ namespace MKMTool
             ac1.ShowDialog();
         }
 
-        private void readStockButton_Click(object sender, EventArgs e)
+        private void viewInventoryButton_Click(object sender, EventArgs e)
         {
             if (stockViewWindow.IsDisposed)
                 stockViewWindow = new StockView();
@@ -248,15 +248,15 @@ namespace MKMTool
                 logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
         }
 
-        private void getProductListButton_Click(object sender, EventArgs e)
+        private void updateDatabaseButton_Click(object sender, EventArgs e)
         {
             logBoxAppend("Updating local database files..." + Environment.NewLine);
-            getProductListButton.Text = "Updating...";
-            getProductListButton.Enabled = false;
+            updateDatabaseButton.Text = "Updating...";
+            updateDatabaseButton.Enabled = false;
             if (MKMDbManager.Instance.UpdateDatabaseFiles())
                 logBoxAppend("Database created." + Environment.NewLine);
-            getProductListButton.Enabled = true;
-            getProductListButton.Text = "Update local MKM Product List";
+            updateDatabaseButton.Enabled = true;
+            updateDatabaseButton.Text = "Update Local Data";
         }
 
         private void autoUpdateCheck_CheckedChanged(object sender, EventArgs e)
@@ -265,9 +265,9 @@ namespace MKMTool
             {
                 status.Text = "Bot Mode";
 
-                getProductListButton.Enabled = false;
+                viewInventoryButton.Enabled = false;
                 loginButton.Enabled = false;
-                readStockButton.Enabled = false;
+                updateDatabaseButton.Enabled = false;
                 updatePriceButton.Enabled = false;
                 wantlistEditButton.Enabled = false;
                 checkDisplayPriceButton.Enabled = false;
@@ -292,9 +292,9 @@ namespace MKMTool
 
                 status.Text = "Manual Mode";
 
-                getProductListButton.Enabled = true;
+                viewInventoryButton.Enabled = true;
                 loginButton.Enabled = true;
-                readStockButton.Enabled = true;
+                updateDatabaseButton.Enabled = true;
                 updatePriceButton.Enabled = true;
                 wantlistEditButton.Enabled = true;
                 checkDisplayPriceButton.Enabled = true;
