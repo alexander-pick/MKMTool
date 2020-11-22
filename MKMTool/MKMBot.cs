@@ -741,10 +741,16 @@ namespace MKMTool
             // **playset are equal to **single in non-playset case, all string prices are always prices for playset when applicable
             double dArticlePlayset = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
             double dArticleSingle = dArticlePlayset;
-            double minPricePlayset = 0.02;// minimum price MKM accepts for a single article is 0.02€
-            double minPriceSingle = 0.005;
+            double minPricePlayset = 0.005;// minimum price MKM accepts for a single article is 0.02€
+            string articleRarity = article.GetAttribute(MCAttribute.Rarity);
+            if (articleRarity == "Rare" || articleRarity == "Mythic")
+                minPricePlayset = settings.priceMinRarePrice;
+            double minPriceSingle = minPricePlayset;
             if (isPlayset == "true")
+            {
                 dArticleSingle /= 4;
+                minPricePlayset *= 4;
+            }
             string logMessage = productID + ">> " + articleName + " (" + articleExpansion + ", " +
                     (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine;
 
@@ -829,7 +835,7 @@ namespace MKMTool
                 {
                     logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items found (some outliers culled)" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "");
+                        (ignoreSellersCountry ? " - worldwide search! " : ". ");
                     forceLog = true;
                 }
             }
@@ -838,7 +844,7 @@ namespace MKMTool
                 if (settings.logHighPriceVariance) // this signifies that prices were not updated due to too high variance
                 {
                     logMessage += "NOT UPDATED - variance among cheapest similar items too high" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "");
+                        (ignoreSellersCountry ? " - worldwide search! " : ". ");
                     forceLog = true;
                 }
             }
@@ -848,7 +854,7 @@ namespace MKMTool
                 {
                     logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items found" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "");
+                        (ignoreSellersCountry ? " - worldwide search! " : ". ");
                     forceLog = true;
                 }
             }
@@ -860,7 +866,7 @@ namespace MKMTool
                 {
                     logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
                         (lastMatch + 1) + " similar items with a condition-matching item above them found" +
-                        (ignoreSellersCountry ? " - worldwide search!" : "");
+                        (ignoreSellersCountry ? " - worldwide search! " : ". ");
                     forceLog = true;
                 }
             }
@@ -910,11 +916,6 @@ namespace MKMTool
                     markupValue = settings.priceMarkupCap;
                 priceEstimationSingle += markupValue;
 
-                string articleRarity = article.GetAttribute(MCAttribute.Rarity);
-                if (priceEstimationSingle < settings.priceMinRarePrice
-                    && (articleRarity == "Rare" || articleRarity == "Mythic"))
-                    priceEstimationSingle = settings.priceMinRarePrice;
-
                 // just a temporary to correctly convert priceEstimation to string based on is/isn't playset; is/isn't less than minimum allowed price (0.02€)
                 double priceToSet = priceEstimationSingle;
                 // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
@@ -935,7 +936,7 @@ namespace MKMTool
                             {
                                 logMessage += "NOT UPDATED - change too large: Current Price: "
                                     + articlePrice + ", Calculated Price:" + sNewPrice +
-                                    (ignoreSellersCountry ? " - worldwide search!" : "");
+                                    (ignoreSellersCountry ? " - worldwide search! " : ". ");
                                 forceLog = true;
                             }
                         }
@@ -969,7 +970,7 @@ namespace MKMTool
                     { 
                         logMessage += "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
                             ", based on " + (lastMatch + 1) + " items" +
-                            (ignoreSellersCountry ? " - worldwide search!" : "");
+                            (ignoreSellersCountry ? " - worldwide search! " : ". ");
                     }
                     MainView.Instance.LogMainWindow(logMessage);
                 }

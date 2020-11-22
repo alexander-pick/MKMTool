@@ -67,6 +67,7 @@ namespace MKMTool
             comboBoxAltered.SelectedIndex = 0;
             comboBoxCondition.SelectedIndex = 2;
             comboBoxExpansion.SelectedIndex = 0;
+            comboBoxRarity.SelectedIndex = 1; // Rare
 
             foreach (var Lang in MKMHelpers.languagesNames)
             {
@@ -116,9 +117,11 @@ namespace MKMTool
 
         private async void buttonImport_Click(object sender, EventArgs e)
         {
-            OpenFileDialog import = new OpenFileDialog();
-            import.Multiselect = false;
-            import.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+            OpenFileDialog import = new OpenFileDialog
+            {
+                Multiselect = false,
+                Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*"
+            };
             if (import.ShowDialog() == DialogResult.OK)
             {
                 buttonImport.Enabled = false;
@@ -142,10 +145,11 @@ namespace MKMTool
                 string defaultAltered = comboBoxAltered.SelectedItem.ToString();
                 string defaultCondition = comboBoxCondition.SelectedItem.ToString();
                 string defaultExpansion = comboBoxExpansion.SelectedItem.ToString();
-                string defaultLanguageID = ((MKMHelpers.ComboboxItem)comboBoxLanguage.SelectedItem).Value.ToString();
+                string defaultLanguageID = ((ComboboxItem)comboBoxLanguage.SelectedItem).Value.ToString();
+                string defaultRarity = comboBoxRarity.SelectedItem.ToString();
 
                 await Task.Run(() => importRun(import.FileName, defaultFoil, defaultPlayset, defaultSigned, defaultAltered, 
-                    defaultCondition, defaultExpansion, defaultLanguageID));
+                    defaultCondition, defaultExpansion, defaultLanguageID, defaultRarity));
 
                 buttonImport.Enabled = true;
                 if (importedValidOnly.Count > 0)
@@ -164,7 +168,7 @@ namespace MKMTool
         /// </summary>
         /// <param name="filePath">The file path.</param>
         private void importRun(string filePath, string defaultFoil, string defaultPlayset, string defaultSigned, string defaultAltered,
-            string defaultCondition, string defaultExpansion, string defaultLanguageID)
+            string defaultCondition, string defaultExpansion, string defaultLanguageID, string defaultRarity)
         {
             DataTable dt;
             try
@@ -196,6 +200,11 @@ namespace MKMTool
                 {
                     languageID = defaultLanguageID;
                     mc.SetLanguageID(languageID);
+                }
+                string rarity = mc.GetAttribute(MCAttribute.Rarity);
+                if (rarity == "")
+                {
+                    mc.SetAttribute(MCAttribute.Rarity, defaultRarity);
                 }
                 if (name == "" && productID == "") // we have neither name or productID - we have to hope we have locName and language
                 {
@@ -771,6 +780,7 @@ namespace MKMTool
                         MainView.Instance.LogMainWindow("Uploading " + mc.GetAttribute(MCAttribute.Count) + "x " +
                             mc.GetAttribute(MCAttribute.Name) + " from " + mc.GetAttribute(MCAttribute.Expansion) +
                             " for " + price + "€ to MKM.");
+                    
                     sRequestXML += MKMInteract.RequestHelper.postStockArticleBody(mc);
                     postCounter++;
                     if (postCounter > 98)
