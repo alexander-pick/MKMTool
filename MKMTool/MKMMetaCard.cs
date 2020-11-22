@@ -833,16 +833,16 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         /// </returns>
         public override bool Equals(object card2)
         {
-            if (card2 is MKMMetaCard)
+            if (card2 is MKMMetaCard card)
             {
                 foreach (var att in data)
                 {
                     if (att.Key == MCAttribute.MinCondition && att.Value != "")
                     {
                         // comparing minCondition requires custom handling
-                        if (IsOfMinCondition((MKMMetaCard)card2) == Bool3.False)
+                        if (IsOfMinCondition(card) == Bool3.False)
                             return false;
-                        if (((MKMMetaCard)card2).IsOfMinCondition(this) == Bool3.False)
+                        if (card.IsOfMinCondition(this) == Bool3.False)
                             return false;
                     }
                     else
@@ -850,7 +850,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
                         // all other attributes are compared directly
                         if (att.Value != "")
                         {
-                            string att2 = ((MKMMetaCard)card2).GetAttribute(att.Key);
+                            string att2 = card.GetAttribute(att.Key);
                             if (att2 != "" && att.Value != att2)
                                 return false;
                         }

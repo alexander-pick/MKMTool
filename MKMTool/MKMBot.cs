@@ -761,12 +761,9 @@ namespace MKMTool
             {
                 if (minPricePlayset < dOwnMinPrice)
                 {
-                    minPricePlayset = dOwnMinPrice;
+                    minPricePlayset = minPriceSingle = dOwnMinPrice;
                     if (isPlayset == "true")
-                    {
-                        dOwnMinPrice /= 4;
-                    }
-                    minPriceSingle = dOwnMinPrice;
+                        minPriceSingle /= 4;
                 }
             }
             List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
@@ -785,10 +782,11 @@ namespace MKMTool
                         string sMinPriceTemp = card.GetAttribute(MCAttribute.MinPrice);
                         double dMinPriceTemp = Convert.ToDouble(sMinPriceTemp, CultureInfo.InvariantCulture);
                         if (minPricePlayset < dMinPriceTemp)
-                            minPricePlayset = dMinPriceTemp;
-                        if (isPlayset == "true")
-                            dMinPriceTemp /= 4;
-                        minPriceSingle = dMinPriceTemp;
+                        {
+                            minPricePlayset = minPriceSingle = dMinPriceTemp;
+                            if (isPlayset == "true")
+                                minPriceSingle /= 4;
+                        }
                     }
                 }
                 article.SetAttribute(MCAttribute.MinPrice, sOwnMinPrice); // restore the Min Price
