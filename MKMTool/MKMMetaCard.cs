@@ -250,7 +250,7 @@ namespace MKMTool
     public class MKMMetaCard
     {
         // If a recognized attribute has a synonym, add it to this dictionary, key == synonym, value == the recognized attribute to which this synonym maps.
-        private static Dictionary<string, string> synonyms = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> synonyms = new Dictionary<string, string>
         {
             { "enName", MCAttribute.Name }, { "Edition", MCAttribute.Expansion }, { "Altered Art", MCAttribute.Altered },
             // the following 10 are used by GET STOCK FILE
@@ -261,7 +261,7 @@ namespace MKMTool
 
         // literal dictionary of conditions - translates any supported condition denomination to its equivalent in the two-letter format MKM uses
         // all capitals! transform your string toUpper before checking against this dictionary
-        private static Dictionary<string, string> conditionsDictionary = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> conditionsDictionary = new Dictionary<string, string>
         {
             { "MT", "MT" }, { "NM", "NM" }, { "EX", "EX" }, { "GD", "GD" }, { "LP", "LP" }, { "PL", "PL" }, { "PO", "PO" },
             { "MINT", "MT" }, { "NEAR MINT", "NM" }, { "EXCELLENT", "EX" }, { "GOOD", "GD" }, 
@@ -272,7 +272,7 @@ namespace MKMTool
             { "HEAVILY PLAYED", "LP" }// this could be either LP or PL, we will never know...let's set it to LP
         };
         // key == any recognized condition in upper case, value == case sensitive deckbox format
-        private static Dictionary<string, string> conditionsDeckboxDictionary = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> conditionsDeckboxDictionary = new Dictionary<string, string>
         {
             { "MT", "Mint" }, { "NM", "Near Mint" }, { "EX", "Good (Lightly Played)" }, { "GD", "Played" },
             { "LP", "Heavily Played" }, { "PL", "Heavily Played" }, { "PO", "Poor" },
@@ -289,9 +289,7 @@ namespace MKMTool
         {
         }
 
-        private Dictionary<string, string> data = new Dictionary<string, string>();
-
-        private bool hasPriceGuides = false; // is set to true 
+        private readonly Dictionary<string, string> data = new Dictionary<string, string>();
 
         /// <summary>
         /// Gets a value indicating whether this instance has recent MKM's price guides,
@@ -300,10 +298,7 @@ namespace MKMTool
         /// <value>
         ///   <c>true</c> if this instance has price guides; otherwise, <c>false</c>.
         /// </value>
-        public bool HasPriceGuides
-        {
-            get { return hasPriceGuides; }
-        }
+        public bool HasPriceGuides { get; private set; } = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MKMMetaCard"/> class based on a database entry.
@@ -320,8 +315,7 @@ namespace MKMTool
                 {
                     // if this is a synonym, store the original input value under the synonym, 
                     // but continue the rest of the processing with the "main" name
-                    string attName;
-                    if (synonyms.TryGetValue(card.Table.Columns[i].ColumnName, out attName))
+                    if (synonyms.TryGetValue(card.Table.Columns[i].ColumnName, out string attName))
                         data[card.Table.Columns[i].ColumnName] = columnVal;
                     else
                         attName = card.Table.Columns[i].ColumnName;
@@ -441,12 +435,12 @@ NOT STORED      links: { }                           // HATEOAS links
             */
             data[MCAttribute.ArticleID] = MKMArticle["idArticle"].InnerText;
             data[MCAttribute.ProductID] = MKMArticle["idProduct"].InnerText;
-            data[MCAttribute.LanguageID] = MKMArticle["language"]["idLanguage"].InnerText;
-            data[MCAttribute.Language] = MKMArticle["language"]["languageName"].InnerText;
+            // some requests use "T/S-Chinese" instead of "Traditional/Simplified Chinese" -> always use SetLanguageID
+            SetLanguageID(MKMArticle["language"]["idLanguage"].InnerText);
             data[MCAttribute.Comments] = MKMArticle["comments"].InnerText;
             data[MCAttribute.MKMPrice] = MKMArticle["price"].InnerText;
             data[MCAttribute.Count] = MKMArticle["count"].InnerText;
-            data[MCAttribute.Condition] = MKMArticle["condition"].InnerText;
+            SetCondition(MKMArticle["condition"].InnerText);
             data[MCAttribute.IsInCart] = MKMArticle["inShoppingCart"].InnerText;
             data[MCAttribute.LastEdited] = MKMArticle["lastEdited"].InnerText;
 
@@ -549,7 +543,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
 
             if (MKMProduct["priceGuide"] != null)
             {
-                hasPriceGuides = true;
+                HasPriceGuides = true;
                 data[MCAttribute.PriceGuideSELL] = MKMProduct["priceGuide"]["SELL"].InnerText;
                 data[MCAttribute.PriceGuideLOW] = MKMProduct["priceGuide"]["LOW"].InnerText;
                 data[MCAttribute.PriceGuideLOWEX] = MKMProduct["priceGuide"]["LOWEX"].InnerText;
@@ -567,8 +561,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         /// Allowed values (case sensitive): English; French; German; Spanish; Italian; Simplified Chinese; Japanese; Portuguese; Russian; Korean; Traditional Chinese.</param>
         public void SetLanguage(string language)
         {
-            string languageID;
-            if (languagesIds.TryGetValue(language, out languageID))
+            if (languagesIds.TryGetValue(language, out string languageID))
             {
                 data[MCAttribute.LanguageID] = languageID;
                 data[MCAttribute.Language] = language;
@@ -589,8 +582,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         /// <param name="languageID">The language identifier. Must be an integer 1-11</param>
         public void SetLanguageID(string languageID)
         {
-            string language;
-            if (languagesNames.TryGetValue(languageID, out language))
+            if (languagesNames.TryGetValue(languageID, out string language))
             {
                 data[MCAttribute.LanguageID] = languageID;
                 data[MCAttribute.Language] = language;
@@ -612,8 +604,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         public void SetCondition(string condition)
         {
             condition = condition.ToUpper(); // MKM API is returning the conditions always as capital letters
-            string conditionOut;
-            if (!conditionsDictionary.TryGetValue(condition, out conditionOut))
+            if (!conditionsDictionary.TryGetValue(condition, out string conditionOut))
             {
                 LogError("setting card condition", "Unrecognized condition \"" + condition +
                     "\", condition of the current item will be ignored.", false);
@@ -630,8 +621,7 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         public void SetMinCondition(string condition)
         {
             condition = condition.ToUpper(); // MKM API is returning the conditions always as capital letters
-            string conditionOut;
-            if (!conditionsDictionary.TryGetValue(condition, out conditionOut))
+            if (!conditionsDictionary.TryGetValue(condition, out string conditionOut))
             {
                 LogError("setting card minCondition", "Unrecognized condition \"" + condition +
                     "\", condition of the current item will be ignored.", false);

@@ -20,6 +20,7 @@ New/improved features:
 Bug-fixes:
 + MinPrice from mystock.csv was taken into account only if no price update was computed. Now it will always be checked even just against the current price.
 + Fixed crashes when Checking for Cheap Deals by wantlist when article in wantlist had "Any" as isFoil, isSigned or isAltered.
++ Fixed View Inventory using "S/T-Chinese" as language names instead of "Simplified/Traditional Chinese" (which are the only names recognized when importing a CSV)
 
 <details><summary><i>Show older changelogs</i></summary>
 <p>
