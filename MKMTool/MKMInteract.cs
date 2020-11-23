@@ -82,7 +82,7 @@ namespace MKMTool
                 if (body != null)
                 {
                     request.ServicePoint.Expect100Continue = false;
-                    request.ContentLength = body.Length;
+                    request.ContentLength = System.Text.Encoding.UTF8.GetByteCount(body);
                     request.ContentType = "text/xml";
 
                     var writer = new StreamWriter(request.GetRequestStream());
