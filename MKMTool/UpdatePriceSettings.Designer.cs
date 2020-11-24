@@ -130,6 +130,8 @@ namespace MKMTool
             this.checkBoxFilterPrivSeller = new System.Windows.Forms.CheckBox();
             this.buttonFilterCountries = new System.Windows.Forms.Button();
             this.buttonFilterExpansions = new System.Windows.Forms.Button();
+            this.comboBoxPriceEstMinPriceMatch = new System.Windows.Forms.ComboBox();
+            this.labelPriceEstMinPriceMatch = new System.Windows.Forms.Label();
             this.groupBoxLogSettings.SuspendLayout();
             this.groupBoxConditionSettings.SuspendLayout();
             this.groupBoxPriceEstim.SuspendLayout();
@@ -296,6 +298,8 @@ namespace MKMTool
             // 
             // groupBoxPriceEstim
             // 
+            this.groupBoxPriceEstim.Controls.Add(this.comboBoxPriceEstMinPriceMatch);
+            this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstMinPriceMatch);
             this.groupBoxPriceEstim.Controls.Add(this.comboBoxPriceEstUpdateMode);
             this.groupBoxPriceEstim.Controls.Add(this.labelPriceEstUpdateMode);
             this.groupBoxPriceEstim.Controls.Add(this.labelWorlwideAvg);
@@ -348,16 +352,16 @@ namespace MKMTool
             "Full update",
             "Update only below minPrice",
             "Only ensure minPrice"});
-            this.comboBoxPriceEstUpdateMode.Location = new System.Drawing.Point(591, 123);
+            this.comboBoxPriceEstUpdateMode.Location = new System.Drawing.Point(405, 123);
             this.comboBoxPriceEstUpdateMode.Name = "comboBoxPriceEstUpdateMode";
-            this.comboBoxPriceEstUpdateMode.Size = new System.Drawing.Size(191, 21);
+            this.comboBoxPriceEstUpdateMode.Size = new System.Drawing.Size(170, 21);
             this.comboBoxPriceEstUpdateMode.TabIndex = 65;
             this.toolTip1.SetToolTip(this.comboBoxPriceEstUpdateMode, "This is mainly related to how myStock.csv is used, see documentation for details");
             // 
             // labelPriceEstUpdateMode
             // 
             this.labelPriceEstUpdateMode.AutoSize = true;
-            this.labelPriceEstUpdateMode.Location = new System.Drawing.Point(516, 126);
+            this.labelPriceEstUpdateMode.Location = new System.Drawing.Point(333, 126);
             this.labelPriceEstUpdateMode.Name = "labelPriceEstUpdateMode";
             this.labelPriceEstUpdateMode.Size = new System.Drawing.Size(74, 13);
             this.labelPriceEstUpdateMode.TabIndex = 7;
@@ -528,11 +532,11 @@ namespace MKMTool
             // checkBoxPriceEstWorldwide
             // 
             this.checkBoxPriceEstWorldwide.AutoSize = true;
-            this.checkBoxPriceEstWorldwide.Location = new System.Drawing.Point(256, 125);
+            this.checkBoxPriceEstWorldwide.Location = new System.Drawing.Point(191, 125);
             this.checkBoxPriceEstWorldwide.Name = "checkBoxPriceEstWorldwide";
-            this.checkBoxPriceEstWorldwide.Size = new System.Drawing.Size(226, 17);
+            this.checkBoxPriceEstWorldwide.Size = new System.Drawing.Size(136, 17);
             this.checkBoxPriceEstWorldwide.TabIndex = 50;
-            this.checkBoxPriceEstWorldwide.Text = "Allow worldwide search for low-stock items";
+            this.checkBoxPriceEstWorldwide.Text = "Allow worldwide search";
             this.toolTip1.SetToolTip(this.checkBoxPriceEstWorldwide, "If minimum number of items (before any culling) is not found in your country, ite" +
         "ms from all sellers will be considered");
             this.checkBoxPriceEstWorldwide.UseVisualStyleBackColor = true;
@@ -986,6 +990,30 @@ namespace MKMTool
             this.buttonFilterExpansions.UseVisualStyleBackColor = true;
             this.buttonFilterExpansions.Click += new System.EventHandler(this.buttonFilterExpansions_Click);
             // 
+            // comboBoxPriceEstMinPriceMatch
+            // 
+            this.comboBoxPriceEstMinPriceMatch.CausesValidation = false;
+            this.comboBoxPriceEstMinPriceMatch.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPriceEstMinPriceMatch.FormattingEnabled = true;
+            this.comboBoxPriceEstMinPriceMatch.Items.AddRange(new object[] {
+            "Highest",
+            "Best"});
+            this.comboBoxPriceEstMinPriceMatch.Location = new System.Drawing.Point(659, 123);
+            this.comboBoxPriceEstMinPriceMatch.Name = "comboBoxPriceEstMinPriceMatch";
+            this.comboBoxPriceEstMinPriceMatch.Size = new System.Drawing.Size(119, 21);
+            this.comboBoxPriceEstMinPriceMatch.TabIndex = 67;
+            this.toolTip1.SetToolTip(this.comboBoxPriceEstMinPriceMatch, resources.GetString("comboBoxPriceEstMinPriceMatch.ToolTip"));
+            // 
+            // labelPriceEstMinPriceMatch
+            // 
+            this.labelPriceEstMinPriceMatch.AutoSize = true;
+            this.labelPriceEstMinPriceMatch.Location = new System.Drawing.Point(579, 128);
+            this.labelPriceEstMinPriceMatch.Name = "labelPriceEstMinPriceMatch";
+            this.labelPriceEstMinPriceMatch.Size = new System.Drawing.Size(83, 13);
+            this.labelPriceEstMinPriceMatch.TabIndex = 66;
+            this.labelPriceEstMinPriceMatch.Text = "MinPrice match:";
+            this.toolTip1.SetToolTip(this.labelPriceEstMinPriceMatch, resources.GetString("labelPriceEstMinPriceMatch.ToolTip"));
+            // 
             // UpdatePriceSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1098,5 +1126,7 @@ namespace MKMTool
         private System.Windows.Forms.CheckBox checkBoxFilterPrivSeller;
         private System.Windows.Forms.ComboBox comboBoxPriceEstUpdateMode;
         private System.Windows.Forms.Label labelPriceEstUpdateMode;
+        private System.Windows.Forms.ComboBox comboBoxPriceEstMinPriceMatch;
+        private System.Windows.Forms.Label labelPriceEstMinPriceMatch;
     }
 }

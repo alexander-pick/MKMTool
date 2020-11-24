@@ -62,6 +62,8 @@ namespace MKMTool
             Text = title;
             allowedExpansionsWindow = new PopupListbox("Allowed Expansions");
             allowedCountriesWindow = new PopupListbox("Allowed Countries");
+            comboBoxPriceEstUpdateMode.SelectedIndex = 0;
+            comboBoxPriceEstMinPriceMatch.SelectedIndex = 0;
             List<string> countryNames = new List<string>(MKMHelpers.countryNames.Count);
             foreach (var code in MKMHelpers.countryNames)
                 countryNames.Add(code.Value);
@@ -197,6 +199,16 @@ namespace MKMTool
                     break;
             }
 
+            switch (comboBoxPriceEstMinPriceMatch.SelectedIndex)
+            {
+                case 0:
+                    s.minPriceMatch = MKMBotSettings.MinPriceMatch.Highest;
+                    break;
+                case 1:
+                    s.minPriceMatch = MKMBotSettings.MinPriceMatch.Best;
+                    break;
+            }
+
             return true;
         }
 
@@ -297,6 +309,15 @@ namespace MKMTool
                     break;
                 case MKMBotSettings.UpdateMode.OnlyEnsureMinPrice:
                     comboBoxPriceEstUpdateMode.SelectedIndex = 2;
+                    break;
+            }
+            switch (settings.minPriceMatch)
+            {
+                case MKMBotSettings.MinPriceMatch.Highest:
+                    comboBoxPriceEstUpdateMode.SelectedIndex = 0;
+                    break;
+                case MKMBotSettings.MinPriceMatch.Best:
+                    comboBoxPriceEstUpdateMode.SelectedIndex = 1;
                     break;
             }
         }

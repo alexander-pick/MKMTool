@@ -71,6 +71,15 @@ namespace MKMTool
             OnlyEnsureMinPrice // does not run update, only checks if current price is below minPrice, if yes, sets minPrice as current
         }
 
+        /// <summary>
+        /// How is the min price from myStock matched 
+        /// </summary>
+        public enum MinPriceMatch
+        {
+            Highest, // of all matching metacards in mystock, the highest minPrice is chosen as the one to use
+            Best // of all matching metacards in mystock, the one with the most non-null columns is chosen (highest in case of a tie)
+        }
+
         // each pair is a <max price of item; max change in % allowed for such item>
         public SortedList<double, double> priceMaxChangeLimits;
         // each pair is a <max price of item; max difference in % allowed for such the next item> to be considered as similar - used to cull outliers
@@ -107,6 +116,7 @@ namespace MKMTool
         public bool searchWorldwide; // if the minimum of items is not found in the sellers country, do a search ignoring country - used only when nothing is culled!
         public string description; // overall description of what is this setting expected to do, written in the GUI
         public UpdateMode updateMode;
+        public MinPriceMatch minPriceMatch;
 
         public MKMBotSettings()
         {
@@ -144,6 +154,7 @@ namespace MKMTool
 
             testMode = false;
             updateMode = UpdateMode.FullUpdate;
+            minPriceMatch = MinPriceMatch.Highest;
         }
 
         /// <summary>
@@ -187,6 +198,7 @@ namespace MKMTool
             description = refSettings.description;
             searchWorldwide = refSettings.searchWorldwide;
             updateMode = refSettings.updateMode;
+            minPriceMatch = refSettings.minPriceMatch;
         }
 
         /// <summary>
@@ -337,6 +349,19 @@ namespace MKMTool
                         }
                         break;
                     }
+                    case "minPriceMatch":
+                    {
+                        switch (att.Value)
+                        {
+                            case "Highest":
+                                temp.minPriceMatch = MinPriceMatch.Highest;
+                                break;
+                            case "Best":
+                                temp.minPriceMatch = MinPriceMatch.Best;
+                                break;
+                        }
+                        break;
+                    }
                     case "description":
                         temp.description = att.Value;
                         break;
@@ -432,6 +457,16 @@ namespace MKMTool
                     break;
                 case UpdateMode.OnlyEnsureMinPrice:
                     root.SetAttribute("updateMode", "OnlyEnsureMinPrice");
+                    break;
+            }
+
+            switch (minPriceMatch)
+            {
+                case MinPriceMatch.Highest:
+                    root.SetAttribute("minPriceMatch", "Highest");
+                    break;
+                case MinPriceMatch.Best:
+                    root.SetAttribute("minPriceMatch", "Best");
                     break;
             }
 
@@ -783,10 +818,23 @@ namespace MKMTool
             {
                 //reset the min price - card.Equals would otherwise resolve an equal card as not equal because the cards coming from MKM do not have the Min Price
                 article.SetAttribute(MCAttribute.MinPrice, "");
+                int bestMatchCount = 0;
                 foreach (MKMMetaCard card in listArticles)
                 {
                     if (card.Equals(article))
                     {
+                        if (settings.minPriceMatch == MKMBotSettings.MinPriceMatch.Best)
+                        {
+                            int noAtts = card.GetNumberOfAttributes();
+                            if (noAtts < bestMatchCount)
+                                continue;
+                            else if (noAtts > bestMatchCount)// erase previous minPrice, we want this one
+                            {
+                                minPricePlayset = -9999;
+                                minPriceSingle = -9999;
+                            }
+                            bestMatchCount = noAtts; // if its bigger or the same
+                        }
                         string sMinPriceTemp = card.GetAttribute(MCAttribute.MinPrice);
                         double dMinPriceTemp = Convert.ToDouble(sMinPriceTemp, CultureInfo.InvariantCulture);
                         if (minPricePlayset < dMinPriceTemp)
