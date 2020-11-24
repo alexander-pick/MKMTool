@@ -46,12 +46,18 @@ namespace MKMTool
                     if (MessageBox.Show("Preset with this name already exists.\nOverwrite?", "Preset already exists",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                         return;
-                    else
-                        f.Delete();
                 }
                 toStore.description = textBoxDescription.Text;
+                // first try to write it into a memory stream to see if Save() finishes correctly
+                // only if it does, delete the previous file (if there was one) and write into it
+                MemoryStream ms = new MemoryStream();
+                toStore.Serialize().Save(ms); 
+                if (f.Exists)
+                    f.Delete();
                 FileStream fs = f.OpenWrite();
-                toStore.Serialize().Save(fs);
+                ms.Position = 0;
+                ms.CopyTo(fs);
+                ms.Close();
                 fs.Close();
                 chosenName = textBoxFileName.Text;
                 DialogResult = DialogResult.OK;

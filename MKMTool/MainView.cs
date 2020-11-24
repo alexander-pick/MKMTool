@@ -94,12 +94,12 @@ namespace MKMTool
         // the button on the main window will show them again or hide if they are visible. This allow us to let the
         // main window be accessible while a module is opened, but at the same time prevents the user from opening two instances of a single module.
         // Make sure to put all calls that use API to their onVisibleChanged event, not their constructor and to override the onClose.
-        private UpdatePriceSettings settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
-        private StockView stockViewWindow = new StockView();
-        private CheckWantsView checkCheapDealsWindow = new CheckWantsView();
-        private CheckDisplayPrices checkDisplayPricesWindow = new CheckDisplayPrices();
-        private WantlistEditorView wantlistEditorViewWindow = new WantlistEditorView();
-        private PriceExternalList priceExternalListWindow = new PriceExternalList();
+        private UpdatePriceSettings settingsWindow;
+        private StockView stockViewWindow;
+        private CheckWantsView checkCheapDealsWindow;
+        private CheckDisplayPrices checkDisplayPricesWindow;
+        private WantlistEditorView wantlistEditorViewWindow;
+        private PriceExternalList priceExternalListWindow;
         internal MKMBot bot;
 
         /// <summary>
@@ -188,7 +188,13 @@ namespace MKMTool
                 MKMHelpers.LogError("initializing product list and account info", eError.Message, true);
             }
             bot = new MKMBot();
-        }
+            settingsWindow = new UpdatePriceSettings("LastSettingsPreset", "Settings of Update Price");
+            stockViewWindow = new StockView();
+            checkCheapDealsWindow = new CheckWantsView();
+            checkDisplayPricesWindow = new CheckDisplayPrices();
+            wantlistEditorViewWindow = new WantlistEditorView();
+            priceExternalListWindow = new PriceExternalList();
+    }
 
         /// <summary>
         /// Logs a messages in the application's main window within the main thread by using Delegate.Invoke

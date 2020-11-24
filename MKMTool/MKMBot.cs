@@ -357,34 +357,42 @@ namespace MKMTool
             s.CreateXmlDeclaration("1.0", System.Text.Encoding.UTF8.ToString(), "no");
             XmlElement root = s.CreateElement("MKMBotSettings");
 
-            XmlElement child = s.CreateElement("priceMaxChangeLimits");
-            child.InnerText = "";
-            foreach (var limitPair in priceMaxChangeLimits)
-                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
-            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
-            root.AppendChild(child);
-
-            child = s.CreateElement("priceMaxDifferenceLimits");
-            child.InnerText = "";
-            foreach (var limitPair in priceMaxDifferenceLimits)
-                child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
-            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
-            root.AppendChild(child);
-
-            child = s.CreateElement("allowedExpansions");
-            child.InnerText = "";
-            foreach (var expansion in allowedExpansions)
-                child.InnerText += "" + expansion + ";";
-            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
-            root.AppendChild(child);
-
-            child = s.CreateElement("allowedCountryNames");
-            child.InnerText = "";
-            foreach (var country in allowedCountryNames)
-                child.InnerText += "" + country + ";";
-            child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1);
-            root.AppendChild(child);
-
+            if (priceMaxChangeLimits.Count > 0)
+            {
+                XmlElement child = s.CreateElement("priceMaxChangeLimits");
+                child.InnerText = "";
+                foreach (var limitPair in priceMaxChangeLimits)
+                    child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
+                child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
+                root.AppendChild(child);
+            }
+            if (priceMaxDifferenceLimits.Count > 0)
+            {
+                XmlElement child = s.CreateElement("priceMaxDifferenceLimits");
+                child.InnerText = "";
+                foreach (var limitPair in priceMaxDifferenceLimits)
+                    child.InnerText += "" + limitPair.Key + ";" + limitPair.Value.ToString("f2", CultureInfo.InvariantCulture) + ";";
+                child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
+                root.AppendChild(child);
+            }
+            if (allowedExpansions.Count > 0)
+            {
+                XmlElement child = s.CreateElement("allowedExpansions");
+                child.InnerText = "";
+                foreach (var expansion in allowedExpansions)
+                    child.InnerText += "" + expansion + ";";
+                child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1); // remove the last semicolon
+                root.AppendChild(child);
+            }
+            if (allowedCountryNames.Count > 0)
+            {
+                XmlElement child = s.CreateElement("allowedCountryNames");
+                child.InnerText = "";
+                foreach (var country in allowedCountryNames)
+                    child.InnerText += "" + country + ";";
+                child.InnerText = child.InnerText.Remove(child.InnerText.Length - 1);
+                root.AppendChild(child);
+            }
             root.SetAttribute("priceMinRarePrice", priceMinRarePrice.ToString("f2", CultureInfo.InvariantCulture));
             root.SetAttribute("priceMinSimilarItems", priceMinSimilarItems.ToString(CultureInfo.InvariantCulture));
             root.SetAttribute("priceMaxSimilarItems", priceMaxSimilarItems.ToString(CultureInfo.InvariantCulture));
