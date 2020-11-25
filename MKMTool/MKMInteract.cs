@@ -45,8 +45,11 @@ namespace MKMTool
         public class RequestHelper
         {
             private static bool denyAdditionalRequests = false; // this switches to true once requests limit is reached for the day
-            private static System.DateTime denyTime; // to know when denyAdditionalRequests was switched, if we pass to another day, reset it 
-            private static MKMAuth.OAuthHeader header = new MKMAuth.OAuthHeader();
+            private static DateTime denyTime; // to know when denyAdditionalRequests was switched, if we pass to another day, reset it 
+            // As of 25.11.2020, MKM allows maximum 600 requests per 60 seconds - use this queue to make sure we don't overstep it
+            private static readonly int maxRequestsPerMinute = 600;
+            private static readonly Queue<DateTime> requestTimes = new Queue<DateTime>(maxRequestsPerMinute);
+            private static readonly MKMAuth.OAuthHeader header = new MKMAuth.OAuthHeader();
 
             /// <summary>
             /// Makes a request from MKM's API. 
@@ -67,11 +70,29 @@ namespace MKMTool
                 {
                     // MKM resets the counter at 0:00 CET. CET is two hours ahead of UCT, so if it is after 22:00 of the same day
                     // the denial was triggered, that means the 0:00 CET has passed and we can reset the deny
-                    if (System.DateTime.UtcNow.Date == denyTime.Date && System.DateTime.UtcNow.Hour < 22)
+                    if (DateTime.UtcNow.Date == denyTime.Date && DateTime.UtcNow.Hour < 22)
                         throw new HttpListenerException(429, "Too many requests. Wait for 0:00 CET for request counter to reset.");
                     else
                         denyAdditionalRequests = false;
                 }
+                // enforce the maxRequestsPerMinute limit - technically it's just an approximation as the requests
+                // can arrive to MKM with some delay, but it should be close enough
+                var now = DateTime.Now;
+                while (requestTimes.Count > 0 && (now - requestTimes.Peek()).TotalSeconds > 60) 
+                {
+                    requestTimes.Dequeue();// keep only times of requests in the past 60 seconds
+                }
+                if (requestTimes.Count >= maxRequestsPerMinute)
+                {
+                    // wait until 60.01 seconds passed since the oldest request
+                    // we know (now - peek) is <= 60, otherwise it would get dequeued above,
+                    // so we are passing a positive number to sleep
+                    System.Threading.Thread.Sleep(
+                        60010 - (int)(now - requestTimes.Peek()).TotalMilliseconds);
+                    requestTimes.Dequeue();
+                }
+
+                requestTimes.Enqueue(DateTime.Now);
                 XmlDocument doc = new XmlDocument();
                 var request = WebRequest.CreateHttp(url);
                 request.Method = method;

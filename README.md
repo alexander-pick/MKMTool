@@ -6,6 +6,7 @@ If you have just updated from older version than 0.7.0, please delete the "mkmto
 ## Latest changes
 **Version 0.8.0.0, 30.11.2020**
 New/improved features:
++ MKM now limits the maximum number of API requests per minute to 600. MKMTool will now automatically wait before sending next request if the limit is reached.
 + All CSV lists used by MKMTool can now also use semicolon (the character ';') as a separator. MKMTool automatically detects if your file uses ';' or ','. ';' must NOT be contained in column names.
 + Added generic configuration settings for MKMTool that can be specified in the config.xml. Documentation is in the [Settings](#Settings) section.
 + Added setting to config.xml for choosing the CSV separator to use when exporting files (currently used in View Inventory, Price External List and Download Buys).
