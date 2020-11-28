@@ -1116,19 +1116,33 @@ namespace MKMTool
                             }
                         }
                         if (offer["condition"].InnerText == articleCondition)
+                        {
+                            // this can be true only if settings.condAcceptance == AcceptedCondition.SomeMatchesAbove
+                            // and we still have not found a match above the maxItems
+                            // now we have -> we can use the entire priceMaxSimilarItems item sequence for appraisal
+                            if (prices.Count >= settings.priceMaxSimilarItems)
+                            {
+                                lastMatch = settings.priceMaxSimilarItems - 1;
+                                return TraverseResult.SequenceFound;
+                            }
                             lastMatch = prices.Count;
+                        }
                         prices.Add(price);
                     }
-                    if (prices.Count >= settings.priceMaxSimilarItems)
+                    if (prices.Count >= settings.priceMaxSimilarItems &&
+                        (settings.condAcceptance != AcceptedCondition.SomeMatchesAbove || lastMatch == prices.Count - 1))
+                    {
+                        // in case of SomeMatchesAbove, we want to look even above maxSimilarItems
+                        // to find out if there is some matching
                         return TraverseResult.SequenceFound;
+                    }
                 }
             }
             if (minNumberNotYetFound)
                 return TraverseResult.NotEnoughSimilars;
             else if (prices.Count < settings.priceMinSimilarItems)
                 return TraverseResult.Culled;
-            else
-                return TraverseResult.SequenceFound;
+            return TraverseResult.SequenceFound;
         }
 
         private string getTimestamp(DateTime now)
