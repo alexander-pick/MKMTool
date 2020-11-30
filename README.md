@@ -1,5 +1,7 @@
 # Welcome to MKMTool 0.8
 
+THE "UseStockGetFile" SETTING IS STILL WORK IN PROGRESS, USE WITH CAUTION, CURRENTLY IT WILL MAKE PRICE UPDATE IGNORE RARITY.
+
 If you have just updated from older version than 0.8.0, do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation.
 If you have just updated from older version than 0.7.0, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
 
@@ -135,6 +137,7 @@ You can simply open the project in Microsoft Visual Studio Community 2015 or new
 If you are too lazy to compile, here is a build for Windows (64-bit):
 
 https://tomasjanak.github.io/MKMTool0.7.0.5.zip (version 0.7.0.5, compiled by [Tomas Janak](https://github.com/tomasjanak))
+https://tomasjanak.github.io/MKMTool0.8.0.0_experimental.zip (version 0.8.0.0 experimental (UseStockGetFile is not working fully correctly (ignores rarity), waiting for response from Cardmarket support), compiled by [Tomas Janak](https://github.com/tomasjanak))
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 

@@ -33,7 +33,7 @@
 <config>
   <settings>
     <!--true or false. see documentation for details-->
-    <UseStockGetFile>true</UseStockGetFile>
+    <UseStockGetFile>false</UseStockGetFile>
     <!--only relevant if UseStockGetFile is true. 1 for MtG, 2 World of Warcraft, 3 Yu-Gi-Oh, experiment to get the rest -->
     <idGame>1</idGame>
     <!--separator for columns for exported CSVs, should be ; or , use anything else at your own risk-->
