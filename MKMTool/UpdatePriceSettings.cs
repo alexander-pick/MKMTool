@@ -314,10 +314,10 @@ namespace MKMTool
             switch (settings.minPriceMatch)
             {
                 case MKMBotSettings.MinPriceMatch.Highest:
-                    comboBoxPriceEstUpdateMode.SelectedIndex = 0;
+                    comboBoxPriceEstMinPriceMatch.SelectedIndex = 0;
                     break;
                 case MKMBotSettings.MinPriceMatch.Best:
-                    comboBoxPriceEstUpdateMode.SelectedIndex = 1;
+                    comboBoxPriceEstMinPriceMatch.SelectedIndex = 1;
                     break;
             }
         }
