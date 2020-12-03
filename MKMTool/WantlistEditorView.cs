@@ -150,7 +150,9 @@ namespace MKMTool
 
             dj = new DataTable();
 
-            dj = MKMDbManager.JoinDataTables(MKMDbManager.Instance.Inventory, MKMDbManager.Instance.Expansions,
+            // note - we have expansions only for MTG cards, so non-mtg will not have the expansion name
+            var inventorySinglesOnly = MKMDbManager.Instance.InventorySinglesOnly.CopyToDataTable();
+            dj = MKMDbManager.JoinDataTables(inventorySinglesOnly, MKMDbManager.Instance.Expansions,
                 (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
 
             foreach (DataRow row in dj.Rows)

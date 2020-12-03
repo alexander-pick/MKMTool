@@ -57,8 +57,9 @@ namespace MKMTool
         /// <summary>
         /// DataTable with all MTG singles in the MKM's inventory.
         /// Each row is a record for one card with the following entries: "idProduct","Name","Expansion ID","Metacard ID","Date Added"
+        /// Avoid using this as working with the entire inventory is slow, use InventorySinglesOnly whenever possible.
         /// </summary>
-        public DataTable Inventory { get; private set; } = new DataTable();
+        private DataTable Inventory { get; set; }
         /// <summary>
         /// Subset of Inventory, only single cards from games selected in config.
         /// </summary>
