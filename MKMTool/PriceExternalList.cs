@@ -292,9 +292,9 @@ namespace MKMTool
                     string expID = mc.GetAttribute(MCAttribute.ExpansionID); // if the Expansion would be set, ExpansionID would be set as well in constructor of MKMMetaCard
                     if (expID == "") // we have to determine the expansion
                     {
-                        DataRow[] all = MKMDbManager.Instance.GetCardByName(name);
-                        // options are: Latest, Oldest, Cheapest, Median Price, Most Expensive
-                        if (all.Length > 0)
+                        var all = MKMDbManager.Instance.GetCardByName(name);
+                        // options are: Latest, Oldest, Cheapest, Median Price, Most Expensive                        
+                        if (all.GetEnumerator().MoveNext())
                         {
                             // used for prices based on price guide (cheapest, median, most expensive):
                             // for non-foil, compare the LOWEX+ for EX+ items, LOW for worse conditions, for foil compare the LOWFOIL, for "any foil" compare SELL
@@ -441,7 +441,7 @@ namespace MKMTool
                         // TODO - determine whether the expansion is foil only / cannot be foil and based on the isFoil flag of the current article choose the correct set
                     }
                     // now we have expID and English name -> we can determine the product ID
-                    string[] ids = MKMDbManager.Instance.GetProductID(name, mc.GetAttribute(MCAttribute.ExpansionID));
+                    string[] ids = MKMDbManager.Instance.GetCardProductID(name, mc.GetAttribute(MCAttribute.ExpansionID));
                     if (ids.Length == 0)
                     {
                         LogError("importing line #" + (counter + 1) + ", article will be ignored",

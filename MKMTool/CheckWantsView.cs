@@ -254,7 +254,7 @@ namespace MKMTool
             int start = 0;
             while (true)
             {
-                String sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
+                string sUrl = "https://api.cardmarket.com/ws/v2.0/users/" + user + "/articles?start=" + start + "&maxResults=1000";
                 XmlDocument doc2;
                 try
                 {
@@ -272,9 +272,10 @@ namespace MKMTool
                 {
                     if (selectedExpansionID != "") // if we want only cards from a specified set, check if this product is from that set using local database
                     {
-                        DataRow card = MKMDbManager.Instance.GetSingleCard(article[MKMDbManager.InventoryFields.ProductID].InnerText);
+                        DataRow card = MKMDbManager.Instance.GetSingleCard(
+                            article[MKMDbManager.InventoryFields.ProductID].InnerText);
 
-                        if (card == null || card.Field<string>(MKMDbManager.InventoryFields.ExpansionID) != selectedExpansionID) // compare
+                        if (card == null || card.Field<string>(MKMDbManager.InventoryFields.ExpansionID) != selectedExpansionID)
                             continue;
                     }
 
@@ -309,7 +310,7 @@ namespace MKMTool
             double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
             System.Collections.Generic.List<string> selectedLanguage)
         {
-            DataRow[] sT = MKMDbManager.Instance.GetCardsInExpansion(selectedExpansionID);
+            var sT = MKMDbManager.Instance.GetCardsInExpansion(selectedExpansionID);
             MainView.Instance.LogMainWindow("Checking for cheap deals from selected expansion...");
             foreach (DataRow oRecord in sT)
             {

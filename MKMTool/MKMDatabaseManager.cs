@@ -52,20 +52,17 @@ namespace MKMTool
     /// </summary>
     class MKMDbManager
     {
-#region initialization
-        private static readonly MKMDbManager instance = new MKMDbManager();
-
-        private DataTable inventory = new DataTable();
-        private DataTable expansions = new DataTable(); // all expansions of products in inventory
+        #region initialization
 
         /// <summary>
         /// DataTable with all MTG singles in the MKM's inventory.
         /// Each row is a record for one card with the following entries: "idProduct","Name","Expansion ID","Metacard ID","Date Added"
         /// </summary>
-        public DataTable Inventory
-        {
-            get { return inventory; }
-        }
+        public DataTable Inventory { get; private set; } = new DataTable();
+        /// <summary>
+        /// Subset of Inventory, only single cards from games selected in config.
+        /// </summary>
+        public DataRow[] InventorySinglesOnly { get; private set; } = { };
 
         /// <summary>
         /// A "string enum" for fields of the Inventory DataTable.
@@ -76,17 +73,17 @@ namespace MKMTool
             public static string Name { get { return "Name"; } }
             public static string ExpansionID { get { return "Expansion ID"; } }
             public static string MetaproductID { get { return "Metacard ID"; } }
+            public static string Category { get { return "Category"; } }
+            public static string CategoryID { get { return "Category ID"; } }
             public static string DateAdded { get { return "Date Added"; } }
+            public static string Rarity { get { return MCAttribute.Rarity; } }
         }
 
         /// <summary>
         /// DataTable with all expansions of MtG in the MKM's inventory.
         /// Each row is a record for one card with the following entries: "idExpansion","abbreviation","enName"
         /// </summary>
-        public DataTable Expansions
-        {
-            get { return expansions; }
-        }
+        public DataTable Expansions { get; private set; } = new DataTable();
 
         /// <summary>
         /// A "string enum" for fields of the Expansions DataTable.
@@ -105,13 +102,7 @@ namespace MKMTool
         static MKMDbManager()
         { }
 
-        public static MKMDbManager Instance
-        {
-            get
-            {
-                return instance;
-            }
-        }
+        public static MKMDbManager Instance { get; } = new MKMDbManager();
 
         /// <summary>
         /// On construction we create the databases for inventory and expansions.
@@ -121,6 +112,24 @@ namespace MKMTool
         private MKMDbManager()
         {
             buildDatabase();
+        }
+
+        ~MKMDbManager()
+        {
+            if (Inventory.GetChanges() != null)
+            {
+                WriteTableAsCSV(@".\\mkminventory.csv", Inventory);
+            }
+        }
+
+        private bool isSelectedGame(string categoryID)
+        {
+            foreach (var gameDesc in MainView.Instance.Config.Games)
+            {
+                if (categoryID == gameDesc.SinglesCategoryID)
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -137,27 +146,41 @@ namespace MKMTool
                 var doc = MKMInteract.RequestHelper.makeRequest("https://api.cardmarket.com/ws/v2.0/productlist", "GET");
 
                 var node = doc.GetElementsByTagName("response");
-                // not sure what is the point of zipping the database when we are storing the unzipped one as well, but I will leave it as it is for now
-                var zipPath = @".\\mkminventory.zip"; 
+                var data = Convert.FromBase64String(node.Item(0)["productsfile"].InnerText);
+                var aDecompressed = GzDecompress(data);
+                var downloadedProducts = ConvertCSVtoDataTable(aDecompressed);
 
-                foreach (XmlNode aFile in node)
-                    if (aFile["productsfile"].InnerText != null)
+                // only join the downloaded with the current version, so that we don't overwrite other
+                // data we cache into the Inventory (Rarity) that is not present in the productlist
+                // the productList is sorted by productid, so just read the last few that we don't have yet
+                // this assumes the previous rows never change, which is the case only if there is no error in them...
+                for (int i = Inventory.Rows.Count; i < downloadedProducts.Rows.Count; i++)
+                {
+                    var insertRow = Inventory.NewRow();
+                    foreach (DataColumn col2 in downloadedProducts.Columns)
                     {
-                        var data = Convert.FromBase64String(aFile["productsfile"].InnerText);
-                        File.WriteAllBytes(zipPath, data);
+                        insertRow[col2.ColumnName] = downloadedProducts.Rows[i][col2.ColumnName];
                     }
-                    
-                var file = File.ReadAllBytes(zipPath);
-                var aDecompressed = GzDecompress(file);
-
-                File.WriteAllBytes(@".\\mkminventory.csv", aDecompressed);
-
+                    Inventory.Rows.Add(insertRow);
+                }
+                WriteTableAsCSV(@".\\mkminventory.csv", Inventory);
+                Inventory.AcceptChanges();
+                InventorySinglesOnly = Inventory.AsEnumerable().Where(
+                       r => isSelectedGame(r.Field<string>(InventoryFields.CategoryID))).ToArray();
                 MainView.Instance.LogMainWindow("MKM inventory database updated.");
+            }
+            catch (Exception eError)
+            {
+                LogError("downloading MKM inventory", eError.Message, true);
+                return false;
+            }
+            try 
+            { 
                 MainView.Instance.LogMainWindow("Updating MKM expansions database...");
 
                 // build expansions
-                doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
-                node = doc.GetElementsByTagName("expansion");
+                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
+                var node = doc.GetElementsByTagName("expansion");
 
                 using (StreamWriter exp = new StreamWriter(@".\\mkmexpansions.csv"))
                 {
@@ -174,18 +197,12 @@ namespace MKMTool
             }
             catch (Exception eError)
             {
-                LogError("downloading MKM inventory", eError.Message, true);
-                File.Delete(@".\\mkminventory.csv");
-                File.Delete(@".\\mkmexpansions.csv");
+                LogError("downloading MKM expansions", eError.Message, true);
                 return false;
             }
             try
             {
-                inventory = ConvertCSVtoDataTable(@".\\mkminventory.csv").Select("[Category ID] = '1'").CopyToDataTable(); // grab only MTG Singles
-                // we know we have only category 1 (Magic Singles), no point in keeping that in memory
-                inventory.Columns.Remove("Category ID");
-                inventory.Columns.Remove("Category");
-                expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
+                Expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
             }
             catch (Exception eError)
             {
@@ -198,7 +215,7 @@ namespace MKMTool
             // However, if something fails, we continue as if nothing happened.
             SQLiteConnection m_dbConnection;
             
-            var sql2 = CreateTableSql(inventory, "inventory");
+            var sql2 = CreateTableSql(Inventory, "inventory");
 
             Console.WriteLine(sql2);
 
@@ -209,7 +226,7 @@ namespace MKMTool
                 m_dbConnection = new SQLiteConnection("Data Source=mkmtool.sqlite;Version=3;");
                 m_dbConnection.Open();
 
-                var sql = CreateTableSql(inventory, "inventory");
+                var sql = CreateTableSql(Inventory, "inventory");
 
                 var command = new SQLiteCommand(sql, m_dbConnection);
 
@@ -244,9 +261,9 @@ namespace MKMTool
                 command.ExecuteNonQuery();
             }
 
-            BulkInsertDataTable("inventory", inventory, m_dbConnection);
+            BulkInsertDataTable("inventory", Inventory, m_dbConnection);
 
-            BulkInsertDataTable("expansions", expansions, m_dbConnection);
+            BulkInsertDataTable("expansions", Expansions, m_dbConnection);
 
             m_dbConnection.Close();
 
@@ -258,6 +275,15 @@ namespace MKMTool
         /// </summary>
         private void buildDatabase()
         {
+            Inventory = new DataTable();
+            Inventory.Columns.Add(InventoryFields.ProductID);
+            Inventory.Columns.Add(InventoryFields.Name);
+            Inventory.Columns.Add(InventoryFields.CategoryID);
+            Inventory.Columns.Add(InventoryFields.Category);
+            Inventory.Columns.Add(InventoryFields.ExpansionID);
+            Inventory.Columns.Add(InventoryFields.MetaproductID);
+            Inventory.Columns.Add(InventoryFields.DateAdded);
+            Inventory.Columns.Add(InventoryFields.Rarity);
             if (!File.Exists(@".\\mkminventory.csv") || !File.Exists(@".\\mkmexpansions.csv"))
             {
                 MainView.Instance.LogMainWindow("Local inventory database not found, downloading...");
@@ -277,11 +303,10 @@ namespace MKMTool
             {
                 try
                 {
-                    inventory = ConvertCSVtoDataTable(@".\\mkminventory.csv");
-                    inventory = inventory.Select("[Category ID] = '1'").CopyToDataTable(); // grab only MTG Singles
-                    inventory.Columns.Remove("Category ID"); // we know we have only category 1 (Magic Singles), no point in keeping that in memory
-                    inventory.Columns.Remove("Category");
-                    expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
+                    Inventory = ConvertCSVtoDataTable(@".\\mkminventory.csv");
+                    InventorySinglesOnly = Inventory.AsEnumerable().Where(
+                        r => isSelectedGame(r.Field<string>(InventoryFields.CategoryID))).ToArray();
+                    Expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
                 }
                 catch (Exception eError)
                 {
@@ -292,7 +317,7 @@ namespace MKMTool
 
         #endregion
         #region utilities
-        
+
         // Reference:
         // http://stackoverflow.com/questions/665754/inner-join-of-datatables-in-c-sharp
         public static DataTable JoinDataTables(DataTable t1, DataTable t2, params Func<DataRow, DataRow, bool>[] joinOn)
@@ -333,7 +358,7 @@ namespace MKMTool
         /// and also does not modify anything else - only does exp.Items.Add(ComboboxItem).</param>
         public void PopulateExpansionsComboBox(ComboBox exp)
         {
-            foreach (DataRow nExpansion in expansions.Rows)
+            foreach (DataRow nExpansion in Expansions.Rows)
             {
                 ComboboxItem item = new ComboboxItem
                 {
@@ -346,14 +371,45 @@ namespace MKMTool
         }
 
         /// <summary>
+        /// Writes the specified value for a specified item in the inventory.
+        /// If the value is different from current value, marks the inventory as modified 
+        /// -> will save it to file before closing the application.
+        /// </summary>
+        /// <param name="productID">The product identifier.</param>
+        /// <param name="inventoryField">The field (column) to which to write the value.</param>
+        /// <param name="value">The value to enter in the database.</param>
+        public void WriteValueToInventory(string idProduct,
+            string inventoryField, string value)
+        {
+            var result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
+                r => r.Field<string>(InventoryFields.ProductID) == idProduct); 
+            if (result == default && (DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
+            {
+                MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
+                UpdateDatabaseFiles();
+                result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
+                    r => r.Field<string>(InventoryFields.ProductID) == idProduct);
+            }
+            if (result == default)
+            {
+                LogError("writing " + inventoryField + " " + value + " for product id " + idProduct,
+                    "Specified product ID does not exist.", false);
+            }
+            else if (result[inventoryField].ToString() != value)
+            {
+                result[inventoryField] = value;
+            }
+        }
+
+        /// <summary>
         /// Gets all expansion names.
         /// </summary>
         /// <param name="sortByName">If set to <c>true</c>, the result will be sorted by name.</param>
         /// <returns>List of all expansions in the database.</returns>
         public List<string> GetAllExpansionNames(bool sortByName)
         {
-            List<string> exp = new List<string>(expansions.Rows.Count);
-            foreach (DataRow nExpansion in expansions.Rows)
+            List<string> exp = new List<string>(Expansions.Rows.Count);
+            foreach (DataRow nExpansion in Expansions.Rows)
             {
                 exp.Add(nExpansion[ExpansionsFields.Name].ToString());
             }
@@ -367,20 +423,24 @@ namespace MKMTool
         /// </summary>
         /// <param name="idProduct">Product ID of the card - it must be a single MtG cards, other products will not be found. If the card has not been
         /// found, it will attempt to update the local database if it is more than 24 hours old.</param>
+        /// <param name="idProduct">Product ID of the card - it must be a single MtG cards, other products will not be found. If the card has not been
+        /// found, it will attempt to update the local database if it is more than 24 hours old.</param>
         /// <returns>The card info with the entries from the Inventory (use InventoryFields to get names of columns).
         /// Returns null in case the product ID is invalid.</returns>
         public DataRow GetSingleCard(string idProduct)
         {
-            DataRow[] result = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ProductID, idProduct));
-            if (result.Length == 1) // should always be either 0 or 1 as idProduct is unique
-                return result[0];
+            var result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
+                r => r.Field<string>(InventoryFields.ProductID) == idProduct);
+            if (result != default) // should always be either 0 or 1 as idProduct is unique
+                return result;
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                result = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ProductID, idProduct));
-                if (result.Length == 1) // should always be either 0 or 1 as idProduct is unique
-                    return result[0];
+                result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
+                   r => r.Field<string>(InventoryFields.ProductID) == idProduct);
+                if (result != default)
+                    return result;
             }
             return null;
         }
@@ -391,17 +451,17 @@ namespace MKMTool
         /// <param name="enName">English name of the card.</param>
         /// <returns>For each expansion the card has been printed in, one entry from the Inventory is returned (use InventoryFields to get names of columns).
         /// Empty if nothing found.</returns>
-        public DataRow[] GetCardByName(string enName)
+        public IEnumerable<DataRow> GetCardByName(string enName)
         {
-            enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.Name, enName));
-            if (ret.Length > 0) // should always be either 0 or 1 as idProduct is unique
+            var ret = InventorySinglesOnly.AsEnumerable().Where(
+                r => r.Field<string>(InventoryFields.Name) == enName);
+            if (ret.Count() > 0)
                 return ret;
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card " + enName + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                return inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.Name, enName));
+                return InventorySinglesOnly.AsEnumerable().Where(r => r.Field<string>(InventoryFields.Name) == enName);
             }
             return new DataRow[0];
         }
@@ -412,14 +472,16 @@ namespace MKMTool
         /// <param name="idExpansion">Expansion's ID.</param>
         /// <returns>Array of card records, each record has the entries from the Inventory (use InventoryFields to get names of columns).
         /// Empty if idExpansion is invalid.</returns>
-        public DataRow[] GetCardsInExpansion(string idExpansion)
+        public IEnumerable<DataRow> GetCardsInExpansion(string idExpansion)
         {
-            DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ExpansionID, idExpansion));
-            if (ret.Length == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            var ret = InventorySinglesOnly.AsEnumerable()
+                .Where(r => r.Field<string>(InventoryFields.ExpansionID).Equals(idExpansion));
+            if (ret.Count() == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion id " + idExpansion + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
-                ret = inventory.Select(string.Format("[{0}] = '{1}'", InventoryFields.ExpansionID, idExpansion));
+                UpdateDatabaseFiles(); 
+                ret = InventorySinglesOnly.AsEnumerable()
+                    .Where(r => r.Field<string>(InventoryFields.ExpansionID).Equals(idExpansion));
             }
             return ret;
         }
@@ -431,17 +493,18 @@ namespace MKMTool
         /// <returns>String with the ID or empty string if the expansion was not found.</returns>
         public string GetExpansionID(string expansionName)
         {
-            expansionName = expansionName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.Name, expansionName));
-            if (ret.Length == 1)
-                return ret[0][ExpansionsFields.ExpansionID].ToString();
+            DataRow ret = Expansions.AsEnumerable().FirstOrDefault(
+                r => r.Field<string>(ExpansionsFields.Name) == expansionName);
+            if (ret != default)
+                return ret[ExpansionsFields.ExpansionID].ToString();
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion " + expansionName + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.Name, expansionName));
-                if (ret.Length == 1)
-                    return ret[0][ExpansionsFields.ExpansionID].ToString();
+                ret = Expansions.AsEnumerable().FirstOrDefault(
+                    r => r.Field<string>(ExpansionsFields.Name) == expansionName);
+                if (ret != default)
+                    return ret[ExpansionsFields.ExpansionID].ToString();
             }
             return "";
         }
@@ -453,16 +516,18 @@ namespace MKMTool
         /// <returns>String with the ID or empty string if the expansion was not found.</returns>
         public string GetExpansionName(string expansionID)
         {
-            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
-            if (ret.Length == 1)
-                return ret[0][ExpansionsFields.Name].ToString();
+            DataRow ret = Expansions.AsEnumerable().FirstOrDefault(
+                r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
+            if (ret != default)
+                return ret[ExpansionsFields.Name].ToString();
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
-                if (ret.Length == 1)
-                    return ret[0][ExpansionsFields.Name].ToString();
+                ret = Expansions.AsEnumerable().FirstOrDefault(
+                    r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
+                if (ret != default)
+                    return ret[ExpansionsFields.Name].ToString();
             }
             return "";
         }
@@ -474,19 +539,22 @@ namespace MKMTool
         /// <param name="expansionID">ID of the expansion.</param>
         /// <returns>Strings of all matching products. Usually it will be exactly one, but can be empty if nothing is found,
         /// and in some cases there can be multiple products of the same name in a single expansion, e.g. basic lands.</returns>
-        public string[] GetProductID(string enName, string expansionID)
+        public string[] GetCardProductID(string enName, string expansionID)
         {
-            enName = enName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = inventory.Select(string.Format("[{0}] = '{1}' AND [Name] = '{2}'", InventoryFields.ExpansionID, expansionID, enName));
-            if (ret.Length == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            var ret = InventorySinglesOnly.AsEnumerable().Where(
+                r => r.Field<string>(InventoryFields.ExpansionID) == expansionID &&
+                     r.Field<string>(InventoryFields.Name) == enName);
+            if (ret.Count() == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Product " + enName + " from " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = inventory.Select(string.Format("[{0}] = '{1}' AND [Name] = '{2}'", InventoryFields.ExpansionID, expansionID, enName));
+                ret = InventorySinglesOnly.AsEnumerable().Where(
+                    r => r.Field<string>(InventoryFields.ExpansionID) == expansionID &&
+                         r.Field<string>(InventoryFields.Name) == enName);
             }
-            string[] retStrings = new string[ret.Length];
-            for (int i = 0; i < ret.Length; i++)
-                retStrings[i] = ret[i][InventoryFields.ProductID].ToString();
+            string[] retStrings = new string[ret.Count()];
+            for (int i = 0; i < ret.Count(); i++)
+                retStrings[i] = ret.ElementAt(i)[InventoryFields.ProductID].ToString();
             return retStrings;
         }
 
@@ -497,10 +565,10 @@ namespace MKMTool
         /// <returns>Data row from the Expansions, use ExpansionsFields to get the names of the columns. Null in case the expansion is not found.</returns>
         public DataRow GetExpansionByName(string expansionName)
         {
-            expansionName = expansionName.Replace("'", "''"); // escape apostrophes as they are understood as escape characters by SQL
-            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.Name, expansionName));
-            if (ret.Length == 1)
-                return ret[0];
+            DataRow ret = Expansions.AsEnumerable().FirstOrDefault(
+                r => r.Field<string>(ExpansionsFields.Name) == expansionName);
+            if (ret != default)
+                return ret;
             else return null;
         }
 
@@ -511,16 +579,18 @@ namespace MKMTool
         /// <returns>Data row from the Expansions, use ExpansionsFields to get the names of the columns. Null in case the expansion is not found.</returns>
         public DataRow GetExpansionByID(string expansionID)
         {
-            DataRow[] ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
-            if (ret.Length == 1)
-                return ret[0];
+            DataRow ret = Expansions.AsEnumerable().FirstOrDefault(
+                r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
+            if (ret != default)
+                return ret;
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                ret = expansions.Select(string.Format("[{0}] = '{1}'", ExpansionsFields.ExpansionID, expansionID));
-                if (ret.Length == 1)
-                    return ret[0];
+                ret = Expansions.AsEnumerable().FirstOrDefault(
+                    r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
+                if (ret != default)
+                    return ret;
             }
             return null;
         }

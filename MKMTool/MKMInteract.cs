@@ -367,6 +367,11 @@ namespace MKMTool
                 return makeRequest("https://api.cardmarket.com/ws/v2.0/stock/" + start, "GET");
             }
 
+            public static XmlDocument ReadGames()
+            {
+                return makeRequest("https://api.cardmarket.com/ws/v2.0/games", "GET");
+            }
+
             /// <summary>
             /// Gets the stock file csv.
             /// Warning: the Language column in the returned csv is actually Language ID and boolean vars 
@@ -374,12 +379,13 @@ namespace MKMTool
             /// but based on our request (so always English).
             /// Prefer using the wrapper getAllStockSingles.
             /// </summary>
+            /// <param name="gameId">Game for which to get the stock.</param>
             /// <returns>Decompressed data containing the stock file. Can either be written directly to an output stream.
             /// Null if the reading failed (this method logs the error). Empty array if no items are in the stock.</returns>
-            private static byte[] getStockFile()
+            private static byte[] getStockFile(string gameId)
             {
                 var doc = makeRequest("https://api.cardmarket.com/ws/v2.0/stock/file?idGame=" 
-                    + MainView.Instance.Config.GameID, "GET");
+                    + gameId, "GET");
 
                 var node = doc.GetElementsByTagName("response");
                                 
@@ -403,48 +409,52 @@ namespace MKMTool
             /// <param name="useFile">This is for legacy support. If set to false, it will use the old way of getting stock
             /// by the readStock method. New way is to use getStockFile as it takes only a single API request.</param>
             /// <returns>List of all single cards in our stock</returns>
-            public static List<MKMMetaCard> getAllStockSingles(bool useFile)
+            public static List<MKMMetaCard> GetAllStockSingles(bool useFile)
             {
+                MainView.Instance.LogMainWindow("Fetching stock...");
                 List<MKMMetaCard> cards = new List<MKMMetaCard>();
                 if (useFile)
                 {
-                    byte[] stock = getStockFile();
-                    if (stock != null && stock.Length > 0)
+                    foreach (var game in MainView.Instance.Config.Games)
                     {
-                        var articleTable = MKMCsvUtils.ConvertCSVtoDataTable(stock);
-                        // the GET STOCK FILE has language ID named Language, fix that
-                        articleTable.Columns["Language"].ColumnName = MCAttribute.LanguageID;
-                        articleTable.Columns.Remove("Local Name"); // this is in the language of the request...which is always english
-                        foreach (DataRow row in articleTable.Rows)
+                        byte[] stock = getStockFile(game.GameID);
+                        if (stock != null && stock.Length > 0)
                         {
-                            MKMMetaCard mc = new MKMMetaCard(row);
-                            // according to the API documentation, "The 'condition' key is only returned for single cards. "
-                            // -> check if condition exists to see if this is a single card or something else
-                            if (mc.GetAttribute(MCAttribute.Condition) != "" && mc.GetAttribute(MCAttribute.ArticleID) != "")
+                            var articleTable = MKMCsvUtils.ConvertCSVtoDataTable(stock);
+                            // the GET STOCK FILE has language ID named Language, fix that
+                            articleTable.Columns["Language"].ColumnName = MCAttribute.LanguageID;
+                            articleTable.Columns.Remove("Local Name"); // this is in the language of the request...which is always English
+                            foreach (DataRow row in articleTable.Rows)
                             {
-                                // sanitize the false booleans - the empty ones mean no, while in MKMMEtaCard empty means "any"
-                                if (articleTable.Columns.Contains("Foil?") && mc.GetAttribute(MCAttribute.Foil) == "")
+                                MKMMetaCard mc = new MKMMetaCard(row);
+                                // according to the API documentation, "The 'condition' key is only returned for single cards. "
+                                // -> check if condition exists to see if this is a single card or something else
+                                if (mc.GetAttribute(MCAttribute.Condition) != "" && mc.GetAttribute(MCAttribute.ArticleID) != "")
                                 {
-                                    mc.SetBoolAttribute(MCAttribute.Foil, "false");
+                                    // sanitize the false booleans - the empty ones mean no, while in MKMMEtaCard empty means "any"
+                                    if (articleTable.Columns.Contains("Foil?") && mc.GetAttribute(MCAttribute.Foil) == "")
+                                    {
+                                        mc.SetBoolAttribute(MCAttribute.Foil, "false");
+                                    }
+                                    if (articleTable.Columns.Contains("Altered?") && mc.GetAttribute(MCAttribute.Altered) == "")
+                                    {
+                                        mc.SetBoolAttribute(MCAttribute.Altered, "false");
+                                    }
+                                    if (articleTable.Columns.Contains("Signed?") && mc.GetAttribute(MCAttribute.Signed) == "")
+                                    {
+                                        mc.SetBoolAttribute(MCAttribute.Signed, "false");
+                                    }
+                                    if (articleTable.Columns.Contains("Playset?") && mc.GetAttribute(MCAttribute.Playset) == "")
+                                    {
+                                        mc.SetBoolAttribute(MCAttribute.Playset, "false");
+                                    }
+                                    // this is just a guess, not sure how isFirstEd is written there, or if at all
+                                    if (articleTable.Columns.Contains("FirstEd?") && mc.GetAttribute(MCAttribute.FirstEd) == "")
+                                    {
+                                        mc.SetBoolAttribute(MCAttribute.FirstEd, "false");
+                                    }
+                                    cards.Add(mc);
                                 }
-                                if (articleTable.Columns.Contains("Altered?") && mc.GetAttribute(MCAttribute.Altered) == "")
-                                {
-                                    mc.SetBoolAttribute(MCAttribute.Altered, "false");
-                                }
-                                if (articleTable.Columns.Contains("Signed?") && mc.GetAttribute(MCAttribute.Signed) == "")
-                                {
-                                    mc.SetBoolAttribute(MCAttribute.Signed, "false");
-                                }
-                                if (articleTable.Columns.Contains("Playset?") && mc.GetAttribute(MCAttribute.Playset) == "")
-                                {
-                                    mc.SetBoolAttribute(MCAttribute.Playset, "false");
-                                }
-                                // this is just a guess, not sure how isFirstEd is written there, or if at all
-                                if (articleTable.Columns.Contains("FirstEd?") && mc.GetAttribute(MCAttribute.FirstEd) == "")
-                                {
-                                    mc.SetBoolAttribute(MCAttribute.FirstEd, "false");
-                                }
-                                cards.Add(mc);
                             }
                         }
                     }
@@ -466,7 +476,13 @@ namespace MKMTool
                                 // -> check if condition exists to see if this is a single card or something else
                                 if (article["condition"] != null && article["idArticle"].InnerText != null)
                                 {
-                                    cards.Add(new MKMMetaCard(article));
+                                    var card = new MKMMetaCard(article);
+                                    cards.Add(card);
+                                    // we can get rarities from this request -> update them in database
+                                    string idProduct = card.GetAttribute(MCAttribute.ProductID);
+                                    MKMDbManager.Instance.WriteValueToInventory(idProduct,
+                                        MKMDbManager.InventoryFields.Rarity,
+                                        card.GetAttribute(MCAttribute.Rarity));
                                 }
                             }
                             count = result.Count;
@@ -474,6 +490,7 @@ namespace MKMTool
                         }
                     } while (count == 100);
                 }
+                MainView.Instance.LogMainWindow("Finished fetching stock.");
                 return cards;
             }
 

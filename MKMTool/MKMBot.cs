@@ -637,7 +637,7 @@ namespace MKMTool
             List<MKMMetaCard> articles;
             try
             {
-                articles = MKMInteract.RequestHelper.getAllStockSingles(MainView.Instance.Config.UseStockGetFile);
+                articles = MKMInteract.RequestHelper.GetAllStockSingles(MainView.Instance.Config.UseStockGetFile);
             }
             catch (Exception error)
             {

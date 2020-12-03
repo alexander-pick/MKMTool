@@ -34,8 +34,24 @@
   <settings>
     <!--true or false. see documentation for details-->
     <UseStockGetFile>false</UseStockGetFile>
-    <!--only relevant if UseStockGetFile is true. 1 for MtG, 2 World of Warcraft, 3 Yu-Gi-Oh, experiment to get the rest -->
-    <idGame>1</idGame>
+    <!--database will be loaded only for cards from the specified games. if UseStockGetFile is true, only cards from those games will be processed-->
+    <!--uncomment the ones you want, comment the ones you don't want, keep the ; at the ends-->
+    <!--if a card from a different game is encountered, it might be processed incorrectly or not at all -->
+    <!--the more games you select, the slower will processing be (even if you actually don't have any cards from that game), so keep it to minimum -->
+    <Games>
+      Magic the Gathering;
+      <!-- World of Warcraft TCG; -->
+      <!-- Yugioh; -->
+      <!-- The Spoils; -->
+      <!-- Pokémon; -->
+      <!-- Force of Will; -->
+      <!-- Cardfight!! Vanguard; -->
+      <!-- Final Fantasy; -->
+      <!-- Weiß Schwarz; -->
+      <!-- Dragoborne; -->
+      <!-- My Little Pony; -->
+      <!-- Dragon Ball Super; -->
+    </Games>
     <!--separator for columns for exported CSVs, should be ; or , use anything else at your own risk-->
     <CSVExportSeparator>,</CSVExportSeparator>
     <!--for pretending you are from somewhere else, leave it empty to have it read from MKM. Use D for Germany, otherwise codes from here:https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 -->

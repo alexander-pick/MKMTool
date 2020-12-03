@@ -339,7 +339,9 @@ namespace MKMTool
 
             // fill in missing data that we know from our local database (and have them be "any" would make no sense)
             string productId = GetAttribute(MCAttribute.ProductID);
-            if (productId != "") // if we know product ID, we can use the inventory database to get expansion ID and Name
+            if (productId != "" &&  // if we know product ID, we can use the inventory database to get expansion ID and Name
+                (!data.ContainsKey(MCAttribute.ExpansionID) || !data.ContainsKey(MCAttribute.Name)
+                || !data.ContainsKey(MCAttribute.Rarity)))
             {
                 DataRow row = MKMDbManager.Instance.GetSingleCard(productId);
                 if (row != null)
@@ -347,6 +349,22 @@ namespace MKMTool
                     data[MCAttribute.ExpansionID] = row[MKMDbManager.InventoryFields.ExpansionID].ToString();
                     data[MCAttribute.Name] = row[MKMDbManager.InventoryFields.Name].ToString();
                     data[MCAttribute.MetaproductID] = row[MKMDbManager.InventoryFields.MetaproductID].ToString();
+                    string rarity = row[MKMDbManager.InventoryFields.Rarity].ToString();
+                    if (rarity == "")
+                    {
+                        // we have to do a product search
+                        try
+                        {
+                            var productDoc = MKMInteract.RequestHelper.getProduct(productId);
+                            rarity = productDoc["response"]["product"]["rarity"].InnerText;
+                            row[MKMDbManager.InventoryFields.Rarity] = rarity;
+                        }
+                        catch (System.Exception eError)
+                        {
+                            LogError("getting rarity for product " + productId, eError.Message, false);
+                        }
+                    }
+                    data[MCAttribute.Rarity] =  rarity;
                 }
                 else
                 {
@@ -385,7 +403,7 @@ namespace MKMTool
                 string name = GetAttribute(MCAttribute.Name);
                 if (name != "")
                 {
-                    string[] ids = MKMDbManager.Instance.GetProductID(name, expID);
+                    string[] ids = MKMDbManager.Instance.GetCardProductID(name, expID);
                     if (ids.Length == 1)
                         data[MCAttribute.ProductID] = ids[0];
                     // else we are unable to determine the product ID

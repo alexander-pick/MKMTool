@@ -1,19 +1,20 @@
 # Welcome to MKMTool 0.8
 
-THE "UseStockGetFile" SETTING IS STILL WORK IN PROGRESS, USE WITH CAUTION, CURRENTLY IT WILL MAKE PRICE UPDATE IGNORE RARITY.
-
-If you have just updated from older version than 0.8.0, do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation.
-If you have just updated from older version than 0.7.0, please delete the "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).
+**IF YOU ARE UPDATING FROM A VERSION OLDER THAN: 
++ 1.12.2020: delete mkminventory.csv file in your bin folder before starting MKMTool, cardmarket had some mistakes in the database (it will be recreated)
++ 0.8.0: do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation. Also, delete "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).**
 
 ## Latest changes
 **Version 0.8.0.0, 30.11.2020**
+
 New/improved features:
 + MKM now limits the maximum number of API requests per minute to 600. MKMTool will now automatically wait before sending next request if the limit is reached.
 + All CSV lists used by MKMTool can now also use semicolon (the character ';') as a separator. MKMTool automatically detects if your file uses ';' or ','. ';' must NOT be contained in column names.
 + Added generic configuration settings for MKMTool that can be specified in the config.xml. Documentation is in the [Settings](#Settings) section.
 + Added setting to config.xml for choosing the CSV separator to use when exporting files (currently used in View Inventory, Price External List and Download Buys).
-+ Fetching our own stock is now more efficient by using the GET STOCK FILE API request, which downloads the entire stock as a single CSV file, which MKMTool then parses. This reduces the number of API requests used by 1 per each 100 articles in your stock, which also decreases the processing time. This is used in the Update Price and the View Inventory. If you have some problems, you can switch to the old way by opening your config.xml and setting the UseStockGetFile to false.
-+ View Inventory now includes the idProduct. If UseStockGetFile is set to true (now default), it will no longer include Rarity, LocName, lastEdited and inShoppingCart columns. If you need those, you will have to switch UseStockGetFile to false (this will however significantly increase the time it takes to show the inventory).
++ Fetching our own stock is now more efficient by using the GET STOCK FILE API request, which downloads the entire stock as a single CSV file, which MKMTool then parses. However, it does not include rarity, which we now have to cache it in the local database. See the UseStockGetFile documentation in [Settings](#Settings) for more details.
++ View Inventory now includes the idProduct. If UseStockGetFile is set to true, it will no longer include LocName, lastEdited and inShoppingCart columns. If you need those, you will have to switch UseStockGetFile to false (this will however significantly increase the time it takes to show the inventory).
++ Local Database now stores rarity for cards you appraised/updated (see the UseStockGetFile [Settings](#Settings) for more details). If the database is modified (some new rarity is noted), it is saved automatically to the file (mkminventory.csv) when you close MKMTool. You may notice ~2s delay when shutting MKMTool down in those cases.
 + Added "Filter expansions" to [Price Update](#Price-Update) / [Price External List](#Price-External-List): only cards from selected expansions will be processed.
 + Added "Filter seller countries" to [Price Update](#Price-Update) / [Price External List](#Price-External-List): when doing "worldwide search", only sellers from the selected countries will be taken into account. See documentation in the [Price Update](#Price-Update)section before using this feature.
 + Added filtering by user type - private, professional and commercial - to [Price Update](#Price-Update) / [Price External List](#Price-External-List): only articles by sellers of the selected types will be used for price update.
@@ -23,6 +24,7 @@ New/improved features:
 + Added setting to config.xml to fake your own country.
 + When updating price, the FirstEd parameter is taken into account when looking for similar items (relevant only for Yu-Gi-Oh).
 + The "Update local database" and "View Inventory" buttons switched places.
+
 Bug-fixes:
 + MinPrice from mystock.csv was taken into account only if no price update was computed. Now it will always be checked even just against the current price.
 + Fixed crashes when Checking for Cheap Deals by wantlist when article in wantlist had "Any" as isFoil, isSigned or isAltered.
@@ -57,7 +59,7 @@ Bug-fixes:
 
 **Version 0.7.0, 11.7.2019 (by [Tomas Janak](https://github.com/tomasjanak))**
 
-Bugfixes:
+Bug-fixes:
 + Fixed [Check Display Value](#Check-Display-Value) using locale-dependent number parsing, which caused the decimal delimiter to be ignored if you are using '.' instead of ',', leading to 100x higher prices.
 + Fixed numerous issues in [Check for Cheap Deals](#Check-for-Cheap-Deals), now it works as intended for all three modes (expansion check, user check, want list check)
 + Error logging is now more consistent, you can find all errors in the error_log.txt, separated for each individual run of MKMTool and with more precise description
@@ -137,7 +139,7 @@ You can simply open the project in Microsoft Visual Studio Community 2015 or new
 If you are too lazy to compile, here is a build for Windows (64-bit):
 
 https://tomasjanak.github.io/MKMTool0.7.0.5.zip (version 0.7.0.5, compiled by [Tomas Janak](https://github.com/tomasjanak))
-https://tomasjanak.github.io/MKMTool0.8.0.0_experimental.zip (version 0.8.0.0 experimental (UseStockGetFile is not working fully correctly (ignores rarity), waiting for response from Cardmarket support), compiled by [Tomas Janak](https://github.com/tomasjanak))
+https://tomasjanak.github.io/MKMTool0.8.0.0_experimental.zip (version 0.8.0.0 experimental (UseStockGetFile is not working fully correctly (ignores rarity), waiting for response from Cardmarket support), compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool, cardmarket had some mistakes in the database (it will be recreated).**
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
@@ -168,8 +170,9 @@ MKMTool has several features/modules, click the links to bring you to documentat
 
 ### Settings
 But first, let's see settings you can choose in the config.xml file (values are entered without quotes):
-+ **UseStockGetFile:** values can be "true" or "false", true by default. It is relevant for Price Update and View Inventory modules. It is a faster method of getting all of your stock in a single API request. The alternative uses 1 API request per 100 articles. However, it includes more information. While it is irrelevant for Price Update, in View Inventory the following can be seen only when setting UseStockGetFile to false: Rarity, LocName (name in the language of the card), inShoppingCart (true or false if the item is currently in shopping card) and lastEdited (time you last edited the article). Also, see idGame setting below.
-+ **idGame:** if UseStockGetFile is set to true, we retrieve only cards of one single game. By default it is Magic: the Gathering, idGame 1. 2 is world of warcraft, 3 Yu-Gi-Oh etc. (don't know the rest since the API call that should give us a list of all games does not work and they don't have it anywhere on website...just experiment or ask support). If you want MKMTool to process several games at once, you will have to use UseStockGetFile = false.
++ **UseStockGetFile:** values can be "true" or "false", true by default. It is relevant for Price Update and View Inventory modules. It is a faster method of getting all of your stock in a single API request. The alternative uses 1 API request per 100 articles. However, it includes more information. Rarity is not included in the file version and is also not in the database downloadable from MKM. We have to now store it in our database as an additional column. Since obtaining it takes requests, it is done only when needed (i.e. you are updating a card for which you don't yet have rarity in your local database). When UseStockGetFile is set to false, it reads rarity and so it also updates it in the database for all articles that are being updated. If it is set to true, we have to do 1 request per each card with unknown rarity. Therefore, it is recommended to run price update once with UseStockGetFile set to false to get rarity for all cards in your current stock. Once that is done, you can switch to the more efficient UseStockGetFile = true. Newly added cards will use 1 additional requests, but that should be OK unless you are adding large batch of new cards (in that case you might want to do 1 run with UseStockGetFile set to false).
+While it is irrelevant for Price Update, in View Inventory the following can be seen only when setting UseStockGetFile to false: LocName (name in the language of the card), inShoppingCart (true or false if the item is currently in shopping card) and lastEdited (time you last edited the article). Also, see Games setting below.
++ **Games:** if UseStockGetFile is set to true, we retrieve only cards of the specified games during price update/appraisal. The local database keeps all the products, but during processing (price updates etc.), we use only a subset of the database - only single cards from the games specified by this setting. This is because working with the whole database can take a long time, so keep the number of games you process to minimum for better performance. Keep the games you do not want commented (enclosed in <!-- -->), uncomment it to enable it. For example, config_template.xml has only Magic the Gathering uncommented and all other commented, i.e. MKMTool will work optimized for Magic the Gathering.
 + **CSVExportSeparator:** separator to use when exporting CSV files. Default comma (','), other reasonable choice is semicolon (';'). Note that this is only for export: for importing, the separator can only be comma or semicolon and it is detected automatically, it does not take this setting into account. So if you use something else than , or ; for exporting, you will not be able to open that file in MKMTool. Also, note that this will be used even if the export format requires other separator (for example, DeckBox.org requires comma, so even if you choose to export in Deckbox format in Price External List, Deckbox will not accept that file if you set something other than comma as CSVExportSeparator).
 + **MyCountryCode:** decides which country will be treated as your "domestic". Leave it empty to have it read from MKM (default). Use D for Germany, otherwise codes from here (but only for countries available on cardmarket): https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 
 

@@ -32,6 +32,7 @@
 #undef DEBUG
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -50,7 +51,7 @@ namespace MKMTool
         {
             public MKMToolConfig()
             {
-                var xConfigFile = new System.Xml.XmlDocument();
+                var xConfigFile = new XmlDocument();
 
                 xConfigFile.Load(@".//config.xml");
                 if (xConfigFile["config"]["settings"] != null)
@@ -64,8 +65,28 @@ namespace MKMTool
                                 if (bool.TryParse(setting.InnerText, out bool stockGetMethod))
                                     UseStockGetFile = stockGetMethod;
                                 break;
-                            case "idGame":
-                                GameID = setting.InnerText;
+                            case "Games":
+                                var split = setting.InnerText.Split(';');
+                                if (split.Length == 0)
+                                {
+                                    MKMHelpers.LogError("reading Games setting", "No games specified in config.xml.", false);
+                                }
+                                else
+                                {
+                                    Games.Clear();
+                                    foreach (var game in split)
+                                    {
+                                        var trimmed = game.Trim();
+                                        if (trimmed.Length > 0)
+                                        {
+                                            if (MKMHelpers.gameIDsByName.ContainsKey(trimmed))
+                                                Games.Add(MKMHelpers.gameIDsByName[trimmed]);
+                                            else
+                                                MKMHelpers.LogError("reading Games setting",
+                                                    "Unknown game " + trimmed + " specified, will be ignored.", false);
+                                        }
+                                    }
+                                }
                                 break;
                             case "CSVExportSeparator":
                                 CSVExportSeparator = setting.InnerText;
@@ -81,7 +102,8 @@ namespace MKMTool
             }
 
             public bool UseStockGetFile { get; } = true;
-            public string GameID { get; } = "1";
+            public List<MKMHelpers.GameDesc> Games { get; }  // games to process
+                = new List<MKMHelpers.GameDesc>{ new MKMHelpers.GameDesc("1", "1")};  // be default only MtG
             public string CSVExportSeparator { get; } = ",";
             public string MyCountryCode { get; set; } = ""; // to find domestic deals, empty to be automatically detected
         }
@@ -120,7 +142,7 @@ namespace MKMTool
         /// Gets the configuration loaded from config.xml.
         /// </summary>
         /// <value>The configuration loaded at start of MKMTool.</value>
-        public MKMToolConfig Config { get; } = new MKMToolConfig();
+        public MKMToolConfig Config { get; set; }
 
         private static MainView instance = null; // singleton instance of the main app window
 
@@ -174,6 +196,7 @@ namespace MKMTool
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void initialize(object sender, EventArgs e)
         {
+            Config = new MKMToolConfig();
             timer.Interval = 1440 * 1000 * 60; // set the interval to one day (1440 minutes in ms)
             try
             {

@@ -54,7 +54,7 @@ namespace MKMTool
                 {
                     // getAllStockSingles creates a DataTable and converts it to list of cards, so theoretically we are wasting some work
                     // but it also filters out non-singles and converting to MKMcard will make sure we use the primary column names rather than synonyms
-                    var cards = MKMInteract.RequestHelper.getAllStockSingles(MainView.Instance.Config.UseStockGetFile);
+                    var cards = MKMInteract.RequestHelper.GetAllStockSingles(MainView.Instance.Config.UseStockGetFile);
                     if (cards.Count == 0)
                     {
                         MainView.Instance.LogMainWindow("Stock is empty. Did you select correct idGame in config.xml?");
@@ -80,7 +80,7 @@ namespace MKMTool
                         articles.Columns.Remove(MCAttribute.MKMCurrencyId);
 
                     var dj = MKMDbManager.JoinDataTables(articles, MKMDbManager.Instance.Expansions,
-                        (row1, row2) => row1.Field<string>(MKMDbManager.InventoryFields.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
+                        (row1, row2) => row1.Field<string>(MCAttribute.ExpansionID) == row2.Field<string>(MKMDbManager.ExpansionsFields.ExpansionID));
 
                     if (dj.Columns.Contains(MCAttribute.ExpansionID))
                         dj.Columns.Remove(MCAttribute.ExpansionID); // duplicated
@@ -88,7 +88,7 @@ namespace MKMTool
                         dj.Columns.Remove(MKMDbManager.ExpansionsFields.ExpansionID); // ...and we don't want it anyway
                     if (dj.Columns.Contains(MKMDbManager.ExpansionsFields.Name))
                         dj.Columns.Remove(MKMDbManager.ExpansionsFields.Name); // duplicated
-                    
+
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Name)].SetOrdinal(0);
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Expansion)].SetOrdinal(1);
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Language)].SetOrdinal(2);

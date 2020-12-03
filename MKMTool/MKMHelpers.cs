@@ -128,6 +128,28 @@ namespace MKMTool
             { "SE", "Sweden" }, {"CH", "Switzerland" }, { "GB", "United Kingdom" }
         };
 
+        public struct GameDesc
+        {          
+            public GameDesc(string gameId, string categoryId)
+            {
+                GameID = gameId;
+                SinglesCategoryID = categoryId;
+            }
+            public string GameID { get; set; }// as obtained from MKMInteract.ReadGames()
+            public string SinglesCategoryID { get; set; }// id for the singles of this game in the Inventory database
+        }
+
+        // as obtained from MKMInteract.ReadGames(), key == name
+        public static Dictionary<string, GameDesc> gameIDsByName = new Dictionary<string, GameDesc>
+        {
+            { "Magic the Gathering", new GameDesc("1", "1") }, { "World of Warcraft TCG", new GameDesc("2", "3") },
+            { "Yugioh", new GameDesc("3", "5") }, { "The Spoils", new GameDesc("5", "22") }, 
+            { "Pokémon", new GameDesc("6", "51") }, {"Force of Will",new GameDesc("7", "1018") },
+            { "Cardfight!! Vanguard", new GameDesc("8", "1019") }, { "Final Fantasy", new GameDesc("9", "1022") }, 
+            { "Weiß Schwarz",new GameDesc("10", "1040") }, { "Dragoborne", new GameDesc("11", "1039") },
+            { "My Little Pony", new GameDesc("12", "1041") }, {"Dragon Ball Super", new GameDesc("13", "1049") }
+        };
+
 
         /// <summary>
         /// A three-state boolean allowing "any" as the third state.
