@@ -65,6 +65,12 @@ namespace MKMTool
         public DataRow[] InventorySinglesOnly { get; private set; } = { };
 
         /// <summary>
+        /// Hashes the indices of rows in InventorySinglesOnly by the product ID.
+        /// This significantly speeds up queries in which we know product id.
+        /// </summary>
+        private Dictionary<string, int> SinglesByProductId { get; set; }
+
+        /// <summary>
         /// A "string enum" for fields of the Inventory DataTable.
         /// </summary>
         public class InventoryFields
@@ -132,6 +138,16 @@ namespace MKMTool
             return false;
         }
 
+        // initializes helper structures for operating only over singles of the selected games
+        private void buildSinglesDatabase()
+        {
+            InventorySinglesOnly = Inventory.AsEnumerable().Where(
+                   r => isSelectedGame(r.Field<string>(InventoryFields.CategoryID))).ToArray();
+            SinglesByProductId = new Dictionary<string, int>(InventorySinglesOnly.Length);
+            for (int i = 0; i < InventorySinglesOnly.Length; i++)
+                SinglesByProductId[InventorySinglesOnly[i].Field<string>(InventoryFields.ProductID)] = i;
+        }
+
         /// <summary>
         /// Fetches the latest database from MKM, stores it as a CSV file and re-loads the internal structures of this database manager with new data.
         /// Also creates the SQL database and stores it as mkmtool.sqlite file.
@@ -165,8 +181,7 @@ namespace MKMTool
                 }
                 WriteTableAsCSV(@".\\mkminventory.csv", Inventory);
                 Inventory.AcceptChanges();
-                InventorySinglesOnly = Inventory.AsEnumerable().Where(
-                       r => isSelectedGame(r.Field<string>(InventoryFields.CategoryID))).ToArray();
+                buildSinglesDatabase();
                 MainView.Instance.LogMainWindow("MKM inventory database updated.");
             }
             catch (Exception eError)
@@ -304,8 +319,8 @@ namespace MKMTool
                 try
                 {
                     Inventory = ConvertCSVtoDataTable(@".\\mkminventory.csv");
-                    InventorySinglesOnly = Inventory.AsEnumerable().Where(
-                        r => isSelectedGame(r.Field<string>(InventoryFields.CategoryID))).ToArray();
+                    buildSinglesDatabase();
+                    Inventory.AcceptChanges();
                     Expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
                 }
                 catch (Exception eError)
@@ -381,23 +396,21 @@ namespace MKMTool
         public void WriteValueToInventory(string idProduct,
             string inventoryField, string value)
         {
-            var result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
-                r => r.Field<string>(InventoryFields.ProductID) == idProduct); 
-            if (result == default && (DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
+            if (!SinglesByProductId.ContainsKey(idProduct)
+                && (DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
-                    r => r.Field<string>(InventoryFields.ProductID) == idProduct);
+                if (!SinglesByProductId.ContainsKey(idProduct))
+                {
+                    LogError("writing " + inventoryField + " " + value + " for product id " + idProduct,
+                        "Specified product ID does not exist.", false);
+                }
             }
-            if (result == default)
+            int index = SinglesByProductId[idProduct];
+            if (InventorySinglesOnly[index][inventoryField].ToString() != value)
             {
-                LogError("writing " + inventoryField + " " + value + " for product id " + idProduct,
-                    "Specified product ID does not exist.", false);
-            }
-            else if (result[inventoryField].ToString() != value)
-            {
-                result[inventoryField] = value;
+                InventorySinglesOnly[index][inventoryField] = value;
             }
         }
 
@@ -429,18 +442,14 @@ namespace MKMTool
         /// Returns null in case the product ID is invalid.</returns>
         public DataRow GetSingleCard(string idProduct)
         {
-            var result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
-                r => r.Field<string>(InventoryFields.ProductID) == idProduct);
-            if (result != default) // should always be either 0 or 1 as idProduct is unique
-                return result;
+            if (SinglesByProductId.ContainsKey(idProduct))
+                return InventorySinglesOnly[SinglesByProductId[idProduct]];
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
                 UpdateDatabaseFiles();
-                result = InventorySinglesOnly.AsEnumerable().FirstOrDefault(
-                   r => r.Field<string>(InventoryFields.ProductID) == idProduct);
-                if (result != default)
-                    return result;
+                if (SinglesByProductId.ContainsKey(idProduct))
+                    return InventorySinglesOnly[SinglesByProductId[idProduct]];
             }
             return null;
         }
