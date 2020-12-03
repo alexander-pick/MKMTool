@@ -48,7 +48,6 @@
             this.comboBoxFoil = new System.Windows.Forms.ComboBox();
             this.labelFoil = new System.Windows.Forms.Label();
             this.groupBoxPrice = new System.Windows.Forms.GroupBox();
-            this.checkBoxMyStock = new System.Windows.Forms.CheckBox();
             this.buttonBotSettings = new System.Windows.Forms.Button();
             this.buttonAppraise = new System.Windows.Forms.Button();
             this.checkBoxToolPrices = new System.Windows.Forms.CheckBox();
@@ -67,8 +66,7 @@
             this.checkBoxExportFormatDeckbox = new System.Windows.Forms.CheckBox();
             this.checkBoxExportPriceGuide = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.comboBoxRarity = new System.Windows.Forms.ComboBox();
-            this.labelRarity = new System.Windows.Forms.Label();
+            this.checkBoxMyStock = new System.Windows.Forms.CheckBox();
             this.groupBoxImport.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBoxPrice.SuspendLayout();
@@ -112,8 +110,6 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.comboBoxRarity);
-            this.groupBox1.Controls.Add(this.labelRarity);
             this.groupBox1.Controls.Add(this.comboBoxCondition);
             this.groupBox1.Controls.Add(this.labelCondition);
             this.groupBox1.Controls.Add(this.comboBoxLanguage);
@@ -304,18 +300,6 @@
             this.groupBoxPrice.TabIndex = 1;
             this.groupBoxPrice.TabStop = false;
             this.groupBoxPrice.Text = "Appraise";
-            // 
-            // checkBoxMyStock
-            // 
-            this.checkBoxMyStock.AutoSize = true;
-            this.checkBoxMyStock.Location = new System.Drawing.Point(239, 42);
-            this.checkBoxMyStock.Name = "checkBoxMyStock";
-            this.checkBoxMyStock.Size = new System.Drawing.Size(109, 17);
-            this.checkBoxMyStock.TabIndex = 15;
-            this.checkBoxMyStock.Text = "Use myStock.csv";
-            this.toolTip1.SetToolTip(this.checkBoxMyStock, "If checked, your myStock.csv will be used to limit minimal prices for the assigne" +
-        "d MKMTool Price");
-            this.checkBoxMyStock.UseVisualStyleBackColor = true;
             // 
             // buttonBotSettings
             // 
@@ -510,30 +494,17 @@
             this.checkBoxExportPriceGuide.Text = "MKM price guide prices";
             this.checkBoxExportPriceGuide.UseVisualStyleBackColor = true;
             // 
-            // comboBoxRarity
+            // checkBoxMyStock
             // 
-            this.comboBoxRarity.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxRarity.FormattingEnabled = true;
-            this.comboBoxRarity.Items.AddRange(new object[] {
-            "Mythic",
-            "Rare",
-            "Uncommon",
-            "Common"});
-            this.comboBoxRarity.Location = new System.Drawing.Point(391, 46);
-            this.comboBoxRarity.Name = "comboBoxRarity";
-            this.comboBoxRarity.Size = new System.Drawing.Size(81, 21);
-            this.comboBoxRarity.TabIndex = 15;
-            this.toolTip1.SetToolTip(this.comboBoxRarity, "Use Mythic or Rare for to appraise the cards using the Min. Price of Rares in set" +
-        "tings");
-            // 
-            // labelRarity
-            // 
-            this.labelRarity.AutoSize = true;
-            this.labelRarity.Location = new System.Drawing.Point(327, 49);
-            this.labelRarity.Name = "labelRarity";
-            this.labelRarity.Size = new System.Drawing.Size(37, 13);
-            this.labelRarity.TabIndex = 14;
-            this.labelRarity.Text = "Rarity:";
+            this.checkBoxMyStock.AutoSize = true;
+            this.checkBoxMyStock.Location = new System.Drawing.Point(239, 42);
+            this.checkBoxMyStock.Name = "checkBoxMyStock";
+            this.checkBoxMyStock.Size = new System.Drawing.Size(109, 17);
+            this.checkBoxMyStock.TabIndex = 15;
+            this.checkBoxMyStock.Text = "Use myStock.csv";
+            this.toolTip1.SetToolTip(this.checkBoxMyStock, "If checked, your myStock.csv will be used to limit minimal prices for the assigne" +
+        "d MKMTool Price");
+            this.checkBoxMyStock.UseVisualStyleBackColor = true;
             // 
             // PriceExternalList
             // 
@@ -601,7 +572,5 @@
         private System.Windows.Forms.CheckBox checkBoxExportLogAll;
         private System.Windows.Forms.CheckBox checkBoxExportOnlyAppraised;
         private System.Windows.Forms.CheckBox checkBoxMyStock;
-        private System.Windows.Forms.ComboBox comboBoxRarity;
-        private System.Windows.Forms.Label labelRarity;
     }
 }
