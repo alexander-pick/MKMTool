@@ -481,6 +481,9 @@ NOT STORED      links: { }                           // HATEOAS links
                 data[MCAttribute.ExpansionID] = MKMDbManager.Instance.GetExpansionID(MKMArticle["product"]["expansion"].InnerText);
                 data[MCAttribute.CardNumber] = MKMArticle["product"]["nr"].InnerText;
                 data[MCAttribute.Rarity] = MKMArticle["product"]["rarity"].InnerText;
+                // also update database (updates only if it was not there before)
+                MKMDbManager.Instance.WriteValueToInventory(data[MCAttribute.ProductID],
+                    MKMDbManager.InventoryFields.Rarity, data[MCAttribute.Rarity]);
             }
         }
 

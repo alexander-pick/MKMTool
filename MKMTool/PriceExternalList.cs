@@ -427,7 +427,7 @@ namespace MKMTool
                         else
                         {
                             LogError("importing line #" + (counter + 1) + ", identifying expansion for " + name + ", article will be ignored",
-                                "No expansion found.", false);
+                                "No card with this name found.", false);
                             failed++;
                             continue;
                         }
@@ -515,6 +515,27 @@ namespace MKMTool
                     temp = mc.GetAttribute(MCAttribute.Altered);
                     if (temp == "")
                         mc.SetBoolAttribute(MCAttribute.Altered, defaultAltered);
+                }
+                // rarity might not be present in some cases, check it and get it from database, or worst case from MKM
+                var rarity = mc.GetAttribute(MCAttribute.Rarity);
+                if (rarity == "")
+                {
+                    var dataRow = MKMDbManager.Instance.GetSingleCard(productID);
+                    rarity = dataRow[MKMDbManager.InventoryFields.Rarity].ToString();
+                    if (rarity == "")
+                    {
+                        try
+                        {
+                            var productDoc = MKMInteract.RequestHelper.getProduct(productID);
+                            rarity = productDoc["response"]["product"]["rarity"].InnerText;
+                            dataRow[MKMDbManager.InventoryFields.Rarity] = rarity;
+                        }
+                        catch (Exception eError)
+                        {
+                            LogError("getting rarity for product " + productID, eError.Message, false);
+                        }
+                    }
+                    mc.SetAttribute(MCAttribute.Rarity, rarity);
                 }
 
                 importedValidOnly.Add(mc);
