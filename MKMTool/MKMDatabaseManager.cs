@@ -226,6 +226,7 @@ namespace MKMTool
                 return false;
             }
 
+#if false // if you want the sql database for some reason, change this to true. MKMTool does not use it and creating it takes unnecessary time
             // Store the database as an SQL database. This is currently not actually used anywhere by MKMTool itself,
             // but it has existed in previous versions, might be used by other software and might have other uses in the future, so for now we keep it.
             // However, if something fails, we continue as if nothing happened.
@@ -282,7 +283,7 @@ namespace MKMTool
             BulkInsertDataTable("expansions", Expansions, m_dbConnection);
 
             m_dbConnection.Close();
-
+#endif
             return true;
         }
 
@@ -331,8 +332,8 @@ namespace MKMTool
             }
         }
 
-        #endregion
-        #region utilities
+#endregion
+#region utilities
 
         // Reference:
         // http://stackoverflow.com/questions/665754/inner-join-of-datatables-in-c-sharp
@@ -605,8 +606,8 @@ namespace MKMTool
             return null;
         }
 
-        #endregion
-        #region SQL
+#endregion
+#region SQL
 
         // currently not used
         public static DataTable ReadSQLiteToDt(string sTableName)
