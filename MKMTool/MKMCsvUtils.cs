@@ -75,6 +75,7 @@ namespace MKMTool
                 // mixed format (i.e. enclosed and unenclosed in the same file). Hopefully this never has any practical impact.
                 if (!quoteEnclosed && columnValue == "\"")
                     columnValue = "";
+                columnValue = columnValue.Trim();
                 ret.Add(columnValue);
             }
             return ret;
