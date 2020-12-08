@@ -89,9 +89,21 @@ namespace MKMTool
                     if (dj.Columns.Contains(MKMDbManager.ExpansionsFields.Name))
                         dj.Columns.Remove(MKMDbManager.ExpansionsFields.Name); // duplicated
 
+                    // use the same order with or without UseStockGetFile
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Name)].SetOrdinal(0);
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Expansion)].SetOrdinal(1);
                     dj.Columns[dj.Columns.IndexOf(MCAttribute.Language)].SetOrdinal(2);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.ProductID)].SetOrdinal(3);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.MKMPrice)].SetOrdinal(4);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Condition)].SetOrdinal(5);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Comments)].SetOrdinal(6);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Foil)].SetOrdinal(7);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Altered)].SetOrdinal(8);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Signed)].SetOrdinal(9);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Playset)].SetOrdinal(10);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Count)].SetOrdinal(11);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.Rarity)].SetOrdinal(12);
+                    dj.Columns[dj.Columns.IndexOf(MCAttribute.ExpansionAbb)].SetOrdinal(13);
 
                     stockGridView.DataSource = dj;
 

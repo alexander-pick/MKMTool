@@ -1,11 +1,11 @@
 # Welcome to MKMTool 0.8
 
 **IF YOU ARE UPDATING FROM A VERSION OLDER THAN: 
-+ 1.12.2020: delete mkminventory.csv file in your bin folder before starting MKMTool, cardmarket had some mistakes in the database (it will be recreated)
-+ 0.8.0: do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation. Also, delete "mkmtool.sqlite" file in your bin folder (don't worry, it will be created automatically anew once needed).**
++ 1.12.2020: delete mkminventory.csv file in your bin folder before starting MKMTool (it will be recreated)
++ 0.8.0: do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation.**
 
 ## Latest changes
-**Version 0.8.0.0, 30.11.2020**
+**Version 0.8.0.0, 8.12.2020**
 
 New/improved features:
 + MKM now limits the maximum number of API requests per minute to 600. MKMTool will now automatically wait before sending next request if the limit is reached.
@@ -133,12 +133,11 @@ First a small disclaimer and things to remember:
 
 ## Installation and starting off
 
-You can simply open the project in Microsoft Visual Studio Community 2015 or newer (free for private use, download URL see at the end of this file) and compile/run it. There is nothing else needed. 
+The preferred way is to compile MKMTool yourself, which is easier than it sounds. Download the code (green button in upper left corner on the main page) and unzip. Open MKMTool.sln in Microsoft Visual Studio Community 2015 or newer (free for private use, download URL see at the end of this file) and compile/run it, i.e. press the green Start button in top middle, or press F5 (see the discussion here for some common issues: https://github.com/alexander-pick/MKMTool/issues/33#issuecomment-621855056). 
 
-If you are too lazy to compile, here is a build for Windows (64-bit):
+If you do not want to do that, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.7.0.5.zip (version 0.7.0.5, compiled by [Tomas Janak](https://github.com/tomasjanak))
-https://tomasjanak.github.io/MKMTool0.8.0.0_experimental.zip (version 0.8.0.0 experimental (UseStockGetFile is not working fully correctly (ignores rarity), waiting for response from Cardmarket support), compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool, cardmarket had some mistakes in the database (it will be recreated).**
+https://tomasjanak.github.io/MKMTool0.8.0.0.zip (version 0.8.0.0 experimental), compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
@@ -395,7 +394,7 @@ Here are some URLs I thing you need to know about:
 + MKM International site: https://www.magiccardmarket.eu/
 + MKM German site: https://www.magickartenmarkt.de/
 + MKM API documentation (MKMTool uses v2.0): https://www.mkmapi.eu/ws/documentation
-+ MS Visual Studio 2015 Community: https://www.visualstudio.com/de/downloads/
++ MS Visual Studio 2015 Community: https://www.visualstudio.com/en/downloads/
 
 ### And finally
 
