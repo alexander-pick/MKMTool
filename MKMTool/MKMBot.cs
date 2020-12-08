@@ -707,7 +707,7 @@ namespace MKMTool
         /// </summary>
         /// <param name="card">The card template for which to get similar articles on sale on MKM.</param>
         /// <param name="maxNbItems">Maximum amount of items fetched from MKM. The larger the longer it usually takes MKM to process the request.</param>
-        /// <returns>List with MKM "article" nodes, one for each similar items.</returns>
+        /// <returns>List with MKM "article" nodes, one for each similar items. Null in case fetching similar items failed.</returns>
         private XmlNodeList getSimilarItems(MKMMetaCard card, int maxNbItems = 150)
         {
             string sUrl = "http://not.initilaized";
@@ -741,8 +741,6 @@ namespace MKMTool
                     userType = "commercial"; // includes professional sellers and powersellers
                 else if (settings.includePowersellers)
                     userType = "powerseller";
-                else
-                    return null; // if nothing is selected, return null
                 sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
                             (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
                             (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
@@ -872,6 +870,8 @@ namespace MKMTool
             bool ignoreSellersCountry = false;
             bool forceLog = false; // write the log even in case of no price update
             XmlNodeList similarItems = getSimilarItems(article);
+            if (similarItems == null)
+                return;
             TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
             if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
                 || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems))
