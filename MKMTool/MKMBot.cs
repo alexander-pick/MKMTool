@@ -495,6 +495,30 @@ namespace MKMTool
                     return false;
             }
         }
+
+        /// <summary>
+        /// Determines whether sellers from the specified country are allowed or not under these settings.
+        /// Logs an error if the country code is not recognized.
+        /// </summary>
+        /// <param name="countryCode">The country code.</param>
+        /// <returns>True if filtering by countries is off or the country is on the allowed list.
+        /// False otherwise or if filtering is on and the code is not in our table (need to update the table).
+        /// </returns>
+        public bool IsAllowedSellerCountry(string countryCode)
+        {
+            if (filterByCountries)
+            {
+                if (MKMHelpers.countryNames.ContainsKey(countryCode))
+                    return allowedCountryNames.Contains(MKMHelpers.countryNames[countryCode]);
+                else
+                {
+                    MKMHelpers.LogError("filtering sellers by countries",
+                        "country code " + countryCode + " not recognized. Seller will be ignored.", false);
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     internal class MKMBot
@@ -1049,8 +1073,7 @@ namespace MKMTool
                 if (ignoreSellersCountry)
                 {
                     // if we are ignoring seller's country, check the country filter
-                    if (settings.filterByCountries &&
-                        !settings.allowedCountryNames.Contains(MKMHelpers.countryNames[sellerCountryCode]))
+                    if (!settings.IsAllowedSellerCountry(sellerCountryCode))
                         continue;
                 }
                 else if (isntFromMyCountry)

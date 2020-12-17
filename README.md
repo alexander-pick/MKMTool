@@ -5,6 +5,10 @@
 + 0.8.0: do not just copy your config.xml - new variables were added to config_template.xml, keep them included in your new file. See [Installation and starting off](#Installation-and-starting-off) for details as well as the new [Settings](#Settings) documentation.
 
 ## Latest changes
+
+**Version 0.8.0.2, 8.12.2020**
++ Fixed crashes when sellers country code is not recognized during price update.
+
 **Version 0.8.0.1, 8.12.2020**
 + Fixed MKMTool crashing when it fails in fetching similar items, now it just goes to the next one.
 
@@ -140,7 +144,7 @@ The preferred way is to compile MKMTool yourself, which is easier than it sounds
 
 If you do not want to do that, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.8.0.1.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
+https://tomasjanak.github.io/MKMTool0.8.0.2.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
 
