@@ -83,6 +83,7 @@ namespace MKMTool
         {
             if (Visible)
             {
+                editionBox.Items.Clear();
                 MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
                 if (editionBox.Items.Count > 0)
                 {
@@ -120,7 +121,7 @@ namespace MKMTool
                 var item = new MKMHelpers.ComboboxItem
                 {
                     Text = nWantlist["name"].InnerText,
-                    Value = nWantlist["idWantslist"].InnerText
+                    Value = nWantlist["idWantsList"].InnerText
                 };
 
                 wantListsBox2.Items.Add(item);

@@ -126,7 +126,7 @@ namespace MKMTool
                     var item = new MKMHelpers.ComboboxItem();
 
                     item.Text = nWantlist["name"].InnerText;
-                    item.Value = nWantlist["idWantslist"].InnerText;
+                    item.Value = nWantlist["idWantsList"].InnerText;
 
                     wantListsBox.Items.Add(item);
 
