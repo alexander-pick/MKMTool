@@ -478,11 +478,6 @@ namespace MKMTool
                                 {
                                     var card = new MKMMetaCard(article);
                                     cards.Add(card);
-                                    // we can get rarities from this request -> update them in database
-                                    string idProduct = card.GetAttribute(MCAttribute.ProductID);
-                                    MKMDbManager.Instance.WriteValueToInventory(idProduct,
-                                        MKMDbManager.InventoryFields.Rarity,
-                                        card.GetAttribute(MCAttribute.Rarity));
                                 }
                             }
                             count = result.Count;

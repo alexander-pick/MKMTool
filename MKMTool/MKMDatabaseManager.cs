@@ -398,15 +398,19 @@ namespace MKMTool
         public void WriteValueToInventory(string idProduct,
             string inventoryField, string value)
         {
-            if (!SinglesByProductId.ContainsKey(idProduct)
-                && (DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
+            if (!SinglesByProductId.ContainsKey(idProduct))
             {
-                MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
+                if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
+                {
+                    MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
+                    UpdateDatabaseFiles();
+                }
+                // check again...in case we did not update the database we will call it twice in a row, but that's ok
                 if (!SinglesByProductId.ContainsKey(idProduct))
                 {
                     LogError("writing " + inventoryField + " " + value + " for product id " + idProduct,
                         "Specified product ID does not exist.", false);
+                    return;
                 }
             }
             int index = SinglesByProductId[idProduct];

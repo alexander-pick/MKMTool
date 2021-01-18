@@ -6,9 +6,10 @@
 
 ## Latest changes
 
-**Version 0.8.0.4, 18.1.2021**
+**Version 0.8.0.4, 22.1.2021**
 + Fixed crashes in Wantlist editor and Check cheap deals (System.NullReferenceException exception in function InitWantList, caused by recent changes in the API)
 + Fixed the expansion drop down list adding all expansions to the list every time the window is opened, resulting in duplicit entires in the list when opened more than once
++ Fixed some rare errors when updating database
 
 **Version 0.8.0.3, 13.1.2021**
 + Fixed crashes in View Inventory when some of the expected columns are not there.
