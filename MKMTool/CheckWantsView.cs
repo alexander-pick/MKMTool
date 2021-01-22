@@ -115,7 +115,7 @@ namespace MKMTool
             }
 
             var node = doc.GetElementsByTagName("wantslist");
-
+            wantListsBox2.Items.Clear();
             foreach (XmlNode nWantlist in node)
             {
                 var item = new MKMHelpers.ComboboxItem
