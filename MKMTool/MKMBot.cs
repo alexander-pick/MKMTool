@@ -732,7 +732,7 @@ namespace MKMTool
         /// <param name="card">The card template for which to get similar articles on sale on MKM.</param>
         /// <param name="maxNbItems">Maximum amount of items fetched from MKM. The larger the longer it usually takes MKM to process the request.</param>
         /// <returns>List with MKM "article" nodes, one for each similar items. Null in case fetching similar items failed.</returns>
-        private XmlNodeList getSimilarItems(MKMMetaCard card, int maxNbItems = 150)
+        private XmlNodeList getSimilarItems(MKMMetaCard card, int maxNbItems)
         {
             string sUrl = "http://not.initilaized";
             string condition = card.GetAttribute(MCAttribute.Condition);
@@ -893,7 +893,7 @@ namespace MKMTool
             int lastMatch = -1;
             bool ignoreSellersCountry = false;
             bool forceLog = false; // write the log even in case of no price update
-            XmlNodeList similarItems = getSimilarItems(article);
+            XmlNodeList similarItems = getSimilarItems(article, MainView.Instance.Config.MaxArticlesFetched);
             if (similarItems == null)
                 return;
             TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);

@@ -96,6 +96,11 @@ namespace MKMTool
                                     MyCountryCode = setting.InnerText;
                                 // else leave the default, i.e. ""
                                 break;
+                            case "ArticleCountFetched":
+                                if (int.TryParse(setting.InnerText, out int maxArticlesFetched))
+                                    // must be positive, but at most 1000
+                                    MaxArticlesFetched = Math.Min(Math.Max(maxArticlesFetched, 1), 1000);
+                                break;
                         }
                     }
                 }
@@ -106,6 +111,8 @@ namespace MKMTool
                 = new List<MKMHelpers.GameDesc>{ new MKMHelpers.GameDesc("1", "1")};  // be default only MtG
             public string CSVExportSeparator { get; } = ",";
             public string MyCountryCode { get; set; } = ""; // to find domestic deals, empty to be automatically detected
+
+            public int MaxArticlesFetched { get; } = 150; // used for the "article" API request
         }
         private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);
