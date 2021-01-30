@@ -49,7 +49,7 @@
             this.listBoxContent.Location = new System.Drawing.Point(12, 38);
             this.listBoxContent.Name = "listBoxContent";
             this.listBoxContent.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxContent.Size = new System.Drawing.Size(258, 634);
+            this.listBoxContent.Size = new System.Drawing.Size(258, 652);
             this.listBoxContent.TabIndex = 0;
             this.listBoxContent.SelectedValueChanged += new System.EventHandler(this.listBoxContent_SelectedValueChanged);
             // 
@@ -58,7 +58,7 @@
             this.buttonConfirm.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonConfirm.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonConfirm.Location = new System.Drawing.Point(12, 702);
+            this.buttonConfirm.Location = new System.Drawing.Point(12, 726);
             this.buttonConfirm.Name = "buttonConfirm";
             this.buttonConfirm.Size = new System.Drawing.Size(258, 34);
             this.buttonConfirm.TabIndex = 2;
@@ -92,7 +92,7 @@
             this.panelForHint.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelForHint.Controls.Add(this.labelHint);
-            this.panelForHint.Location = new System.Drawing.Point(12, 689);
+            this.panelForHint.Location = new System.Drawing.Point(12, 713);
             this.panelForHint.Name = "panelForHint";
             this.panelForHint.Size = new System.Drawing.Size(257, 10);
             this.panelForHint.TabIndex = 4;
@@ -112,7 +112,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(282, 737);
+            this.ClientSize = new System.Drawing.Size(282, 761);
             this.Controls.Add(this.panelForHint);
             this.Controls.Add(this.buttonConfirm);
             this.Controls.Add(this.listBoxContent);

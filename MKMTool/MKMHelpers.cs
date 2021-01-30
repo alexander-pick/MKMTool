@@ -118,7 +118,7 @@ namespace MKMTool
             { "DK", "Denmark" }, { "EE", "Estonia" },
             { "FI", "Finland" }, { "FR", "France" },
             { "D", "Germany" },  { "GR", "Greece"  },   // MKM's exception, ISO code for Germany is DE
-            { "HU", "Hungary" },
+            { "HK", "Hong Kong" }, { "HU", "Hungary" }, 
             { "IS", "Iceland" }, { "IE", "Ireland" }, {"IT", "Italy" },
             { "JP", "Japan" },
             { "LV", "Latvia" }, { "LI", "Liechtenstein" }, {"LT", "Lithuania" }, { "LU", "Luxembourg" },

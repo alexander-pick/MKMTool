@@ -6,6 +6,9 @@
 
 ## Latest changes
 
+**Version 0.8.1.0, 31.1.2021**
++ Added Hong Kong among supported countries
+
 **Version 0.8.0.4, 22.1.2021**
 + Fixed crashes in Wantlist editor and Check cheap deals (System.NullReferenceException exception in function InitWantList, caused by recent changes in the API)
 + Fixed the drop down lists for expansions and wanlist names multiplicating their entries every time the window is opened
