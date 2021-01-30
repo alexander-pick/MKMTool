@@ -897,8 +897,9 @@ namespace MKMTool
             if (similarItems == null)
                 return;
             TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
-            if (settings.searchWorldwide && res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
-                || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems))
+            if (settings.searchWorldwide && 
+                (res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
+                || (settings.condAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.priceMinSimilarItems)))
                 // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
             {
                 ignoreSellersCountry = true;

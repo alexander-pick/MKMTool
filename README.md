@@ -8,6 +8,7 @@
 
 **Version 0.8.1.0, 31.1.2021**
 + Added Hong Kong among supported countries
++ Fixed wordlwide search sometimes being performed even when turned on (when using the "accept better if there is at least one more expensive match" condition option) 
 
 **Version 0.8.0.4, 22.1.2021**
 + Fixed crashes in Wantlist editor and Check cheap deals (System.NullReferenceException exception in function InitWantList, caused by recent changes in the API)
