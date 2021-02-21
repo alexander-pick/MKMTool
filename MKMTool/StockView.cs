@@ -103,6 +103,14 @@ namespace MKMTool
                         if (dj.Columns.Contains(att))
                             dj.Columns[dj.Columns.IndexOf(att)].SetOrdinal(ordinal++);
                     }
+                    
+                    // convert columns with numerical data from string so that sorting works correctly
+                    if (dj.Columns.Contains(MCAttribute.ProductID))
+                      convertNumberColumn(dj, MCAttribute.ProductID, false);
+                    if (dj.Columns.Contains(MCAttribute.Count))
+                      convertNumberColumn(dj, MCAttribute.Count, false);
+                    if (dj.Columns.Contains(MCAttribute.MKMPrice))
+                      convertNumberColumn(dj, MCAttribute.MKMPrice, true);
 
                     stockGridView.DataSource = dj;
 
@@ -113,6 +121,27 @@ namespace MKMTool
                     MKMHelpers.LogError("listing stock in Stock View", eError.Message, true);
                 }
             }
+        }
+
+        private void convertNumberColumn(DataTable table, string columnName, bool isFloat)
+        {
+            string tempName = columnName + "convertNumberColumnTemp";
+            DataColumn convertedCol = new DataColumn(tempName, isFloat ? typeof(float) : typeof(int))
+            {
+              DefaultValue = -9999 // this is default we use in price external list as well, so should be recognizable
+            };
+            table.Columns.Add(convertedCol);
+            foreach (DataRow row in table.Rows)
+            {
+                if (isFloat)
+                  row[tempName] = Convert.ToSingle(row[columnName], 
+                    System.Globalization.CultureInfo.InvariantCulture);
+                else
+                  row[tempName] = Convert.ToInt32(row[columnName], 
+                    System.Globalization.CultureInfo.InvariantCulture);
+            }
+            table.Columns.Remove(columnName);
+            convertedCol.ColumnName = columnName;
         }
 
         /// <summary>

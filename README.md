@@ -11,6 +11,7 @@
 + Added an ArticleCountFetched config parameter, see documentation in the [Settings](#Settings) section. Relevant only if you are using only "expensive" countries and often get a "not enough similar items found"
 + Added Hong Kong among supported countries
 + Fixed wordlwide search sometimes being performed even when turned off (when using the "accept better if there is at least one more expensive match" condition option) 
++ Fixed sorting in Stock View for numerical columns (price, count, idProduct) to be numerical, not alphabetical.
 
 **Version 0.8.0.4, 22.1.2021**
 + Fixed crashes in Wantlist editor and Check cheap deals (System.NullReferenceException exception in function InitWantList, caused by recent changes in the API)
