@@ -45,6 +45,7 @@ namespace MKMTool
     {
         // My userId (to disregard items listed by myself when setting a new price)
         public static string sMyId = "0";
+        public static string sMyCurrencyId = "1";
 
         private static readonly object errorLogLock = new object();
 
@@ -223,10 +224,29 @@ namespace MKMTool
         /// <returns>
         ///   <c>true</c> if <c>itemCond</c> is in better or same conditions than the <c>reference</c>; otherwise, <c>false</c>.
         /// </returns>
-        public static bool IsBetterOrSameCondition(String itemCond, String reference)
+        public static bool IsBetterOrSameCondition(string itemCond, string reference)
         {
             return convertCondition(itemCond) >= convertCondition(reference);
 
+        }
+
+        /// <summary>
+        /// From a xml response object with prices extracts the price in the currency of our account.
+        /// </summary>
+        /// <param name="prices">Node that is expected to include one or more "prices" node.
+        /// This is e.g. the Article response nodes.</param>
+        /// <returns>Price in the sMyCurrencyId currency. -1 in case the price is not found (invalid object, logged as error).</returns>
+        public static float GetPriceFromXml(XmlNode prices)
+        {
+            foreach (XmlNode child in prices.SelectNodes("prices"))
+            {
+                if (child["idCurrency"].InnerText == sMyCurrencyId)
+                {
+                    return Convert.ToSingle(child["price"].InnerText, System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
+            LogError("getting price", "price not found in the specified xml object", false, prices.InnerXml);
+            return -1;
         }
 
         public static string PrettyXml(string xml)

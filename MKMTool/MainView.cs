@@ -212,6 +212,7 @@ namespace MKMTool
                 if (Config.MyCountryCode == "") // signifies user wants auto-detect, otherwise the chosen setting overrides what we get from MKM
                     Config.MyCountryCode = doc2["response"]["account"]["country"].InnerText;
                 MKMHelpers.sMyId = doc2["response"]["account"]["idUser"].InnerText;
+                MKMHelpers.sMyCurrencyId = doc2["response"]["account"]["moneyDetails"]["idCurrency"].InnerText;
             }
             catch (Exception eError)
             {

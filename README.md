@@ -7,9 +7,10 @@
 ## Latest changes
 
 **Version 0.8.1.0, 31.1.2021**
++ Fixed/Added support for other currencies than EUR. All prices will now be fetched in the currency of your account (this was supposed to work automatically according to communication from support, but they misinformed us). Small exception: in Download Buys, the price is in the currency the purchase was made.
 + Added an ArticleCountFetched config parameter, see documentation in the [Settings](#Settings) section. Relevant only if you are using only "expensive" countries and often get a "not enough similar items found"
 + Added Hong Kong among supported countries
-+ Fixed wordlwide search sometimes being performed even when turned on (when using the "accept better if there is at least one more expensive match" condition option) 
++ Fixed wordlwide search sometimes being performed even when turned off (when using the "accept better if there is at least one more expensive match" condition option) 
 
 **Version 0.8.0.4, 22.1.2021**
 + Fixed crashes in Wantlist editor and Check cheap deals (System.NullReferenceException exception in function InitWantList, caused by recent changes in the API)
@@ -157,9 +158,9 @@ The preferred way is to compile MKMTool yourself, which is easier than it sounds
 
 If you do not want to do that, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.8.0.4.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
+https://tomasjanak.github.io/MKMTool0.8.1.0.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
 
-Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile there. Please note that you need an account which is able to sell to use most of the seller functions.
+Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile: on the cardmarket website, click Account -> API Settings and generate tokens for "Dedicated App" (you can put anything you want as the app name). You need an account which is able to sell to use most of the seller functions. Once you generate it, four random strings of letters and numbers will appear there, copy-pasete those to your config.xml (see how-to run below for details).
 
 **Short how-to run**
 

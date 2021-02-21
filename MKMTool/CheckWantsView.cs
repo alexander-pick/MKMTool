@@ -133,7 +133,7 @@ namespace MKMTool
         /// <summary>
         /// For actually performing the check for cheap deals from wantlist, expected to be run in its separate thread
         /// </summary>
-        private void checkListRun(string listID, double maxAllowedPrice, double shippingAdd, double percentBelow, bool checkTrend)
+        private void checkListRun(string listID, float maxAllowedPrice, float shippingAdd, float percentBelow, bool checkTrend)
         {
             XmlDocument doc;
             try
@@ -207,9 +207,9 @@ namespace MKMTool
             string sListId = (wantListsBox2.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
 
             // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
-            double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
-            double shippingAdd = Convert.ToDouble(shipAddition.Text);
-            double percentBelow = Convert.ToDouble(percentText.Text);
+            float maxAllowedPrice = Convert.ToSingle(maxPrice.Text);
+            float shippingAdd = Convert.ToSingle(shipAddition.Text);
+            float percentBelow = Convert.ToSingle(percentText.Text);
             bool checkTrend = checkBoxTrend.Checked;
 
             groupBoxParams.Enabled = false;
@@ -245,7 +245,7 @@ namespace MKMTool
         /// </summary>
         /// <param name="selectedExpansionID">Leave as empty string if all expansion should be checked.</param>
         private void checkUserRun(string user, string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
-            bool domesticOnly, double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend,
+            bool domesticOnly, float maxPrice, float shippingAddition, float percentBelowOthers, bool checkTrend,
             System.Collections.Generic.List<string> selectedLanguage, string selectedExpansionID = "")
         {
             MainView.Instance.LogMainWindow("Check for cheap deals from seller '" + user + "'...");
@@ -279,7 +279,9 @@ namespace MKMTool
                         if (card == null || card.Field<string>(MKMDbManager.InventoryFields.ExpansionID) != selectedExpansionID)
                             continue;
                     }
-
+                    float price = MKMHelpers.GetPriceFromXml(article);
+                    if (price < 0)
+                        continue;
                     if ( // do as much filtering here as possible to reduce the number of API calls
                         MKMHelpers.IsBetterOrSameCondition(article["condition"].InnerText, minCondition) &&
                         (!foilBox.Checked || article["isFoil"].InnerText == "true") &&
@@ -287,7 +289,7 @@ namespace MKMTool
                         (selectedLanguage[0] == "" || article["language"]["idLanguage"].InnerText == selectedLanguage[0]) &&
                         (!signedBox.Checked || article["isSigned"].InnerText == "true") &&
                         (!signedBox.Checked || article["isAltered"].InnerText == "true") &&
-                        (maxPrice >= Convert.ToDouble(article["price"].InnerText, CultureInfo.InvariantCulture))
+                        (maxPrice >= price)
                         )
                     {
 
@@ -308,7 +310,7 @@ namespace MKMTool
         /// For actually performing the check for cheap deals, expected to be run in its separate thread
         /// </summary>
         private void checkExpansionRun(string isFoil, string isSigned, string isAltered, string isPlayset, string minCondition,
-            double maxPrice, double shippingAddition, double percentBelowOthers, bool checkTrend, string selectedExpansionID,
+            float maxPrice, float shippingAddition, float percentBelowOthers, bool checkTrend, string selectedExpansionID,
             System.Collections.Generic.List<string> selectedLanguage)
         {
             var sT = MKMDbManager.Instance.GetCardsInExpansion(selectedExpansionID);
@@ -333,9 +335,9 @@ namespace MKMTool
             string isAltered = "";
             string isPlayset = "";
             string minCondition = conditionCombo.Text;
-            double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
-            double shippingAdd = Convert.ToDouble(shipAddition.Text);
-            double percentBelow = Convert.ToDouble(percentText.Text);
+            float maxAllowedPrice = Convert.ToSingle(maxPrice.Text);
+            float shippingAdd = Convert.ToSingle(shipAddition.Text);
+            float percentBelow = Convert.ToSingle(percentText.Text);
             bool checkTrend = checkBoxTrend.Checked;
             string selectedExpansionID = ((MKMHelpers.ComboboxItem)editionBox.SelectedItem).Value.ToString();
 
@@ -377,9 +379,9 @@ namespace MKMTool
             string isAltered = "";
             string isPlayset = "";
             string minCondition = conditionCombo.Text;
-            double maxAllowedPrice = Convert.ToDouble(maxPrice.Text);
-            double shippingAdd = Convert.ToDouble(shipAddition.Text);
-            double percentBelow = Convert.ToDouble(percentText.Text);
+            float maxAllowedPrice = Convert.ToSingle(maxPrice.Text);
+            float shippingAdd = Convert.ToSingle(shipAddition.Text);
+            float percentBelow = Convert.ToSingle(percentText.Text);
             bool checkTrend = checkBoxTrend.Checked;
             string selectedExpansionID = ((MKMHelpers.ComboboxItem)editionBox.SelectedItem).Value.ToString();
 
@@ -413,7 +415,7 @@ namespace MKMTool
         // idLanguages - list of languages to check for. if all are OK, pass in either an empty list or a list with exactly one entry which is an empty string
         private void checkArticle(string idProduct, System.Collections.Generic.List<string> idLanguages, string minCondition, string isFoil,
             string isSigned, string isAltered, string isPlayset, string matchingArticle, 
-            double maxAllowedPrice, double shippingAddition, double percentBelowOthers, bool checkTrend)
+            float maxAllowedPrice, float shippingAddition, float percentBelowOthers, bool checkTrend)
         {
             var sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + idProduct +
                        "?minCondition=" + minCondition +
@@ -497,7 +499,10 @@ namespace MKMTool
                     continue;
 
                 // save cheapest price found anywhere
-                aPrices[counter] = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
+                float price = Convert.ToSingle(MKMHelpers.GetPriceFromXml(offer), CultureInfo.InvariantCulture);
+                if (price < 0)
+                    continue;
+                aPrices[counter] = price;
                 if (noBestPrice)
                 {
                     bestPriceInternational = aPrices[counter];
@@ -523,7 +528,7 @@ namespace MKMTool
 
                 if (counter == 3)
                 {                        
-                    double factor = percentBelowOthers;
+                    float factor = percentBelowOthers;
 
                     factor = factor / 100 + 1;
 
@@ -538,7 +543,7 @@ namespace MKMTool
                         && (aPrices[0] * factor + shippingAddition < aPrices[2])
                         )
                     {
-                        double fTrendprice = 100000; // fictive price 
+                        float fTrendprice = 100000; // fictive price 
 
                         if (checkTrend)
                         {
@@ -549,7 +554,7 @@ namespace MKMTool
                                         "https://api.cardmarket.com/ws/v2.0/products/" + idProduct, "GET");
 
                                 fTrendprice =
-                                    Convert.ToDouble(doc3.GetElementsByTagName("TREND")[0].InnerText.Replace(".", ","));
+                                    Convert.ToSingle(doc3.GetElementsByTagName("TREND")[0].InnerText.Replace(".", ","));
 
                                 MainView.Instance.LogMainWindow("Trend: " + fTrendprice);
                             }

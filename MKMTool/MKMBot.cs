@@ -1086,7 +1086,9 @@ namespace MKMTool
                     if (offer["condition"].InnerText != articleCondition && settings.condAcceptance == AcceptedCondition.OnlyMatching)
                         continue;
 
-                    float price = Convert.ToSingle(offer["price"].InnerText, CultureInfo.InvariantCulture);
+                    float price = MKMHelpers.GetPriceFromXml(offer);
+                    if (price < 0) // error, price not found
+                        continue;
                     if (ignorePlaysets && (offer["isPlayset"] != null)  && (offer["isPlayset"].InnerText == "true")) // if we are ignoring playsets, work with the price of a single
                         price /= 4.0f;
 
@@ -1245,6 +1247,9 @@ namespace MKMTool
                                     + separ + expansion
                                     + separ + article["language"]["languageName"].InnerText
                                     + separ + article["price"].InnerText + "\"");
+                                // note: this article contains price in only one currency, likely the one used to make the purchase
+                                // so do not use MKMHelpers.GetPriceFromXml. Also, for accounts that switched between currencies,
+                                // there will be just one price column but it will have prices in different currencies...
                             }
                             catch (Exception eError)
                             {
