@@ -59,6 +59,8 @@
     <!--how many cheapest articles MKMTool gets from MKM. Filtering by country happens only after - if you use very restricting filter by "expensive" countries, there might not be any articles left among the first ArticleCountFetched articles-->
     <!--but increasing this number can lead to slower performance, keep it low unless you often get "not enough similar items found" in cases that should work-->
     <ArticleCountFetched>150</ArticleCountFetched><!--Minimum 1, Maximum 1000, will be clamped to these extremes if you enter less or more-->
+    <!--if a request times out, it will be attempted again at most this many times. must be at least 1-->
+    <MaxTimeoutRepeat>4</MaxTimeoutRepeat>
   </settings>
   <appToken>ENTER_YOUR_APP_TOKEN_INSTEAD_OF_THIS_TEXT</appToken>
   <appSecret>ENTER_YOUR_APP_SECRET_INSTEAD_OF_THIS_TEXT</appSecret>

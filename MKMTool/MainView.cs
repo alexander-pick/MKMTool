@@ -101,6 +101,11 @@ namespace MKMTool
                                     // must be positive, but at most 1000
                                     MaxArticlesFetched = Math.Min(Math.Max(maxArticlesFetched, 1), 1000);
                                 break;
+                            case "MaxTimeoutRepeat":
+                                if (int.TryParse(setting.InnerText, out int maxTimeoutRepeat))
+                                    // must be at least 1, otherwise there is no point in turning MKMTool on
+                                    MaxTimeoutRepeat = Math.Max(1, maxTimeoutRepeat);
+                                break;
                         }
                     }
                 }
@@ -113,6 +118,7 @@ namespace MKMTool
             public string MyCountryCode { get; set; } = ""; // to find domestic deals, empty to be automatically detected
 
             public int MaxArticlesFetched { get; } = 150; // used for the "article" API request
+            public int MaxTimeoutRepeat { get; } = 4; // how many times to repeat time-outed requests
         }
         private delegate void logboxAppendCallback(string text); // use MainView.Instance.LogMainWindow(string) to log messages
         public delegate void updateRequestCountCallback(int requestsPerformed, int requestsLimit);

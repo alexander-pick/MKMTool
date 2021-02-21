@@ -94,43 +94,67 @@ namespace MKMTool
 
                 requestTimes.Enqueue(DateTime.Now);
                 XmlDocument doc = new XmlDocument();
-                var request = WebRequest.CreateHttp(url);
-                request.Method = method;
-
-                request.Headers.Add(HttpRequestHeader.Authorization, header.getAuthorizationHeader(method, url));
-                request.Method = method;
-
-                if (body != null)
+                for (int numAttempts = 0; numAttempts < MainView.Instance.Config.MaxTimeoutRepeat; numAttempts++)
                 {
-                    request.ServicePoint.Expect100Continue = false;
-                    request.ContentLength = System.Text.Encoding.UTF8.GetByteCount(body);
-                    request.ContentType = "text/xml";
+                    try
+                    {
+                        var request = WebRequest.CreateHttp(url);
+                        request.Method = method;
 
-                    var writer = new StreamWriter(request.GetRequestStream());
+                        request.Headers.Add(HttpRequestHeader.Authorization, header.getAuthorizationHeader(method, url));
+                        request.Method = method;
 
-                    writer.Write(body);
-                    writer.Close();
+                        if (body != null)
+                        {
+                            request.ServicePoint.Expect100Continue = false;
+                            request.ContentLength = System.Text.Encoding.UTF8.GetByteCount(body);
+                            request.ContentType = "text/xml";
+
+                            var writer = new StreamWriter(request.GetRequestStream());
+
+                            writer.Write(body);
+                            writer.Close();
+                        }
+
+                        var response = request.GetResponse() as HttpWebResponse;
+
+                        // just for checking EoF, it is not accessible directly from the Stream object
+                        // Empty streams can be returned for example for article fetches that result in 0 matches (happens regularly when e.g. seeking nonfoils in foil-only promo sets). 
+                        // Passing empty stream to doc.Load causes exception and also sometimes seems to screw up the XML parser 
+                        // even when the exception is handled and it then causes problems for subsequent calls => first check if the stream is empty
+                        StreamReader s = new StreamReader(response.GetResponseStream());
+                        if (!s.EndOfStream)
+                            doc.Load(s);
+                        s.Close();
+                        int requestCount = int.Parse(response.Headers.Get("X-Request-Limit-Count"));
+                        int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));
+                        if (requestCount >= requestLimit)
+                        {
+                            denyAdditionalRequests = true;
+                            denyTime = System.DateTime.UtcNow;
+                        }
+                        MainView.Instance.Invoke(new MainView.updateRequestCountCallback(MainView.Instance.UpdateRequestCount), requestCount, requestLimit);
+                        break;
+                    }
+                    catch (WebException webEx)
+                    {
+                        // timeout can be either on our side (Timeout) or on server
+                        bool isTimeout = webEx.Status == WebExceptionStatus.Timeout;
+                        if (webEx.Status == WebExceptionStatus.ProtocolError)
+                        {
+                            if (webEx.Response is HttpWebResponse response)
+                            {
+                                isTimeout = response.StatusCode == HttpStatusCode.GatewayTimeout
+                                    || response.StatusCode == HttpStatusCode.ServiceUnavailable;
+                            }
+                        }
+                        // handle only timeouts, client handles other exceptions
+                        if (isTimeout && numAttempts + 1 < MainView.Instance.Config.MaxTimeoutRepeat)
+                            System.Threading.Thread.Sleep(1500); // wait and try again
+                        else
+                            throw webEx;
+                    }
                 }
-
-                var response = request.GetResponse() as HttpWebResponse;
-
-                // just for checking EoF, it is not accessible directly from the Stream object
-                // Empty streams can be returned for example for article fetches that result in 0 matches (happens regularly when e.g. seeking nonfoils in foil-only promo sets). 
-                // Passing empty stream to doc.Load causes exception and also sometimes seems to screw up the XML parser 
-                // even when the exception is handled and it then causes problems for subsequent calls => first check if the stream is empty
-                StreamReader s = new StreamReader(response.GetResponseStream());
-                if (!s.EndOfStream)
-                    doc.Load(s);
-                s.Close();
-                int requestCount = int.Parse(response.Headers.Get("X-Request-Limit-Count"));
-                int requestLimit = int.Parse(response.Headers.Get("X-Request-Limit-Max"));
-                if (requestCount >= requestLimit)
-                {
-                    denyAdditionalRequests = true;
-                    denyTime = System.DateTime.UtcNow;
-                }
-                MainView.Instance.Invoke(new MainView.updateRequestCountCallback(MainView.Instance.UpdateRequestCount), requestCount, requestLimit);
-    
                 return doc;
             }
 
