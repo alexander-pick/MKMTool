@@ -11,6 +11,7 @@
 + Fixed/Added support for other currencies than EUR. All prices will now be fetched in the currency of your account (this was supposed to work automatically according to communication from support, but they misinformed us). Small exception: in Download Buys, the price is in the currency the purchase was made.
 + Added an ArticleCountFetched config parameter, see documentation in the [Settings](#Settings) section. Relevant only if you are using only "expensive" countries and often get a "not enough similar items found"
 + Added Hong Kong among supported countries
++ Expansions database is now kept not just for M:tG, but for all the games you have allowed in your config.xml. Each is stored in its own file (ExpansionsDatabase\mkmexpansions_[gameID].csv), but when MKMTool works with them it concatenates those file into a single database. So modules like "check display value" will have all expansions of all your games in the expansions menu together. This can potentially lead to problems if two games have expansions with the same name, if you run into such problem, just temporarily comment out one of the games and do your work in two separate batches.
 + Fixed wordlwide search sometimes being performed even when turned off (when using the "accept better if there is at least one more expensive match" condition option) 
 + Fixed sorting in Stock View for numerical columns (price, count, idProduct) to be numerical, not alphabetical.
 

@@ -55,7 +55,7 @@ namespace MKMTool
         #region initialization
 
         /// <summary>
-        /// DataTable with all MTG singles in the MKM's inventory.
+        /// DataTable with all singles in the MKM's inventory.
         /// Each row is a record for one card with the following entries: "idProduct","Name","Expansion ID","Metacard ID","Date Added"
         /// Avoid using this as working with the entire inventory is slow, use InventorySinglesOnly whenever possible.
         /// </summary>
@@ -87,7 +87,8 @@ namespace MKMTool
         }
 
         /// <summary>
-        /// DataTable with all expansions of MtG in the MKM's inventory.
+        /// DataTable with all expansions of games selected in the config file.
+        /// If multiple games are selected, all their expansions are mangled together in this table.
         /// Each row is a record for one card with the following entries: "idExpansion","abbreviation","enName"
         /// </summary>
         public DataTable Expansions { get; private set; } = new DataTable();
@@ -105,7 +106,7 @@ namespace MKMTool
 
         // Explicit static constructor to tell C# compiler
         // not to mark type as beforefieldinit.
-        // To ensure thead-safety, source: https://csharpindepth.com/articles/singleton
+        // To ensure thread-safety, source: https://csharpindepth.com/articles/singleton
         static MKMDbManager()
         { }
 
@@ -149,12 +150,9 @@ namespace MKMTool
                 SinglesByProductId[InventorySinglesOnly[i].Field<string>(InventoryFields.ProductID)] = i;
         }
 
-        /// <summary>
         /// Fetches the latest database from MKM, stores it as a CSV file and re-loads the internal structures of this database manager with new data.
-        /// Also creates the SQL database and stores it as mkmtool.sqlite file.
-        /// </summary>
         /// <returns><c>False</c> in case the update failed either due to bad response from MKM or IO problems.</returns>
-        public bool UpdateDatabaseFiles()
+        private bool updateInventoryDatabaseFile()
         {
             try
             {
@@ -190,101 +188,87 @@ namespace MKMTool
                 LogError("downloading MKM inventory", eError.Message, true);
                 return false;
             }
-            try 
-            { 
-                MainView.Instance.LogMainWindow("Updating MKM expansions database...");
+            return true;
+        }
 
-                // build expansions
-                var doc = MKMInteract.RequestHelper.getExpansions("1"); // Only MTG at present
-                var node = doc.GetElementsByTagName("expansion");
-
-                using (StreamWriter exp = new StreamWriter(@".\\mkmexpansions.csv"))
-                {
-                    exp.WriteLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\"",
-                        ExpansionsFields.ExpansionID, ExpansionsFields.Abbreviation, ExpansionsFields.Name, ExpansionsFields.ReleaseDate));
-                    foreach (XmlNode nExpansion in node)
-                    {
-                        exp.WriteLine("\"" + nExpansion[ExpansionsFields.ExpansionID].InnerText + "\",\"" // put commas around each, in case wizards ever decide to do set with a comma in the name
-                            + nExpansion[ExpansionsFields.Abbreviation].InnerText + "\",\"" + nExpansion[ExpansionsFields.Name].InnerText + "\",\""
-                            + nExpansion[ExpansionsFields.ReleaseDate].InnerText + "\"");
-                    }
-                }
-                MainView.Instance.LogMainWindow("MKM expansions database updated.");
-            }
-            catch (Exception eError)
+        /// Forces the update of all database files and reload of the internal database manager structures.
+        /// <returns>False in case of any failure (exceptions are reported inside).</returns>
+        public bool UpdateDatabaseFiles()
+        {
+          if (updateInventoryDatabaseFile())
+          {
+            foreach (var game in MainView.Instance.Config.Games)
             {
-                LogError("downloading MKM expansions", eError.Message, true);
+              if (!updateExpansionsDatabaseFiles(game))
                 return false;
             }
+            loadExpansionDatabase();
+            return true;
+          }
+          return false;
+        }
+
+        /// Fetches the latest expansions database for a given game from MKM and stores it as a CSV file.
+        /// Does NOT re-load the internal database manager structures - loadExpansionDatabase has to be called once all games are up to date. 
+        /// <param name="game">The game for which to load the database.</param>
+        /// <returns><c>False</c> in case the update failed either due to bad response from MKM or IO problems.</returns>
+        private bool updateExpansionsDatabaseFiles(GameDesc game)
+        {
+          if (MainView.Instance.Config.Games.Count == 0)
+          {
+            LogError("updating expansion database", "No games specified in config.xml.", true);
+            return false;
+          }
+          try
+          {
+            MainView.Instance.LogMainWindow("Updating MKM expansions database...");
+            // build expansions
+            var doc = MKMInteract.RequestHelper.getExpansions(game.GameID);
+            var node = doc.GetElementsByTagName("expansion");
+
+            using (StreamWriter exp = new StreamWriter(@".\\ExpansionsDatabase\\mkmexpansions_" + game.GameID + ".csv"))
+            {
+              exp.WriteLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\"",
+                  ExpansionsFields.ExpansionID, ExpansionsFields.Abbreviation, ExpansionsFields.Name, ExpansionsFields.ReleaseDate));
+              foreach (XmlNode nExpansion in node)
+              {
+                exp.WriteLine("\"" + nExpansion[ExpansionsFields.ExpansionID].InnerText + "\",\"" // put commas around each, in case wizards ever decide to do set with a comma in the name
+                    + nExpansion[ExpansionsFields.Abbreviation].InnerText + "\",\"" + nExpansion[ExpansionsFields.Name].InnerText + "\",\""
+                    + nExpansion[ExpansionsFields.ReleaseDate].InnerText + "\"");
+              }
+            }
+            MainView.Instance.LogMainWindow("MKM expansions database updated.");
+          }
+          catch (Exception eError)
+          {
+            LogError("downloading MKM expansions", eError.Message, true);
+            return false;
+          }
+          return true;
+        }
+
+        // ! Already assumes all files are loaded, shows an error otherwise.
+        private void loadExpansionDatabase()
+        {
+          if (MainView.Instance.Config.Games.Count > 0)
+          {
             try
             {
-                Expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
+              // Expansions will have all expansions of all games merged - this could theoretically make issues if there are
+              // two expansions with the same name (each from a different game)
+              Expansions = ConvertCSVtoDataTable(@".\\ExpansionsDatabase\\mkmexpansions_"
+                + MainView.Instance.Config.Games[0].GameID + ".csv"); // initialize the database by the first game
+              for (int i = 1; i < MainView.Instance.Config.Games.Count; i++)
+              {
+                Expansions.Merge(ConvertCSVtoDataTable(@".\\ExpansionsDatabase\\mkmexpansions_"
+                  + MainView.Instance.Config.Games[i].GameID + ".csv"));
+              }
             }
             catch (Exception eError)
             {
-                LogError("parsing mkm inventory, product list cannot be obtained", eError.Message, true);
-                return false;
+              LogError("parsing expansion database", eError.Message, true);
             }
-
-#if false // if you want the sql database for some reason, change this to true. MKMTool does not use it and creating it takes unnecessary time
-            // Store the database as an SQL database. This is currently not actually used anywhere by MKMTool itself,
-            // but it has existed in previous versions, might be used by other software and might have other uses in the future, so for now we keep it.
-            // However, if something fails, we continue as if nothing happened.
-            SQLiteConnection m_dbConnection;
-            
-            var sql2 = CreateTableSql(Inventory, "inventory");
-
-            Console.WriteLine(sql2);
-
-            if (!File.Exists("mkmtool.sqlite"))
-            {
-                SQLiteConnection.CreateFile("mkmtool.sqlite");
-
-                m_dbConnection = new SQLiteConnection("Data Source=mkmtool.sqlite;Version=3;");
-                m_dbConnection.Open();
-
-                var sql = CreateTableSql(Inventory, "inventory");
-
-                var command = new SQLiteCommand(sql, m_dbConnection);
-
-                command.ExecuteNonQuery();
-
-                sql = string.Format("CREATE TABLE expansions ({0}, {1}, {2}, {3})",
-                    ExpansionsFields.ExpansionID, ExpansionsFields.Abbreviation, ExpansionsFields.Name, ExpansionsFields.ReleaseDate);
-
-                command = new SQLiteCommand(sql, m_dbConnection);
-
-                command.ExecuteNonQuery();
-            }
-            else
-            {
-                //clean inventory table
-                m_dbConnection = new SQLiteConnection("Data Source=mkmtool.sqlite;Version=3;");
-                m_dbConnection.Open();
-
-                var sql = "DELETE FROM inventory";
-
-                var command = new SQLiteCommand(sql, m_dbConnection);
-                command.ExecuteNonQuery();
-
-                sql = "DELETE FROM expansions";
-
-                command = new SQLiteCommand(sql, m_dbConnection);
-                command.ExecuteNonQuery();
-
-                sql = "VACUUM";
-
-                command = new SQLiteCommand(sql, m_dbConnection);
-                command.ExecuteNonQuery();
-            }
-
-            BulkInsertDataTable("inventory", Inventory, m_dbConnection);
-
-            BulkInsertDataTable("expansions", Expansions, m_dbConnection);
-
-            m_dbConnection.Close();
-#endif
-            return true;
+          }
         }
 
         /// <summary>
@@ -301,18 +285,17 @@ namespace MKMTool
             Inventory.Columns.Add(InventoryFields.MetaproductID);
             Inventory.Columns.Add(InventoryFields.DateAdded);
             Inventory.Columns.Add(InventoryFields.Rarity);
-            if (!File.Exists(@".\\mkminventory.csv") || !File.Exists(@".\\mkmexpansions.csv"))
+            if (!File.Exists(@".\\mkminventory.csv"))
             {
                 MainView.Instance.LogMainWindow("Local inventory database not found, downloading...");
-                if (UpdateDatabaseFiles())
+                if (updateInventoryDatabaseFile())
                     MainView.Instance.LogMainWindow("Database created.");
                 else return;// updateDatabaseFiles reported the error
             }
-            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalDays > 100 ||
-                (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalDays > 100)
+            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalDays > 100)
             {
                 MainView.Instance.LogMainWindow("Local inventory database is more than 100 days old, updating...");
-                if (UpdateDatabaseFiles())
+                if (updateInventoryDatabaseFile())
                     MainView.Instance.LogMainWindow("Database updated.");
                 else return;// updateDatabaseFiles reported the error
             }
@@ -323,13 +306,35 @@ namespace MKMTool
                     Inventory = ConvertCSVtoDataTable(@".\\mkminventory.csv");
                     buildSinglesDatabase();
                     Inventory.AcceptChanges();
-                    Expansions = ConvertCSVtoDataTable(@".\\mkmexpansions.csv"); // grab only MTG Singles
                 }
                 catch (Exception eError)
                 {
                     LogError("reading local database files", eError.Message, true);
                 }
             }
+            // load expansions
+            if (!Directory.Exists(@".\\ExpansionsDatabase)"))
+              Directory.CreateDirectory(@".\\ExpansionsDatabase");
+            foreach (var game in MainView.Instance.Config.Games)
+            {
+              string filename = @".\\ExpansionsDatabase\\mkmexpansions_" + game.GameID + ".csv";
+              if (!File.Exists(filename))
+              {
+                MainView.Instance.LogMainWindow("Local expansion database for game ID " + game.GameID + " not found, downloading...");
+                if (updateExpansionsDatabaseFiles(game))
+                  MainView.Instance.LogMainWindow("Database created.");
+                else return;// updateExpansionsDatabaseFiles reported the error
+              }
+              else if ((DateTime.Now - File.GetLastWriteTime(filename)).TotalDays > 100)
+              {
+                MainView.Instance.LogMainWindow("Local expansion database for game ID " + game.GameID + 
+                  " is more than 100 days old, downloading...");
+                if (updateExpansionsDatabaseFiles(game))
+                  MainView.Instance.LogMainWindow("Database updated.");
+                else return;// updateExpansionsDatabaseFiles reported the error
+              }
+            }
+            loadExpansionDatabase();
         }
 
 #endregion
@@ -403,7 +408,7 @@ namespace MKMTool
                 if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
                 {
                     MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
-                    UpdateDatabaseFiles();
+                    updateInventoryDatabaseFile();
                 }
                 // check again...in case we did not update the database we will call it twice in a row, but that's ok
                 if (!SinglesByProductId.ContainsKey(idProduct))
@@ -440,10 +445,10 @@ namespace MKMTool
         /// <summary>
         /// Fetches a card from the product database.
         /// </summary>
-        /// <param name="idProduct">Product ID of the card - it must be a single MtG cards, other products will not be found. If the card has not been
-        /// found, it will attempt to update the local database if it is more than 24 hours old.</param>
-        /// <param name="idProduct">Product ID of the card - it must be a single MtG cards, other products will not be found. If the card has not been
-        /// found, it will attempt to update the local database if it is more than 24 hours old.</param>
+        /// <param name="idProduct">Product ID of the card - it must be a single card, other products will not be found.
+        /// If the card has not been found, it will attempt to update the local database if it is more than 24 hours old.</param>
+        /// <param name="idProduct">Product ID of the card - it must be a single card, other products will not be found.
+        /// If the card has not been found, it will attempt to update the local database if it is more than 24 hours old.</param>
         /// <returns>The card info with the entries from the Inventory (use InventoryFields to get names of columns).
         /// Returns null in case the product ID is invalid.</returns>
         public DataRow GetSingleCard(string idProduct)
@@ -453,7 +458,7 @@ namespace MKMTool
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card id " + idProduct + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
+                updateInventoryDatabaseFile();
                 if (SinglesByProductId.ContainsKey(idProduct))
                     return InventorySinglesOnly[SinglesByProductId[idProduct]];
             }
@@ -475,10 +480,32 @@ namespace MKMTool
             else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkminventory.csv")).TotalHours > 24)
             {
                 MainView.Instance.LogMainWindow("Card " + enName + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
+                updateInventoryDatabaseFile();
                 return InventorySinglesOnly.AsEnumerable().Where(r => r.Field<string>(InventoryFields.Name) == enName);
             }
             return new DataRow[0];
+        }
+
+        /// <summary>
+        /// Updates all the expansions databases if they are more than 24 hours old.
+        /// </summary>
+        /// <returns>True if at least one database was updated</returns>
+        private bool updateExpansionDatabase24hours()
+        {
+          bool wasUpdated = false;
+          foreach (var game in MainView.Instance.Config.Games)
+          {
+              string filename = @".\\ExpansionsDatabase\\mkmexpansions_" + game.GameID + ".csv";
+              if ((DateTime.Now - File.GetLastWriteTime(filename)).TotalHours > 24)
+              {
+                if (!updateExpansionsDatabaseFiles(game))
+                  return false; // there was an error, do not continue
+                wasUpdated = true;
+              }
+          }
+          if (wasUpdated)
+            loadExpansionDatabase();
+          return wasUpdated;
         }
 
         /// <summary>
@@ -491,10 +518,8 @@ namespace MKMTool
         {
             var ret = InventorySinglesOnly.AsEnumerable()
                 .Where(r => r.Field<string>(InventoryFields.ExpansionID).Equals(idExpansion));
-            if (ret.Count() == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            if (ret.Count() == 0 && updateExpansionDatabase24hours()) // try again with up to date database
             {
-                MainView.Instance.LogMainWindow("Expansion id " + idExpansion + " not found in local database, updating database...");
-                UpdateDatabaseFiles(); 
                 ret = InventorySinglesOnly.AsEnumerable()
                     .Where(r => r.Field<string>(InventoryFields.ExpansionID).Equals(idExpansion));
             }
@@ -512,10 +537,8 @@ namespace MKMTool
                 r => r.Field<string>(ExpansionsFields.Name) == expansionName);
             if (ret != default)
                 return ret[ExpansionsFields.ExpansionID].ToString();
-            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
-            {
-                MainView.Instance.LogMainWindow("Expansion " + expansionName + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
+            else if (updateExpansionDatabase24hours()) // try again with up to date database
+      {
                 ret = Expansions.AsEnumerable().FirstOrDefault(
                     r => r.Field<string>(ExpansionsFields.Name) == expansionName);
                 if (ret != default)
@@ -535,10 +558,8 @@ namespace MKMTool
                 r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
             if (ret != default)
                 return ret[ExpansionsFields.Name].ToString();
-            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            else if (updateExpansionDatabase24hours()) // try again with up to date database
             {
-                MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
                 ret = Expansions.AsEnumerable().FirstOrDefault(
                     r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
                 if (ret != default)
@@ -559,10 +580,8 @@ namespace MKMTool
             var ret = InventorySinglesOnly.AsEnumerable().Where(
                 r => r.Field<string>(InventoryFields.ExpansionID) == expansionID &&
                      r.Field<string>(InventoryFields.Name) == enName);
-            if (ret.Count() == 0 && (DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            if (ret.Count() == 0 && updateExpansionDatabase24hours()) // try again with up to date database
             {
-                MainView.Instance.LogMainWindow("Product " + enName + " from " + expansionID + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
                 ret = InventorySinglesOnly.AsEnumerable().Where(
                     r => r.Field<string>(InventoryFields.ExpansionID) == expansionID &&
                          r.Field<string>(InventoryFields.Name) == enName);
@@ -598,10 +617,8 @@ namespace MKMTool
                 r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
             if (ret != default)
                 return ret;
-            else if ((DateTime.Now - File.GetLastWriteTime(@".\\mkmexpansions.csv")).TotalHours > 24)
+            else if (updateExpansionDatabase24hours()) // try again with up to date database
             {
-                MainView.Instance.LogMainWindow("Expansion id " + expansionID + " not found in local database, updating database...");
-                UpdateDatabaseFiles();
                 ret = Expansions.AsEnumerable().FirstOrDefault(
                     r => r.Field<string>(ExpansionsFields.ExpansionID) == expansionID);
                 if (ret != default)
