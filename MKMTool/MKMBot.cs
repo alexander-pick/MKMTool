@@ -808,8 +808,12 @@ namespace MKMTool
             double dArticleSingle = dArticlePlayset;
             double minPricePlayset = 0.005;// minimum price MKM accepts for a single article is 0.02€
             string articleRarity = article.GetAttribute(MCAttribute.Rarity);
+            int bestMatchCount = 0; // used for MKMBotSettings.MinPriceMatch.Best, treat it as 1 if we matched by rarity from
             if (articleRarity == "Rare" || articleRarity == "Mythic")
+            {
                 minPricePlayset = settings.priceMinRarePrice;
+                bestMatchCount = 1;
+            }
             double minPriceSingle = minPricePlayset;
             if (isPlayset == "true")
             {
@@ -840,7 +844,6 @@ namespace MKMTool
             {
                 //reset the min price - card.Equals would otherwise resolve an equal card as not equal because the cards coming from MKM do not have the Min Price
                 article.SetAttribute(MCAttribute.MinPrice, "");
-                int bestMatchCount = 0;
                 foreach (MKMMetaCard card in listArticles)
                 {
                     if (card.Equals(article))
