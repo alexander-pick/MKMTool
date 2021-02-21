@@ -777,7 +777,7 @@ namespace MKMTool
                         else
                             price = mc.GetAttribute(MCAttribute.PriceGuideTREND);
                         break;
-                    case "MKMTool price":
+                    case "MKMTool Price":
                         price = mc.GetAttribute(MCAttribute.MKMToolPrice);
                         break;
                     case "Cheapest matching article":

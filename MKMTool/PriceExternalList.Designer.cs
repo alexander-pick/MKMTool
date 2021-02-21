@@ -48,6 +48,7 @@
             this.comboBoxFoil = new System.Windows.Forms.ComboBox();
             this.labelFoil = new System.Windows.Forms.Label();
             this.groupBoxPrice = new System.Windows.Forms.GroupBox();
+            this.checkBoxMyStock = new System.Windows.Forms.CheckBox();
             this.buttonBotSettings = new System.Windows.Forms.Button();
             this.buttonAppraise = new System.Windows.Forms.Button();
             this.checkBoxToolPrices = new System.Windows.Forms.CheckBox();
@@ -66,7 +67,6 @@
             this.checkBoxExportFormatDeckbox = new System.Windows.Forms.CheckBox();
             this.checkBoxExportPriceGuide = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.checkBoxMyStock = new System.Windows.Forms.CheckBox();
             this.groupBoxImport.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBoxPrice.SuspendLayout();
@@ -301,6 +301,18 @@
             this.groupBoxPrice.TabStop = false;
             this.groupBoxPrice.Text = "Appraise";
             // 
+            // checkBoxMyStock
+            // 
+            this.checkBoxMyStock.AutoSize = true;
+            this.checkBoxMyStock.Location = new System.Drawing.Point(239, 42);
+            this.checkBoxMyStock.Name = "checkBoxMyStock";
+            this.checkBoxMyStock.Size = new System.Drawing.Size(109, 17);
+            this.checkBoxMyStock.TabIndex = 15;
+            this.checkBoxMyStock.Text = "Use myStock.csv";
+            this.toolTip1.SetToolTip(this.checkBoxMyStock, "If checked, your myStock.csv will be used to limit minimal prices for the assigne" +
+        "d MKMTool Price");
+            this.checkBoxMyStock.UseVisualStyleBackColor = true;
+            // 
             // buttonBotSettings
             // 
             this.buttonBotSettings.Location = new System.Drawing.Point(393, 12);
@@ -394,7 +406,7 @@
             this.comboBoxExportUploadPrice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxExportUploadPrice.FormattingEnabled = true;
             this.comboBoxExportUploadPrice.Items.AddRange(new object[] {
-            "MKMTool price",
+            "MKMTool Price",
             "Cheapest matching article",
             "Price guide - Low",
             "Price guide - Average",
@@ -494,18 +506,6 @@
             this.checkBoxExportPriceGuide.Text = "MKM price guide prices";
             this.checkBoxExportPriceGuide.UseVisualStyleBackColor = true;
             // 
-            // checkBoxMyStock
-            // 
-            this.checkBoxMyStock.AutoSize = true;
-            this.checkBoxMyStock.Location = new System.Drawing.Point(239, 42);
-            this.checkBoxMyStock.Name = "checkBoxMyStock";
-            this.checkBoxMyStock.Size = new System.Drawing.Size(109, 17);
-            this.checkBoxMyStock.TabIndex = 15;
-            this.checkBoxMyStock.Text = "Use myStock.csv";
-            this.toolTip1.SetToolTip(this.checkBoxMyStock, "If checked, your myStock.csv will be used to limit minimal prices for the assigne" +
-        "d MKMTool Price");
-            this.checkBoxMyStock.UseVisualStyleBackColor = true;
-            // 
             // PriceExternalList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -515,7 +515,7 @@
             this.Controls.Add(this.groupBoxExport);
             this.Controls.Add(this.groupBoxImport);
             this.Name = "PriceExternalList";
-            this.Text = "PriceExternalList";
+            this.Text = "Price External List";
             this.Shown += new System.EventHandler(this.PriceExternalList_Shown);
             this.groupBoxImport.ResumeLayout(false);
             this.groupBoxImport.PerformLayout();
