@@ -34,57 +34,56 @@ using System.Xml;
 
 namespace MKMTool
 {
-    public partial class AccountInfo : Form
+  public partial class AccountInfo : Form
+  {
+    public AccountInfo()
     {
-        public AccountInfo()
-        {
-            InitializeComponent();
-            treeView1.Nodes.Clear();
-            treeView1.Nodes.Add(new TreeNode("Account Details"));
-            var tNode = new TreeNode();
-            tNode = treeView1.Nodes[0];
+      InitializeComponent();
+      treeView1.Nodes.Clear();
+      treeView1.Nodes.Add(new TreeNode("Account Details"));
+      var tNode = treeView1.Nodes[0];
 
-            try
-            {
-                var doc = MKMInteract.RequestHelper.getAccount();
+      try
+      {
+        var doc = MKMInteract.RequestHelper.GetAccount();
 
-                AddNode(doc["response"]["account"], tNode);
-            }
-            catch (System.Exception eError)
-            {
-                MKMHelpers.LogError("fetching account info", eError.Message, true);
-            }
-            //treeView1.ExpandAll();
-        }
-
-        // SRC:
-        // https://support.microsoft.com/de-de/help/317597/how-to-populate-a-treeview-control-with-xml-data-in-visual-c-2005-or-in-visual-c-.net
-        private void AddNode(XmlNode inXmlNode, TreeNode inTreeNode)
-        {
-            XmlNode xNode;
-            TreeNode tNode;
-            XmlNodeList nodeList;
-            int i;
-
-            // Loop through the XML nodes until the leaf is reached.
-            // Add the nodes to the TreeView during the looping process.
-            if (inXmlNode.HasChildNodes)
-            {
-                nodeList = inXmlNode.ChildNodes;
-                for (i = 0; i <= nodeList.Count - 1; i++)
-                {
-                    xNode = inXmlNode.ChildNodes[i];
-                    inTreeNode.Nodes.Add(new TreeNode(xNode.Name));
-                    tNode = inTreeNode.Nodes[i];
-                    AddNode(xNode, tNode);
-                }
-            }
-            else
-            {
-                // Here you need to pull the data from the XmlNode based on the
-                // type of node, whether attribute values are required, and so forth.
-                inTreeNode.Text = inXmlNode.OuterXml.Trim();
-            }
-        }
+        addNode(doc["response"]["account"], tNode);
+      }
+      catch (System.Exception eError)
+      {
+        MKMHelpers.LogError("fetching account info", eError.Message, true);
+      }
+      //treeView1.ExpandAll();
     }
+
+    // SRC:
+    // https://support.microsoft.com/de-de/help/317597/how-to-populate-a-treeview-control-with-xml-data-in-visual-c-2005-or-in-visual-c-.net
+    private void addNode(XmlNode inXmlNode, TreeNode inTreeNode)
+    {
+      XmlNode xNode;
+      TreeNode tNode;
+      XmlNodeList nodeList;
+      int i;
+
+      // Loop through the XML nodes until the leaf is reached.
+      // Add the nodes to the TreeView during the looping process.
+      if (inXmlNode.HasChildNodes)
+      {
+        nodeList = inXmlNode.ChildNodes;
+        for (i = 0; i <= nodeList.Count - 1; i++)
+        {
+          xNode = inXmlNode.ChildNodes[i];
+          inTreeNode.Nodes.Add(new TreeNode(xNode.Name));
+          tNode = inTreeNode.Nodes[i];
+          addNode(xNode, tNode);
+        }
+      }
+      else
+      {
+        // Here you need to pull the data from the XmlNode based on the
+        // type of node, whether attribute values are required, and so forth.
+        inTreeNode.Text = inXmlNode.OuterXml.Trim();
+      }
+    }
+  }
 }

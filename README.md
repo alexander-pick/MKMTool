@@ -6,7 +6,7 @@
 
 ## Latest changes
 
-**Version 0.8.1.0, 31.1.2021**
+**Version 0.8.1.0, 22.2.2021**
 + In order to deal with recent drop in Cardmarket's API reliability, requests that time out either on MKMTool's or Cardmarket's side are now automatically repeated (after an additional 1.5s delay) up to a MaxTimeoutRepeat times (new parameter in config.xml, default is 4). You will still receive a "request timed out" error if all repeated attempts fail.
 + Fixed/Added support for other currencies than EUR. All prices will now be fetched in the currency of your account (this was supposed to work automatically according to communication from support, but they misinformed us). Small exception: in Download Buys, the price is in the currency the purchase was made.
 + Added an ArticleCountFetched config parameter, see documentation in the [Settings](#Settings) section. Relevant only if you are using only "expensive" countries and often get a "not enough similar items found"

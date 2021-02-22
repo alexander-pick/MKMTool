@@ -34,17 +34,16 @@ using System.Windows.Forms;
 
 namespace MKMTool
 {
-    internal static class Program
+  internal static class Program
+  {
+    /// The main entry point for the application.
+    [STAThread]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Keep capital M for Main()")]
+    private static void Main()
     {
-        /// <summary>
-        ///     The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        private static void Main()
-        {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(MainView.Instance);
-        }
+      Application.EnableVisualStyles();
+      Application.SetCompatibleTextRenderingDefault(false);
+      Application.Run(MainView.Instance);
     }
+  }
 }

@@ -37,195 +37,190 @@ using System.Xml;
 
 namespace MKMTool
 {
-    public partial class CheckDisplayPrices : Form
-    { 
+  public partial class CheckDisplayPrices : Form
+  {
 
-        public CheckDisplayPrices()
-        {
-            InitializeComponent();
-        }
-
-        /// <summary>
-        /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
-        /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
-        /// </summary>
-        /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-            if (e.CloseReason == CloseReason.UserClosing)
-            {
-                e.Cancel = true;
-                Hide();
-            }
-        }
-
-        // reload the expansion each time the form is made visible for the corner case that the expansion database changed in between
-        private void CheckDisplayPrices_VisibleChanged(object sender, EventArgs e)
-        {
-            if (Visible)
-            {
-                editionBox.Items.Clear();
-                MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
-
-                editionBox.Sorted = true;
-                editionBox.SelectedIndex = 135; // currently Gatecrash
-            }
-        }
-
-        private async void checkDisplayPrice_Click(object sender, EventArgs e)
-        {
-            checkDisplayPrice.Enabled = false;
-
-            // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
-            var fMythicFactor = (float)Convert.ToDouble(mythicPerRareText.Text, CultureInfo.InvariantCulture); // 1 out of 8 packs has a Mythic
-            var fPackUncommon = (float)Convert.ToDouble(uncommonPerPackText.Text, CultureInfo.InvariantCulture);
-            var fPackRareMythic = (float)Convert.ToDouble(raremythicPerPackText.Text, CultureInfo.InvariantCulture);
-
-            var fRareCardsNotinPacks = (float)Convert.ToDouble(rareNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
-            var fMythicCardsNotinPacks = (float)Convert.ToDouble(mythicNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
-            var fUncommonCardsNotinPacks = (float)Convert.ToDouble(uncommonNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
-
-            var fBoxContent = (float)Convert.ToDouble(boosterPerBoxText.Text, CultureInfo.InvariantCulture); //36 Packs
-            string editionID = (editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
-            
-            // run the check in a separate thread so that the main GUI is correctly updated
-            await Task.Run(() => checkDisplayPrice_run(fMythicFactor, fPackUncommon, fPackRareMythic, fRareCardsNotinPacks, fMythicCardsNotinPacks,
-                fUncommonCardsNotinPacks, fBoxContent, editionID));
-            checkDisplayPrice.Enabled = true;
-        }
-
-        /// <summary>
-        /// Checks the expected ROI of a given display. Expected to be run in a separate thread
-        /// </summary>
-        private void checkDisplayPrice_run(float fMythicFactor, float fPackUncommon, float fPackRareMythic, float fRareCardsNotinPacks,
-            float fMythicCardsNotinPacks, float fUncommonCardsNotinPacks, float fBoxContent, string editionID)
-        {
-            try
-            {
-                //used to determine index of best start edition
-                //MessageBox.Show((editionBox.SelectedIndex.ToString()));
-
-                var doc = MKMInteract.RequestHelper.getExpansionsSingles(editionID);
-                //would be easier if mkm would deliver detailed info with this call but ...
-
-                MainView.Instance.LogMainWindow("====== Expansion Stats ======");
-
-                //Multiplier 
-                float fCardsInSet = doc.SelectNodes("response/single").Count;
-                MainView.Instance.LogMainWindow("Cards in set: " + fCardsInSet);
-
-
-                var xRares = doc.SelectNodes("response/single/rarity[. = \"Rare\"]");
-                var xMythic = doc.SelectNodes("response/single/rarity[. = \"Mythic\"]");
-                var xUncommon = doc.SelectNodes("response/single/rarity[. = \"Uncommon\"]");
-
-                var iCountRares = xRares.Count - fRareCardsNotinPacks; //53F;
-                var iCountMythics = xMythic.Count - fMythicCardsNotinPacks; //15F;
-                var iCountUncommons = xUncommon.Count - fUncommonCardsNotinPacks; //80F;
-
-                MainView.Instance.LogMainWindow("Rares in set: " + iCountRares);
-                MainView.Instance.LogMainWindow("Mythic in set: " + iCountMythics);
-                MainView.Instance.LogMainWindow("Uncommon in set: " + iCountUncommons);
-
-                //factors per booster
-                var fFactorUncommon = fPackUncommon/iCountUncommons; //0,0375
-                var fFactorMythicRareCombined = fPackRareMythic/(iCountRares + iCountMythics); // 0,014
-                var fFactorMythic = fFactorMythicRareCombined/fMythicFactor; //chance is 1:8 fpr Mythic
-                var fFactorRare = fFactorMythicRareCombined/fMythicFactor*(fMythicFactor - 1);
-
-                MainView.Instance.LogMainWindow("====== Calculated Booster Factors ======");
-                MainView.Instance.LogMainWindow("Uncommon: " + fFactorUncommon);
-                MainView.Instance.LogMainWindow("MR Combo: " + fFactorMythicRareCombined);
-                MainView.Instance.LogMainWindow( "Rare:" + fFactorRare);
-                MainView.Instance.LogMainWindow( "Mythic:" + fFactorMythic);
-
-                var fFactorUncommonBox = fFactorUncommon*fBoxContent;
-                var fFactorMythicRareCombinedBox = fFactorMythicRareCombined*fBoxContent;
-                var fFactorMythicBox = fFactorMythic*fBoxContent;
-                var fFactorRareBox = fFactorRare*fBoxContent;
-
-                MainView.Instance.LogMainWindow("====== Calculated Box Factors ======");
-                MainView.Instance.LogMainWindow("Uncommon: " + fFactorUncommonBox);
-                MainView.Instance.LogMainWindow("MR Combo: " + fFactorMythicRareCombinedBox);
-                MainView.Instance.LogMainWindow("Rare:" + fFactorRareBox);
-                MainView.Instance.LogMainWindow("Mythic:" + fFactorMythicBox);
-
-                xRares = doc.SelectNodes("response/single");
-
-                float fBoxValue = 0;
-
-                foreach (XmlNode xn in xRares)
-                {
-                    if (xn["rarity"].InnerText == "Rare")
-                    {
-                        MainView.Instance.LogMainWindow("Checking (R): " + xn["enName"].InnerText);
-
-                        var doc2 =
-                            MKMInteract.RequestHelper.makeRequest(
-                                "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
-
-                        if (doc2.HasChildNodes)
-                        {
-                            var fCardPrice =
-                                (float)Convert.ToDouble(
-                                        doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
-
-                            MainView.Instance.LogMainWindow("Current SELL Price: " + fCardPrice);
-
-                            fBoxValue += fCardPrice * fFactorMythicRareCombinedBox;
-                            //changed cause it's actually a rare + Mythic not rare or mythic I think?  was fFactorRareBox;
-                        }
-                    }
-
-                    if (xn["rarity"].InnerText == "Mythic")
-                    {
-                        MainView.Instance.LogMainWindow("Checking (M): " + xn["enName"].InnerText);
-
-                        var doc2 =
-                            MKMInteract.RequestHelper.makeRequest(
-                                "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
-
-                        if (doc2.HasChildNodes)
-                        {
-                            var fCardPrice =
-                                (float)Convert.ToDouble(
-                                        doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
-                            MainView.Instance.LogMainWindow("Current SELL Price: " + fCardPrice);
-
-                            fBoxValue += fCardPrice * fFactorMythicBox;
-                        }
-                    }
-
-                    if (xn["rarity"].InnerText == "Uncommon")
-                    {
-                        MainView.Instance.LogMainWindow("Checking (U): " + xn["enName"].InnerText);
-
-                        var doc2 =
-                            MKMInteract.RequestHelper.makeRequest(
-                                "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
-
-                        if (doc2.HasChildNodes)
-                        {
-                            var fCardPrice =
-                                (float)Convert.ToDouble(
-                                        doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
-
-                            MainView.Instance.LogMainWindow("Current SELL Price: " + fCardPrice);
-
-                            fBoxValue += fCardPrice * fFactorUncommonBox;
-                        }
-                    }
-                }
-                MainView.Instance.LogMainWindow("Calculated Result *: " + fBoxValue);
-
-                MainView.Instance.LogMainWindow(
-                    "* Estimated average booster box singles value at MKM SELL Pricing (EUR)\n");
-            }
-            catch (Exception eError)
-            {
-                MKMHelpers.LogError("checking display prices", eError.Message, true);
-            }
-        }
+    public CheckDisplayPrices()
+    {
+      InitializeComponent();
     }
+
+    /// Instead of closing the window when the user presses (X) or ALT+F4, just hide it.
+    /// Basically the intended behaviour is for the window to act as kind of a singleton object within the scope of its owner.
+    /// <param name="e">The <see cref="FormClosingEventArgs"/> instance containing the event data.</param>
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+      base.OnFormClosing(e);
+      if (e.CloseReason == CloseReason.UserClosing)
+      {
+        e.Cancel = true;
+        Hide();
+      }
+    }
+
+    // reload the expansion each time the form is made visible for the corner case that the expansion database changed in between
+    private void checkDisplayPrices_VisibleChanged(object sender, EventArgs e)
+    {
+      if (Visible)
+      {
+        editionBox.Items.Clear();
+        MKMDbManager.Instance.PopulateExpansionsComboBox(editionBox);
+
+        editionBox.Sorted = true;
+        editionBox.SelectedIndex = 135; // currently Gatecrash
+      }
+    }
+
+    private async void checkDisplayPrice_Click(object sender, EventArgs e)
+    {
+      checkDisplayPrice.Enabled = false;
+
+      // the window controls can't be accessed from a different thread -> have to parse them here and send as arguments
+      var fMythicFactor = Convert.ToSingle(mythicPerRareText.Text, CultureInfo.InvariantCulture); // 1 out of 8 packs has a Mythic
+      var fPackUncommon = Convert.ToSingle(uncommonPerPackText.Text, CultureInfo.InvariantCulture);
+      var fPackRareMythic = Convert.ToSingle(raremythicPerPackText.Text, CultureInfo.InvariantCulture);
+
+      var fRareCardsNotinPacks = Convert.ToSingle(rareNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
+      var fMythicCardsNotinPacks = Convert.ToSingle(mythicNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
+      var fUncommonCardsNotinPacks = Convert.ToSingle(uncommonNotInBoosterText.Text, CultureInfo.InvariantCulture); //rare and Mythic
+
+      var fBoxContent = Convert.ToSingle(boosterPerBoxText.Text, CultureInfo.InvariantCulture); //36 Packs
+      string editionID = (editionBox.SelectedItem as MKMHelpers.ComboboxItem).Value.ToString();
+
+      // run the check in a separate thread so that the main GUI is correctly updated
+      await Task.Run(() => checkDisplayPrice_run(fMythicFactor, fPackUncommon, fPackRareMythic, fRareCardsNotinPacks, fMythicCardsNotinPacks,
+          fUncommonCardsNotinPacks, fBoxContent, editionID));
+      checkDisplayPrice.Enabled = true;
+    }
+
+    /// Checks the expected ROI of a given display. Expected to be run in a separate thread
+    private void checkDisplayPrice_run(float fMythicFactor, float fPackUncommon, float fPackRareMythic, float fRareCardsNotinPacks,
+        float fMythicCardsNotinPacks, float fUncommonCardsNotinPacks, float fBoxContent, string editionID)
+    {
+      try
+      {
+        //used to determine index of best start edition
+        //MessageBox.Show((editionBox.SelectedIndex.ToString()));
+
+        var doc = MKMInteract.RequestHelper.GetExpansionsSingles(editionID);
+        //would be easier if MKM would deliver detailed info with this call but ...
+
+        MainView.Instance.LogMainWindow("====== Expansion Stats ======");
+
+        //Multiplier 
+        float fCardsInSet = doc.SelectNodes("response/single").Count;
+        MainView.Instance.LogMainWindow("Cards in set: " + fCardsInSet);
+
+
+        var xRares = doc.SelectNodes("response/single/rarity[. = \"Rare\"]");
+        var xMythic = doc.SelectNodes("response/single/rarity[. = \"Mythic\"]");
+        var xUncommon = doc.SelectNodes("response/single/rarity[. = \"Uncommon\"]");
+
+        var iCountRares = xRares.Count - fRareCardsNotinPacks; //53F;
+        var iCountMythics = xMythic.Count - fMythicCardsNotinPacks; //15F;
+        var iCountUncommons = xUncommon.Count - fUncommonCardsNotinPacks; //80F;
+
+        MainView.Instance.LogMainWindow("Rares in set: " + iCountRares);
+        MainView.Instance.LogMainWindow("Mythic in set: " + iCountMythics);
+        MainView.Instance.LogMainWindow("Uncommon in set: " + iCountUncommons);
+
+        //factors per booster
+        var fFactorUncommon = fPackUncommon / iCountUncommons; //0,0375
+        var fFactorMythicRareCombined = fPackRareMythic / (iCountRares + iCountMythics); // 0,014
+        var fFactorMythic = fFactorMythicRareCombined / fMythicFactor; //chance is 1:8 for Mythic
+        var fFactorRare = fFactorMythicRareCombined / fMythicFactor * (fMythicFactor - 1);
+
+        MainView.Instance.LogMainWindow("====== Calculated Booster Factors ======");
+        MainView.Instance.LogMainWindow("Uncommon: " + fFactorUncommon);
+        MainView.Instance.LogMainWindow("MR Combo: " + fFactorMythicRareCombined);
+        MainView.Instance.LogMainWindow("Rare:" + fFactorRare);
+        MainView.Instance.LogMainWindow("Mythic:" + fFactorMythic);
+
+        var fFactorUncommonBox = fFactorUncommon * fBoxContent;
+        var fFactorMythicRareCombinedBox = fFactorMythicRareCombined * fBoxContent;
+        var fFactorMythicBox = fFactorMythic * fBoxContent;
+        var fFactorRareBox = fFactorRare * fBoxContent;
+
+        MainView.Instance.LogMainWindow("====== Calculated Box Factors ======");
+        MainView.Instance.LogMainWindow("Uncommon: " + fFactorUncommonBox);
+        MainView.Instance.LogMainWindow("MR Combo: " + fFactorMythicRareCombinedBox);
+        MainView.Instance.LogMainWindow("Rare:" + fFactorRareBox);
+        MainView.Instance.LogMainWindow("Mythic:" + fFactorMythicBox);
+
+        xRares = doc.SelectNodes("response/single");
+
+        float fBoxValue = 0;
+
+        foreach (XmlNode xn in xRares)
+        {
+          if (xn["rarity"].InnerText == "Rare")
+          {
+            MainView.Instance.LogMainWindow("Checking (R): " + xn["enName"].InnerText);
+
+            var doc2 =
+                MKMInteract.RequestHelper.MakeRequest(
+                    "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
+
+            if (doc2.HasChildNodes)
+            {
+              var fCardPrice =
+                  (float)Convert.ToDouble(
+                          doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
+
+              MainView.Instance.LogMainWindow("Current SELL Price: " + fCardPrice);
+
+              fBoxValue += fCardPrice * fFactorMythicRareCombinedBox;
+              //changed cause it's actually a rare + Mythic not rare or mythic I think?  was fFactorRareBox;
+            }
+          }
+
+          if (xn["rarity"].InnerText == "Mythic")
+          {
+            MainView.Instance.LogMainWindow("Checking (M): " + xn["enName"].InnerText);
+
+            var doc2 =
+                MKMInteract.RequestHelper.MakeRequest(
+                    "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
+
+            if (doc2.HasChildNodes)
+            {
+              var fCardPrice = Convert.ToSingle(
+                doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
+              MainView.Instance.LogMainWindow("Current SELL Price: " + fCardPrice);
+
+              fBoxValue += fCardPrice * fFactorMythicBox;
+            }
+          }
+
+          if (xn["rarity"].InnerText == "Uncommon")
+          {
+            MainView.Instance.LogMainWindow("Checking (U): " + xn["enName"].InnerText);
+
+            var doc2 =
+                MKMInteract.RequestHelper.MakeRequest(
+                    "https://api.cardmarket.com/ws/v2.0/products/" + xn["idProduct"].InnerText, "GET");
+
+            if (doc2.HasChildNodes)
+            {
+              var fCardPrice =
+                  (float)Convert.ToDouble(
+                          doc2.SelectSingleNode("response/product/priceGuide/SELL").InnerText, CultureInfo.InvariantCulture);
+
+              MainView.Instance.LogMainWindow("Current SELL Price: " + fCardPrice);
+
+              fBoxValue += fCardPrice * fFactorUncommonBox;
+            }
+          }
+        }
+        MainView.Instance.LogMainWindow("Calculated Result *: " + fBoxValue);
+
+        MainView.Instance.LogMainWindow(
+            "* Estimated average booster box singles value at MKM SELL Pricing (EUR)\n");
+      }
+      catch (Exception eError)
+      {
+        MKMHelpers.LogError("checking display prices", eError.Message, true);
+      }
+    }
+  }
 }
