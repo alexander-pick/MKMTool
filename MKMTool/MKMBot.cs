@@ -946,7 +946,7 @@ namespace MKMTool
           {
             priceEstimationSingle = 0;
             for (int i = 0; i <= lastMatch; i++)
-              priceEstimationSingle += prices[i]; // priceEstimation is initialized to 0 above
+              priceEstimationSingle += prices[i];
             priceEstimationSingle /= lastMatch + 1;
             // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
             if (priceFactor > 0.5)

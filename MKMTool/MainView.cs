@@ -197,7 +197,15 @@ namespace MKMTool
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     private void initialize(object sender, EventArgs e)
     {
-      Config = new MKMToolConfig();
+      try
+      {
+        Config = new MKMToolConfig();
+      }
+      catch (Exception eError)
+      {
+        MKMHelpers.LogError("loading config.xml file, MKMTool will exit", eError.Message, true);
+        Application.Exit();
+      }
       timer.Interval = 1440 * 1000 * 60; // set the interval to one day (1440 minutes in ms)
       try
       {
