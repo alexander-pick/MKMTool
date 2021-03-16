@@ -561,5 +561,17 @@ namespace MKMTool
       // country codes are hard-coded, no need to update them
       allowedCountriesWindow.ShowDialog();
     }
+
+    private void comboBoxPriceEstUpdateMode_SelectedIndexChanged(object sender, EventArgs e)
+    {
+      // Options are in this order:
+      // Full update
+      // Update only below minPrice
+      // Only ensure minPrice
+      if (comboBoxPriceEstUpdateMode.SelectedIndex == 2)
+        groupBoxTraversal.Enabled = false;
+      else
+        groupBoxTraversal.Enabled = true;
+    }
   }
 }
