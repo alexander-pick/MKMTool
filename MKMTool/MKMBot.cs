@@ -57,6 +57,14 @@ namespace MKMTool
     NotEnoughSimilars // not enough items were found - even without any culling
   }
 
+  public struct TOSSResult
+  {
+    public double EstimatedPrice;
+    public bool UsedWorldWideSearch;
+    public int NumberOfItemsInSequence; // how many items is the estimate based on
+    public bool ForceLog;
+  }
+
   /// Contains all customizable settings that are used by MKMBot.
   /// All numbers expressed as percentage must be saved as a double with 0 = 0%, 1 = 100%.
   /// Can be serialized into a XML, otherwise it is basically a struct -> all members are public
@@ -866,96 +874,16 @@ namespace MKMTool
       }
       if (settings.MinPriceUpdateMode == MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice && minPricePlayset <= dArticlePlayset)
         return;
-      // run the full update
+      
+      // run the TOSS
       double priceEstimationSingle = dArticleSingle; // assume the price will not change -> new price is the orig price
-      List<double> prices = new List<double>();
-      int lastMatch = -1;
-      bool ignoreSellersCountry = false;
-      bool forceLog = false; // write the log even in case of no price update
-      XmlNodeList similarItems = getSimilarItems(article, MainView.Instance.Config.MaxArticlesFetched);
-      if (similarItems == null)
-        return;
-      TraverseResult res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
-      if (settings.SearchWorldwide &&
-          (res == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
-          || (settings.CondAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.PriceMinSimilarItems)))
-      // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
+      var tossResult = performTOSS(article, ref logMessage);
+      if (tossResult.EstimatedPrice > 0)
+        priceEstimationSingle = tossResult.EstimatedPrice;
+      bool forceLog = tossResult.ForceLog;
+      // postprocess the estimated price - add markup for multiple copies and ensure it does not cross the max change
+      if (priceEstimationSingle > 0)
       {
-        ignoreSellersCountry = true;
-        prices.Clear();
-        lastMatch = -1;
-        res = traverseSimilarItems(similarItems, article, ignoreSellersCountry, ref lastMatch, prices);
-      }
-      double priceFactor = ignoreSellersCountry ? settings.PriceFactorWorldwide : settings.PriceFactor;
-      if (res == TraverseResult.Culled)
-      {
-        if (settings.LogLessThanMinimum)
-        {
-          logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
-              (lastMatch + 1) + " similar items found (some outliers culled)" +
-              (ignoreSellersCountry ? " - worldwide search! " : ". ");
-          forceLog = true;
-        }
-      }
-      else if (res == TraverseResult.HighVariance)
-      {
-        if (settings.LogHighPriceVariance) // this signifies that prices were not updated due to too high variance
-        {
-          logMessage += "NOT UPDATED - variance among cheapest similar items too high" +
-              (ignoreSellersCountry ? " - worldwide search! " : ". ");
-          forceLog = true;
-        }
-      }
-      else if (res == TraverseResult.NotEnoughSimilars)
-      {
-        if (settings.LogLessThanMinimum)
-        {
-          logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
-              (lastMatch + 1) + " similar items found" +
-              (ignoreSellersCountry ? " - worldwide search! " : ". ");
-          forceLog = true;
-        }
-      }
-      else if (settings.CondAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.PriceMinSimilarItems)
-      // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
-
-      {
-        if (settings.LogLessThanMinimum)
-        {
-          logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
-              (lastMatch + 1) + " similar items with a condition-matching item above them found" +
-              (ignoreSellersCountry ? " - worldwide search! " : ". ");
-          forceLog = true;
-        }
-      }
-      else
-      {
-        if (settings.PriceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && res == TraverseResult.SequenceFound)
-        {
-          priceEstimationSingle = prices[0] * priceFactor;
-        }
-        else
-        {
-          // if any condition is allowed, use the whole sequence
-          // if only matching is allowed, use whole sequence as well because it is only matching items
-          if (settings.CondAcceptance != AcceptedCondition.SomeMatchesAbove)
-            lastMatch = prices.Count - 1;
-          if (settings.PriceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
-            priceEstimationSingle = prices[lastMatch] * priceFactor;
-          else // estimation by average
-          {
-            priceEstimationSingle = 0;
-            for (int i = 0; i <= lastMatch; i++)
-              priceEstimationSingle += prices[i];
-            priceEstimationSingle /= lastMatch + 1;
-            // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
-            if (priceFactor > 0.5)
-              priceEstimationSingle += (prices[lastMatch] - priceEstimationSingle) * (priceFactor - 0.5) * 2;
-            else if (priceFactor < 0.5) // linear interpolation between lowest price and average
-              priceEstimationSingle = prices[0] + (priceEstimationSingle - prices[0]) * (priceFactor) * 2;
-          }
-        }
-
         // increase the estimate based on how many of those articles do we have in stock
         double markupValue = 0;
         if (settings.PriceIgnorePlaysets && isPlayset == "true")
@@ -994,7 +922,7 @@ namespace MKMTool
               {
                 logMessage += "NOT UPDATED - change too large: Current Price: "
                     + articlePrice + ", Calculated Price:" + sNewPrice +
-                    (ignoreSellersCountry ? " - worldwide search! " : ". ");
+                    ((tossResult.UsedWorldWideSearch && tossResult.EstimatedPrice > 0) ? " - worldwide search! " : ". ");
                 forceLog = true;
               }
             }
@@ -1002,7 +930,6 @@ namespace MKMTool
           }
         }
       }
-
       bool calculatedPrice = true;
       if (priceEstimationSingle < minPriceSingle)
       {
@@ -1026,9 +953,10 @@ namespace MKMTool
         {
           if (calculatedPrice)
           {
+            string basedOn = tossResult.EstimatedPrice > 0 ? tossResult.NumberOfItemsInSequence + " items" +
+                (tossResult.UsedWorldWideSearch ? " - worldwide search! " : ". ") : "previous price being under MinPrice.";
             logMessage += "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
-                ", based on " + (lastMatch + 1) + " items" +
-                (ignoreSellersCountry ? " - worldwide search! " : ". ");
+                ", based on " + basedOn;
           }
           MainView.Instance.LogMainWindow(logMessage);
         }
@@ -1148,6 +1076,111 @@ namespace MKMTool
       else if (prices.Count < settings.PriceMinSimilarItems)
         return TraverseResult.Culled;
       return TraverseResult.SequenceFound;
+    }
+
+    /// Performs the algorithm for estimating price based on other seller's stock.
+    /// <param name="article">The article that is being appraised.</param>
+    /// <param name="logMessage">Messages that should be written to log are appended to this, but not printed in the console.</param>
+    /// <returns>The estimated price, or -9999 in case price can't be estimated</returns>
+    private TOSSResult performTOSS(MKMMetaCard article, ref string logMessage)
+    {
+      TOSSResult res;
+      res.EstimatedPrice = -9999;
+      res.NumberOfItemsInSequence = 0;
+      res.UsedWorldWideSearch = false;
+      res.ForceLog = false;
+      string articlePrice = article.GetAttribute(MCAttribute.MKMPrice);
+      List<double> prices = new List<double>();
+      int lastMatch = -1;
+      XmlNodeList similarItems = getSimilarItems(article, MainView.Instance.Config.MaxArticlesFetched);
+      if (similarItems == null)
+        return res;
+      TraverseResult traverseRes = traverseSimilarItems(similarItems, article, res.UsedWorldWideSearch, ref lastMatch, prices);
+      if (settings.SearchWorldwide &&
+          (traverseRes == TraverseResult.NotEnoughSimilars // if there isn't enough similar items being sold in seller's country, check other countries as well
+          || (settings.CondAcceptance == AcceptedCondition.SomeMatchesAbove && lastMatch + 1 < settings.PriceMinSimilarItems)))
+      // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
+      {
+        res.UsedWorldWideSearch = true;
+        prices.Clear();
+        lastMatch = -1;
+        traverseRes = traverseSimilarItems(similarItems, article, res.UsedWorldWideSearch, ref lastMatch, prices);
+      }
+      res.NumberOfItemsInSequence = lastMatch + 1;
+      double priceFactor = res.UsedWorldWideSearch ? settings.PriceFactorWorldwide : settings.PriceFactor;
+      if (traverseRes == TraverseResult.Culled)
+      {
+        if (settings.LogLessThanMinimum)
+        {
+          logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
+              res.NumberOfItemsInSequence + " similar items found (some outliers culled)" +
+              (res.UsedWorldWideSearch ? " - worldwide search! " : ". ");
+          res.ForceLog = true;
+        }
+      }
+      else if (traverseRes == TraverseResult.HighVariance)
+      {
+        if (settings.LogHighPriceVariance) // this signifies that prices were not updated due to too high variance
+        {
+          logMessage += "NOT UPDATED - variance among cheapest similar items too high" +
+              (res.UsedWorldWideSearch ? " - worldwide search! " : ". ");
+          res.ForceLog = true;
+        }
+      }
+      else if (traverseRes == TraverseResult.NotEnoughSimilars)
+      {
+        if (settings.LogLessThanMinimum)
+        {
+          logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
+              res.NumberOfItemsInSequence + " similar items found" +
+              (res.UsedWorldWideSearch ? " - worldwide search! " : ". ");
+          res.ForceLog = true;
+        }
+      }
+      else if (settings.CondAcceptance == AcceptedCondition.SomeMatchesAbove 
+        && res.NumberOfItemsInSequence < settings.PriceMinSimilarItems)
+      // at least one matching item above non-matching is required -> if there wasn't, the last match might have been before min. # of items
+      {
+        if (settings.LogLessThanMinimum)
+        {
+          logMessage += "Current Price: " + articlePrice + ", unchanged, only " +
+              res.NumberOfItemsInSequence + " similar items with a condition-matching item above them found" +
+              (res.UsedWorldWideSearch ? " - worldwide search! " : ". ");
+          res.ForceLog = true;
+        }
+      }
+      else
+      {
+        if (settings.PriceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && traverseRes == TraverseResult.SequenceFound)
+        {
+          res.EstimatedPrice = prices[0] * priceFactor;
+        }
+        else
+        {
+          // if any condition is allowed, use the whole sequence
+          // if only matching is allowed, use whole sequence as well because it is only matching items
+          if (settings.CondAcceptance != AcceptedCondition.SomeMatchesAbove)
+          {
+            lastMatch = prices.Count - 1;
+            res.NumberOfItemsInSequence = lastMatch + 1;
+          }
+          if (settings.PriceSetPriceBy == PriceSetMethod.ByPercentageOfHighestPrice)
+            res.EstimatedPrice = prices[lastMatch] * priceFactor;
+          else // estimation by average
+          {
+            res.EstimatedPrice = 0;
+            for (int i = 0; i < res.NumberOfItemsInSequence; i++)
+              res.EstimatedPrice += prices[i];
+            res.EstimatedPrice /= res.NumberOfItemsInSequence;
+            // linear interpolation between average (currently stored in priceEstimation) and highest price in the sequence
+            if (priceFactor > 0.5)
+              res.EstimatedPrice += (prices[lastMatch] - res.EstimatedPrice) * (priceFactor - 0.5) * 2;
+            else if (priceFactor < 0.5) // linear interpolation between lowest price and average
+              res.EstimatedPrice = prices[0] + (res.EstimatedPrice - prices[0]) * (priceFactor) * 2;
+          }
+        }
+      }
+      return res;
     }
 
     private string getTimestamp(DateTime now)
