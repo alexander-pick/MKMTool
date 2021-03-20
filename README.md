@@ -6,9 +6,10 @@
 
 ## Latest changes
 
-**Version 0.8.2.0, 22.2.2021**
+**Version 0.8.2.0, 30.3.2021**
 + Added support for setting price by price guide, but only for commercial sellers (private sellers have access to necessary API requests blocked by cardmarket - not MKMTool's fault). Price is specified as a simplified formula using numbers or any of the valid price guides as operands and multiplication, addition and subtraction as operators (no parenthesis). See documentation in the [Price Update](#Price-Update) section for details.
 + MinPrice in myStock.csv can be defined as a formula using price guides.
++ Added "PrescribedPrice" attribute for entries in myStock.csv. It can be specified as a formula (allows using price guides). If the "best matching template" (= most columns in myStock filled with non-empty values) has a PrescribedPrice, it will be used to set the price over any algorithm set in the Update Price settings GUI. It will still use markup for multiple copies and respect max price change limits and minPrice.
 + Rearranged Update Price Settings GUI to separate settings related to traversal of other seller's stock from other settings
 
 **Version 0.8.1.0, 22.2.2021**
@@ -207,9 +208,11 @@ While it is irrelevant for Price Update, in View Inventory the following can be 
 + **MaxTimeoutRepeat:** if an API request fails due to a time out error or "service unavailable" error (which most of the time is due to time outs), it will be automatically attempted again until it succeeds or until it has been attempted a total of MaxTimeoutRepeat times. An error is logged only if all MaxTimeoutRepeat attempts fail. It is recommended to keep this number low (hence the default 4), the timeouts might happen due to legitimate reasons (e.g. servers down for maintenance) in which case MKMTool should just stop. Must be at least 1 (if lower number is entered, 1 is used).
 
 ### Price Update
-This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accessible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.updatePrices() method).
+This function will update all your card sale prices, all you need to do is press the Update Price button. The basic idea is to match your prices to the cheapest prices **from your country** (to avoid dealing with different shipping costs). However, there are numerous parameters that can change how exactly is this price computed, accessible through the "Settings" button on the bottom of the window - it is recommended to look at those first before your first run. The implemented algorithm will now be described, but if it is not good enough for you and you can write some C# code, you can modify the MKMBot class directly (look for MKMBot.UpdatePrices() method).
 
-The base part of the algorithm is finding "similar items". This is a sequence of cards sold by **other** MKM users in **the same country as you** that are the same as the one you are trying to sell. "The same" means they have the same name, expansion, foil/nonfoil, signed/altered and playset/single statuses. Condition is always either the same or better and will be discussed later. Once the sequence is determined, the price is computed based either on the average or on the lowest or highest prices from the sequence. The sequence is always ordered from the cheapest items up. If the algorithm at some points finds out that it does not need another similar item, it stops reading them and just the ones found so far are used to compute the price. Hence the prices will always be a bit skewed towards the cheaper offers.
+The base algorithm is called "TOSS" - Traversal of Other Seller's Stock. It is based on analyzing "similar items" being sold. This is a sequence of cards sold by **other** MKM users in **the same country as you** that are the same as the one you are trying to sell. "The same" means they have the same name, expansion, foil/nonfoil, signed/altered and playset/single statuses. Condition is always either the same or better and will be discussed later. Once the sequence is determined, the price is computed based either on the average or on the lowest or highest prices from the sequence. The sequence is always ordered from the cheapest items up. If the algorithm at some points finds out that it does not need another similar item, it stops reading them and just the ones found so far are used to compute the price. Hence the prices will always be a bit skewed towards the cheaper offers.
+
+If you have a commercial account (professional or powerseller), you can also use price guides instead of / in combination with TOSS (the API does not provide the necessary request to non-commercial sellers, not MKMTool's fault).
 
 The following figure shows the settings window. Each of the parameters will now be described in details, going from top to bottom, left to right:
 
@@ -254,7 +257,25 @@ We are always getting 150 cheapest articles to use for the price estimation, so 
 	A compromise, and probably the best option, is "Accept better only if there are more expensive matches". Cards in better condition will be accepted as part of the sequence, but only if there is some card with exactly matching condition above (more expensive) than the ones in better condition. In the end, all cards until the last exactly matching (or "Maximum # of similar items", whichever comes first) will be used to compute the price, the remainder of the sequence will be thrown away. This will still not help if nobody is selling cards in similar condition. But in the more usual cases where NM and EXC cards tend to have similar prices, they will be treated as equals and accounted for.
 
 #### Price guide settings
-+ TODO
++ Non-foils/Foils price guides: when using update by price guides, the price is defined as a [formula](#Price-as-formula), one for foils and one for non-foils. The formula starts with one price guide and can be followed with additional modifiers written in the textbox in the format described in the [formula documentation](#Price-as-formula). The codes for price guides used in the modifiers are the same as in the drop-down lists for foil/non-foil price, here is their explanation (copy pasted from https://api.cardmarket.com/ws/documentation/API_2.0:PriceGuide; also available as a tooltip when you hover mouse over the drop-down lists):
+  + SELL: The average sell price as shown in the chart at the website for non-foils
+  + LOW: The lowest price at the market for non-foils
+  + TREND: The trend price as shown at the website (and in the chart) for non-foils
+  + LOWGERMAN: The lowest sell price from German professional sellers
+  + SUGGESTED: A suggested sell price for professional users, determined by an internal algorithm; this algorithm will not be made public
+  + SELLFOIL: The average sell price as shown in the chart at the website for foils
+  + LOWFOIL: The lowest price at the market as shown at the website(for condition EX+) for foils
+  + TRENDFOIL: The trend price as shown at the website(and in the chart) for foils
+  + LOWEX+: The lowest price at the market for non-foils with condition EX or better
+  + AVG1: The average sale price over the last day
+  + AVG7: The average sale price over the last 7 days
+  + AVG30: The average sale price over the last 30 days
+  + AVG1FOIL: The average sale price over the last day for foils
+  + AVG7FOIL: The average sale price over the last 7 days for foils
+  + AVG30FOIL: The average sale price over the last 30 days for foils
+
++ Use TOSS when price guide not found: In some cases, particular price guides might not be available for a given card (e.g. for cards that do not sell often, data might not be available). If this checkbox is checked, TOSS will be used as a failsafe in this case.
++ Write to log when price guide not found: Whether to log the failure or not to find the guides.
 
 #### Log settings
 + **Log updates with significant price change:** when checked, information containing old and new price will be printed in the log for each successfully updated card. However, the "Minimum price of rares" will be used to determine if you consider the price change significant - when a new price for some item is computed, it is compared to the old price. If the difference is not smaller or higher by the minimum rare price (or more), it will be considered insignificant. This is done so that less items are listed in the output log, so you can easily check only the important changes that were made.
@@ -275,6 +296,7 @@ There is also a Bot mode, you can make the tool execute this task every X minute
 
 You must feel comfortable with the formula or change it to your demands, be aware that making mistakes in price calculation can cost you real money. Handle with care.
 
+#### MyStock
 You can also define a list of minimum prices for which you want to be selling certain cards. For those cards, the Price Update will not give them lower then specified price no matter what the algorithm computes. This can be useful if you for example want to make sure you are not selling certain cards for less than you bought them for, or if you have certain cards you don't really want to sell unless for a high enough price. The list is defined as follows:
 
 Create a CSV (comma separated values) file in the same folder as your binary is, i.e. alongside your config file, called "myStock.csv" (case sensitive). See [CSV card lists in MKMTool](#CSV-Card-Lists-in-MKMTool) for details about format. You do not need to do anything else to turn the feature on - if the file is present, it will be used (you will also see a message in the log window that the list has been found), if not, the update will still be done without it. After MKMTool computes the price for a particular article, it checks if there is an entry in myStock.csv that matches all attributes of that card and if so, the computed price is compared with the MinPrice in the list and if it is lower, the MinPrice is assigned to the item instead. **You do not have to use all the attributes.** In fact, for the purpose of price update, the only required attribute is the MinPrice itself (if a row in the list does not have it filled, it will be ignored), everything else is optional. When a certain attribute is not filled in for a particular card in the list, it is assumed that you do not care about its value and therefore any article will be considered a match according to that particular attribute. Therefore, each entry in the list does not need to represent a particular card, it can be just sort of a template for a card, a "metacard". In the extreme case, you can have just the MinPrice and nothing else. Such metacard will always match with any card so you can use such metacard to set a minimum price for any card in your stock. Note - MKMTool "groups" (hashes) the metacards by the card name, so only metacards that have a matching name are actually tested for a the card that is being updated + all metacards that have no name assigned. So you don't have to be worried that adding a lot of articles in the list would significantly slow MKMTool down.
@@ -297,6 +319,11 @@ Next let's say we have a near mint Lightning Bolt from M11. MKMTool computes 1.8
 
 Next article we have is a Lightly Played Lightning Bolt from Beta. MKMTool computed 186€ as its price. The first metacard will not be matched, because the condition is not good enough, but the next one will be - the Name matches, the Expansion matches and there is nothing else to check. The minimum price is higher, so we bump up the price to 200€. The third metacard does not match by many attributes, but the last one does as the only attribute is Expansion and it is Beta. However, 20 is less then 200 so after comparing the prices we will keep our 200€ price tag and that is what we upload on MKM in the end.
 
+You can also define a PrescribedPrice column. If the best matching template for the appraised card has a PrescribedPrice, it will be used over the TOSS or Price Guide algorithm. The markup for multiple copies will still be applied and the max price change and MinPrice will be respected.
+Only the best matching template is used. For example, if there are two matching templates for a given card and only one has a Prescribed Price, it needs to have a total number of filled in columns higher than the other template. If it does not, Prescribed Price will not be used since the best matching template does not have it. Note that the prescribed price itself counts when computing the number of filled-in columns.
+
+#### Price as formula
+Both the MinPrice and PrescribedPrice can be defined as a formula comprising of any number of operands separated by operators. The operands must be either numbers or [price guide codes](#Price-guide-settings). The operators can be only `*` for multiplication, `+` for addition or `-` for subtraction. Parenthesis are not supported. Because of that, the operations are evaluated in the order written, they do not respect common arithmetic rules. I.e. `TREND+0.5*1.2` for a card with TREND value 10€ will evaluate to (10+0.5)*1.2 = 12.6€ (not 10+(0.5*1.2)=10.6€ as you would normally expect). This somewhat limits how they can be used, but you can still do for example `TREND+AVG7*0.5` to compute the average of TREND and 7 day average.
 
 ### Check for Cheap Deals
 
@@ -410,7 +437,8 @@ The following is the list of all recognized attributes. **Note that all of the a
 + **idMetaproduct**: MKM's identification number of the metaproduct this product belongs to. Metaproducts gather all cards with the same name, but from different expansions.
 + **Count**: the number of the items. It is recommended *not* to use this in you myStock.csv file. If you do, the match will be required. So if you for example have 5x some card, you write the count down in the list, then you sell one later, you will no longer get a match next time you do price update unless you manually update the Count in the myStock.csv. Synonyms: Amount.
 + **Rarity**: rarity of the card, full word, case sensitive. Valid values are: Masterpiece, Mythic, Rare, Special, Time Shifted, Uncommon, Common, Land, Token, Arena Code Card, Tip Card.
-+ **MinPrice**: the minimal price MKMTool will use when updating prices, in €.
++ **MinPrice**: the minimal price MKMTool will use when updating prices, in EUR or GBP as a formula (can be a single number), see [MyStock](#MyStock).
++ **PrescribedPrice**: the price prescribed for a particular template in Mystoc.csv, in EUR or GBP as a formula (can be a single number), see [MyStock](#MyStock).
 + **MKMTool Price**: the price assigned to the article by MKMTool, in € (not relevant for Price Update, should not be used for myStock.csv).
 + **Price - Cheapest Similar**: the price of the cheapest article currently on sale with the same attributes (not relevant for Price Update, should not be used for myStock.csv).
 + **Price**: the price of the article on MKM. Note that technically this is pointless for the Price Update module and you should not include it in your myStock.csv as it will cause you to get a match on the metacard only if your current price is exactly equal to this number.

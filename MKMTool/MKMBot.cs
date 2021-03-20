@@ -741,7 +741,9 @@ namespace MKMTool
       {
         foreach (var metacard in templatesByName.Value)
         {
-          if (metacard.MinPrice.UsesPriceGuides()) // is surely not null, otherwise it would not be in myStock
+          bool minPriceUsesGuides = metacard.MinPrice_formula.UsesPriceGuides();// is surely not null, otherwise it would not be in myStock
+          bool presPriceUsesGuides = metacard.PrescribedPrice_formula != null && metacard.PrescribedPrice_formula.UsesPriceGuides();
+          if (minPriceUsesGuides || presPriceUsesGuides)
           {
             if (MKMHelpers.SAmCommercial)
             {
@@ -749,9 +751,13 @@ namespace MKMTool
             }
             else
             {
-              metacard.RemoveAttribute(MCAttribute.MinPrice);
+              if (minPriceUsesGuides)
+                metacard.RemoveAttribute(MCAttribute.MinPrice);
+              if (presPriceUsesGuides)
+                metacard.RemoveAttribute(MCAttribute.PrescribedPrice);
               MKMHelpers.LogError("initializing MinPrice from MyStock.csv", "template for \"" + templatesByName.Key +
-                "\" uses a price guide, but you do not have a commercial account, cannot fetch price guides, this MinPrice will be ignored", false);
+                "\" uses a price guide, but you do not have a commercial account, cannot fetch price guides, the following will be ignored for this template:"
+                + (minPriceUsesGuides ? "minPrice " : "") + (presPriceUsesGuides ? "prescribedPrice" : ""), false);
             }
           }
         }
@@ -951,9 +957,9 @@ namespace MKMTool
       // compute min price first
       // Check if the card itself has MinPrice defined - won't happen for traditional update, but can for External List Appraisal
       string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
-      if (article.MinPrice != null)
+      if (article.MinPrice_formula != null)
       {
-        double dOwnMinPrice = article.MinPrice.Evaluate(cardGuides);
+        double dOwnMinPrice = article.MinPrice_formula.Evaluate(cardGuides);
         if (minPricePlayset < dOwnMinPrice)
         {
           minPricePlayset = minPriceSingle = dOwnMinPrice;
@@ -966,6 +972,7 @@ namespace MKMTool
         listArticles.AddRange(myStock[""]); // special treatment for entries that are not for a specific card name
       if (myStock.ContainsKey(articleName))
         listArticles.AddRange(myStock[articleName]);
+      MKMMetaCard bestMatchMyStockTemplate = null;
       if (listArticles.Count > 0)
       {
         // temporarily remove min price - card.Equals would otherwise resolve an equal card 
@@ -975,20 +982,24 @@ namespace MKMTool
         {
           if (card.Equals(article))
           {
+            int noAtts = card.GetNumberOfAttributes();
+            if (noAtts > bestMatchCount)
+            {
+              bestMatchMyStockTemplate = card;
+              bestMatchCount = noAtts; // if its bigger or the same
+            }
+
             if (settings.MyStockMinPriceMatch == MKMBotSettings.MinPriceMatch.Best)
             {
-              int noAtts = card.GetNumberOfAttributes();
-              if (noAtts < bestMatchCount)
-                continue;
-              else if (noAtts > bestMatchCount)// erase previous minPrice, we want this one
+              if (noAtts > bestMatchCount)// erase previous minPrice, we want this one
               {
                 minPricePlayset = -9999;
                 minPriceSingle = -9999;
               }
-              bestMatchCount = noAtts; // if its bigger or the same
+              else continue;
             }
 
-            double dMinPriceTemp = card.MinPrice.Evaluate(cardGuides);
+            double dMinPriceTemp = card.MinPrice_formula.Evaluate(cardGuides);
             if (minPricePlayset < dMinPriceTemp)
             {
               minPricePlayset = minPriceSingle = dMinPriceTemp;
@@ -1019,43 +1030,67 @@ namespace MKMTool
         return;
       
       double priceEstimationSingle = dArticleSingle; // assume the price will not change -> new price is the orig price
-      bool useToss = settings.PriceUpdateMode == MKMBotSettings.UpdateMode.TOSS;
       bool forceLog = false;
       // string describing the way the price was calculated. If nothing is calculated, the only way price is changed is
       // by ensuring min price of the current price
       string basedOnLog = "previous price being under MinPrice.";
-      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+      bool doUpdate = true;
+      if (bestMatchMyStockTemplate != null && bestMatchMyStockTemplate.PrescribedPrice_formula != null)
       {
-        double estPrice = performPriceGuideEstimation(cardGuides, article.GetAttribute(MCAttribute.Foil) == "true");
-        if (estPrice != double.NaN)
+        double price = bestMatchMyStockTemplate.PrescribedPrice_formula.Evaluate(cardGuides);
+        if (price == double.NaN)
         {
-          priceEstimationSingle = estPrice;
-          basedOnLog = "price guides.";
+          logMessage += "Prescribed price " + bestMatchMyStockTemplate.GetAttribute(MCAttribute.PrescribedPrice) +
+            " failed to evaluate, updating price as if it did not exist..." + Environment.NewLine;
+          forceLog = true;
         }
         else
         {
-          useToss = settings.GuideUseTOSSOnFail;
-          if (settings.GuideLogOnFail)
+          priceEstimationSingle = price;
+          sNewPrice = priceEstimationSingle.ToString("f2", CultureInfo.InvariantCulture);
+          if (isPlayset == "true")
+            priceEstimationSingle /= 4;
+          basedOnLog = "PrescribedPrice " + bestMatchMyStockTemplate.GetAttribute(MCAttribute.PrescribedPrice) + ".";
+          doUpdate = false;
+        }
+      }
+      if (doUpdate) // no prescribed price, calculate price using the chosen algorithm
+      {
+        bool useToss = settings.PriceUpdateMode == MKMBotSettings.UpdateMode.TOSS;
+        if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+        {
+          double estPrice = performPriceGuideEstimation(cardGuides, article.GetAttribute(MCAttribute.Foil) == "true");
+          if (estPrice != double.NaN)
           {
-            logMessage += "Guides not found" + (useToss ? (", using TOSS." + Environment.NewLine) : ", price not computed.");
-            forceLog = true;
+            priceEstimationSingle = estPrice;
+            basedOnLog = "price guides.";
+          }
+          else
+          {
+            useToss = settings.GuideUseTOSSOnFail;
+            if (settings.GuideLogOnFail)
+            {
+              logMessage += "Guides not found" + (useToss ? (", using TOSS." + Environment.NewLine) : ", price not computed.");
+              forceLog = true;
+            }
           }
         }
-      }
-      if (useToss)
-      {
-        var tossResult = performTOSS(article, ref logMessage);
-        if (tossResult.EstimatedPrice > 0)
+        if (useToss)
         {
-          priceEstimationSingle = tossResult.EstimatedPrice;
-          basedOnLog = tossResult.NumberOfItemsInSequence + " items" + (tossResult.UsedWorldWideSearch ?
-            " - worldwide search! " : ". ");
-        }
-        if (tossResult.ForceLog)
-        {
-          forceLog = tossResult.ForceLog; // only set it if it is true, don't reset to false
-        }
+          var tossResult = performTOSS(article, ref logMessage);
+          if (tossResult.EstimatedPrice > 0)
+          {
+            priceEstimationSingle = tossResult.EstimatedPrice;
+            basedOnLog = tossResult.NumberOfItemsInSequence + " items" + (tossResult.UsedWorldWideSearch ?
+              " - worldwide search! " : ". ");
+          }
+          if (tossResult.ForceLog)
+          {
+            forceLog = tossResult.ForceLog; // only set it if it is true, don't reset to false
+          }
+        }        
       }
+
       // post process the estimated price - add markup for multiple copies and ensure it does not cross the max change
       if (priceEstimationSingle > 0)
       {
@@ -1104,7 +1139,7 @@ namespace MKMTool
           }
         }
       }
-    
+
       bool calculatedPrice = true;
       if (priceEstimationSingle < minPriceSingle) // check the current price is not below minPrice, even if no new price computed - 
       {

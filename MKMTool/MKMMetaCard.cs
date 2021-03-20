@@ -106,8 +106,12 @@ namespace MKMTool
     /// Masterpiece, Mythic, Rare, Special, Time Shifted, Uncommon, Common, Land, Token, Arena Code Card, Tip Card.
     public static string Rarity { get { return "Rarity"; } }
 
-    /// The minimum price the user wants for this card.
+    /// The minimum price the user wants for this card. Can be a MKMPriceAsFormula - use the dedicated getter to get it.
     public static string MinPrice { get { return "MinPrice"; } }
+
+    /// The price the user wants for this card over any computed price.
+    /// Can be a MKMPriceAsFormula - use the dedicated getter to get it.
+    public static string PrescribedPrice { get { return "PrescribedPrice"; } }
 
     /// Price generated for this card by MKMTool (relevant only for exact card article).
     public static string MKMToolPrice { get { return "MKMTool Price"; } }
@@ -203,7 +207,8 @@ namespace MKMTool
             { "PLAYED", "Played" }, { "HEAVILY PLAYED", "Heavily Played" }// this could be either LP or PL, we will never know...let's set it to LP
         };
 
-    public MKMPriceAsFormula MinPrice { get; private set; } = null;
+    public MKMPriceAsFormula MinPrice_formula { get; private set; } = null;
+    public MKMPriceAsFormula PrescribedPrice_formula { get; private set; } = null;
 
     /// Used to set-up the dictionary of recognized attributes. If you are extending the class to internally handle some additional attribute,
     /// make sure to include it in this method and in the MCAttribute class above.
@@ -249,16 +254,9 @@ namespace MKMTool
           else if (attName == MCAttribute.Foil || attName == MCAttribute.Signed
               || attName == MCAttribute.Altered || attName == MCAttribute.Playset || attName == MCAttribute.FirstEd)
             SetBoolAttribute(attName, columnVal);
-          else if (attName == MCAttribute.MinPrice)
+          else if (attName == MCAttribute.MinPrice || attName == MCAttribute.PrescribedPrice)
           {
-            var mprice = new MKMPriceAsFormula();
-            if (mprice.Parse(columnVal))
-            {
-              MinPrice = mprice;
-              data[attName] = columnVal;
-            }
-            else
-              LogError("parsing min price", "failed to parse " + columnVal + " as a price formula, it will not be used", false);
+            SetAttribute(attName, columnVal);
           }
           // all other attributes
           else
@@ -617,14 +615,19 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
         RemoveAttribute(name);
         return;
       }
-      if (name == MCAttribute.MinPrice)
+      if (name == MCAttribute.MinPrice || name == MCAttribute.PrescribedPrice)
       {
-        MKMPriceAsFormula mPrice = new MKMPriceAsFormula();
-        if (mPrice.Parse(value))
-          MinPrice = mPrice;
+        MKMPriceAsFormula formula = new MKMPriceAsFormula();
+        if (formula.Parse(value))
+        {
+          if (name == MCAttribute.MinPrice)
+            MinPrice_formula = formula;
+          else if (name == MCAttribute.PrescribedPrice)
+            PrescribedPrice_formula = formula;
+        }
         else
         {
-          LogError("setting card attribute MinPrice", "failed to parse formula " + value + ", min price will not be used", false);
+          LogError("setting card attribute " + name, "failed to parse formula " + value + ", it will not be used", false);
           return;
         }
       }
@@ -654,7 +657,9 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
     {
       data.Remove(name);
       if (name == MCAttribute.MinPrice)
-        MinPrice = null;
+        MinPrice_formula = null;
+      else if (name == MCAttribute.PrescribedPrice)
+        PrescribedPrice_formula = null;
       // remove also all synonyms
       if (synonyms.TryGetValue(name, out var mainName)) // check if this is a registered synonym
         data.Remove(mainName);
