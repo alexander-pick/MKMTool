@@ -203,6 +203,8 @@ namespace MKMTool
             { "PLAYED", "Played" }, { "HEAVILY PLAYED", "Heavily Played" }// this could be either LP or PL, we will never know...let's set it to LP
         };
 
+    public MKMPriceAsFormula MinPrice { get; private set; } = null;
+
     /// Used to set-up the dictionary of recognized attributes. If you are extending the class to internally handle some additional attribute,
     /// make sure to include it in this method and in the MCAttribute class above.
     static MKMMetaCard()
@@ -247,6 +249,17 @@ namespace MKMTool
           else if (attName == MCAttribute.Foil || attName == MCAttribute.Signed
               || attName == MCAttribute.Altered || attName == MCAttribute.Playset || attName == MCAttribute.FirstEd)
             SetBoolAttribute(attName, columnVal);
+          else if (attName == MCAttribute.MinPrice)
+          {
+            var mprice = new MKMPriceAsFormula();
+            if (mprice.Parse(columnVal))
+            {
+              MinPrice = mprice;
+              data[attName] = columnVal;
+            }
+            else
+              LogError("parsing min price", "failed to parse " + columnVal + " as a price formula, it will not be used", false);
+          }
           // all other attributes
           else
             data[attName] = columnVal;
@@ -596,9 +609,25 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
     /// use that instead of this method to perform a check that the value is valid and that all related attributes will be set to correct values.
     /// Use SetBoolAttribute where applicable: foil, playset, signed, altered...
     /// <param name="name">The name of the attribute.</param>
-    /// <param name="value">The value.</param>
+    /// <param name="value">The value. If it is an empty string, calls RemoveAttribute.</param>
     public void SetAttribute(string name, string value)
     {
+      if (value == "")
+      {
+        RemoveAttribute(name);
+        return;
+      }
+      if (name == MCAttribute.MinPrice)
+      {
+        MKMPriceAsFormula mPrice = new MKMPriceAsFormula();
+        if (mPrice.Parse(value))
+          MinPrice = mPrice;
+        else
+        {
+          LogError("setting card attribute MinPrice", "failed to parse formula " + value + ", min price will not be used", false);
+          return;
+        }
+      }
       data[name] = value;
       // get the main name
       if (synonyms.TryGetValue(name, out var mainName)) // check if this is a registered synonym
@@ -624,6 +653,21 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
     public void RemoveAttribute(string name)
     {
       data.Remove(name);
+      if (name == MCAttribute.MinPrice)
+        MinPrice = null;
+      // remove also all synonyms
+      if (synonyms.TryGetValue(name, out var mainName)) // check if this is a registered synonym
+        data.Remove(mainName);
+      else  // if it fails, then this is a main name
+        mainName = name;
+      // now look for all synonyms for the main name
+      foreach (var entry in synonyms)
+      {
+        if (entry.Value == mainName)
+        {
+          data.Remove(entry.Key); // key are synonyms, values are main names
+        }
+      }
     }
 
     /// Generic method for obtaining values from the data object of this card. Performs a check if the value is assigned.

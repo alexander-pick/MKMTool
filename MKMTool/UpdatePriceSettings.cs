@@ -60,12 +60,36 @@ namespace MKMTool
       Text = title;
       allowedExpansionsWindow = new PopupListbox("Allowed Expansions");
       allowedCountriesWindow = new PopupListbox("Allowed Countries");
-      comboBoxPriceEstUpdateMode.SelectedIndex = 0;
       comboBoxPriceEstMinPriceMatch.SelectedIndex = 0;
       List<string> countryNames = new List<string>(MKMHelpers.CountryNames.Count);
       foreach (var code in MKMHelpers.CountryNames)
         countryNames.Add(code.Value);
       allowedCountriesWindow.SetDataSource(countryNames);
+
+      groupBoxPriceGuides.Visible = MKMHelpers.SAmCommercial;
+      if (MKMHelpers.SAmCommercial)
+      {
+        comboBoxPriceEstUpdateMode.Items.Add("Use Price Guides");
+        // fill the comboboxes for price guides
+        string tooltip = "";
+        foreach (var guideDesc in MKMHelpers.PriceGuides)
+        {
+          comboBoxPriceGuidesFoils.Items.Add(guideDesc.Value.Code);
+          comboBoxPriceGuidesNonFoils.Items.Add(guideDesc.Value.Code);
+          tooltip += guideDesc.Value.Code + ": " + guideDesc.Value.Documentation + "\n";
+          if (guideDesc.Value.Code == "TREND")
+            comboBoxPriceGuidesNonFoils.SelectedIndex = comboBoxPriceGuidesNonFoils.Items.Count - 1;
+          else if (guideDesc.Value.Code == "TRENDFOIL")
+            comboBoxPriceGuidesFoils.SelectedIndex = comboBoxPriceGuidesFoils.Items.Count - 1;
+        }
+        toolTip1.SetToolTip(comboBoxPriceGuidesFoils, tooltip);
+        toolTip1.SetToolTip(comboBoxPriceGuidesNonFoils, tooltip);
+        comboBoxPriceGuidesFoils.SelectedIndexChanged += 
+          new EventHandler(comboBoxPriceGuidesFoils_SelectedIndexChanged);
+        comboBoxPriceGuidesNonFoils.SelectedIndexChanged += 
+          new EventHandler(comboBoxPriceGuidesNonFoils_SelectedIndexChanged);
+      }
+      comboBoxPriceEstUpdateMode.SelectedIndex = 0;
 
       this.lastPresetName = lastPresetName;
       string lastPreset = Properties.Settings.Default[lastPresetName].ToString();
@@ -183,13 +207,16 @@ namespace MKMTool
       switch (comboBoxPriceEstUpdateMode.SelectedIndex)
       {
         case 0:
-          s.MinPriceUpdateMode = MKMBotSettings.UpdateMode.FullUpdate;
+          s.PriceUpdateMode = MKMBotSettings.UpdateMode.TOSS;
           break;
         case 1:
-          s.MinPriceUpdateMode = MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice;
+          s.PriceUpdateMode = MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice;
           break;
         case 2:
-          s.MinPriceUpdateMode = MKMBotSettings.UpdateMode.OnlyEnsureMinPrice;
+          s.PriceUpdateMode = MKMBotSettings.UpdateMode.OnlyEnsureMinPrice;
+          break;
+        case 3:
+          s.PriceUpdateMode = MKMBotSettings.UpdateMode.UsePriceGuides;
           break;
       }
 
@@ -201,6 +228,14 @@ namespace MKMTool
         case 1:
           s.MyStockMinPriceMatch = MKMBotSettings.MinPriceMatch.Best;
           break;
+      }
+
+      if (MKMHelpers.SAmCommercial)
+      {
+        s.SetGuideNonFoil(comboBoxPriceGuidesNonFoils.SelectedItem.ToString(), textBoxPriceGuidesNonFoil.Text);
+        s.SetGuideFoil(comboBoxPriceGuidesFoils.SelectedItem.ToString(), textBoxPriceGuidesFoils.Text);
+        s.GuideUseTOSSOnFail = checkBoxPriceGuidesTraverseNotFound.Checked;
+        s.GuideLogOnFail = checkBoxPriceGuidesLogNotFound.Checked;
       }
 
       return true;
@@ -291,9 +326,9 @@ namespace MKMTool
       checkBoxPriceEstWorldwide.Checked = settings.SearchWorldwide;
       trackBarPriceEstAvgWorld.Enabled = settings.SearchWorldwide;
 
-      switch (settings.MinPriceUpdateMode)
+      switch (settings.PriceUpdateMode)
       {
-        case MKMBotSettings.UpdateMode.FullUpdate:
+        case MKMBotSettings.UpdateMode.TOSS:
           comboBoxPriceEstUpdateMode.SelectedIndex = 0;
           break;
         case MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice:
@@ -301,6 +336,9 @@ namespace MKMTool
           break;
         case MKMBotSettings.UpdateMode.OnlyEnsureMinPrice:
           comboBoxPriceEstUpdateMode.SelectedIndex = 2;
+          break;
+        case MKMBotSettings.UpdateMode.UsePriceGuides:
+          comboBoxPriceEstUpdateMode.SelectedIndex = 3;
           break;
       }
       switch (settings.MyStockMinPriceMatch)
@@ -311,6 +349,19 @@ namespace MKMTool
         case MKMBotSettings.MinPriceMatch.Best:
           comboBoxPriceEstMinPriceMatch.SelectedIndex = 1;
           break;
+      }
+      if (MKMHelpers.SAmCommercial)
+      {
+        var index = comboBoxPriceGuidesNonFoils.Items.IndexOf(settings.GuideNonFoil);
+        if (index >= 0) // keep the default value if nothing is stored in the settings
+          comboBoxPriceGuidesNonFoils.SelectedIndex = index;
+        index = comboBoxPriceGuidesFoils.Items.IndexOf(settings.GuideFoil);
+        if (index >= 0)
+          comboBoxPriceGuidesFoils.SelectedIndex = index;
+        textBoxPriceGuidesNonFoil.Text = settings.GuideModsNonFoil;
+        textBoxPriceGuidesFoils.Text = settings.GuideModsFoil;
+        checkBoxPriceGuidesTraverseNotFound.Checked = settings.GuideUseTOSSOnFail;
+        checkBoxPriceGuidesLogNotFound.Checked = settings.GuideLogOnFail;
       }
     }
 
@@ -565,13 +616,39 @@ namespace MKMTool
     private void comboBoxPriceEstUpdateMode_SelectedIndexChanged(object sender, EventArgs e)
     {
       // Options are in this order:
-      // Full update
-      // Update only below minPrice
+      // Full update - TOSS
+      // TOSS only below minPrice
       // Only ensure minPrice
-      if (comboBoxPriceEstUpdateMode.SelectedIndex == 2)
-        groupBoxTraversal.Enabled = false;
+      // Use Price Guides
+      groupBoxPriceGuides.Enabled = comboBoxPriceEstUpdateMode.SelectedIndex == 3;
+      if (groupBoxPriceGuides.Enabled)
+        groupBoxTraversal.Enabled = checkBoxPriceGuidesTraverseNotFound.Checked;
       else
-        groupBoxTraversal.Enabled = true;
+        groupBoxTraversal.Enabled = comboBoxPriceEstUpdateMode.SelectedIndex != 2;
+    }
+
+    private void checkBoxPriceGuidesTraversalNotFound_CheckedChanged(object sender, EventArgs e)
+    {
+      // if check changed, it means priceGuides group is enabled == price update mode is Use Price Guides
+      groupBoxTraversal.Enabled = checkBoxPriceGuidesTraverseNotFound.Checked;
+    }
+
+    private void comboBoxPriceGuidesNonFoils_SelectedIndexChanged(object sender, EventArgs e)
+    {
+      if (comboBoxPriceGuidesNonFoils.SelectedItem.ToString().Contains("FOIL"))
+      {
+        MessageBox.Show("Warning: using a FOIL trend for pricing NON-FOIL cards!",
+          "FOIL trend used for NON-FOIL cards", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      }
+    }
+
+    private void comboBoxPriceGuidesFoils_SelectedIndexChanged(object sender, EventArgs e)
+    {
+      if (!comboBoxPriceGuidesFoils.SelectedItem.ToString().Contains("FOIL"))
+      {
+        MessageBox.Show("Warning: using a NON-FOIL trend for pricing FOIL cards!",
+          "NON-FOIL trend used for FOIL cards", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      }
     }
   }
 }

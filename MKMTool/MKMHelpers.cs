@@ -46,6 +46,7 @@ namespace MKMTool
     // My userId (to disregard items listed by myself when setting a new price)
     public static string SMyId = "0";
     public static string SMyCurrencyId = "1";
+    public static bool   SAmCommercial = false; // true if my account is professional or powerseller
 
     private static readonly object errorLogLock = new object();
 
@@ -142,15 +143,60 @@ namespace MKMTool
 
     // as obtained from MKMInteract.ReadGames(), key == name
     public static Dictionary<string, GameDesc> GameIDsByName = new Dictionary<string, GameDesc>
-        {
-            { "Magic the Gathering", new GameDesc("1", "1") }, { "World of Warcraft TCG", new GameDesc("2", "3") },
-            { "Yugioh", new GameDesc("3", "5") }, { "The Spoils", new GameDesc("5", "22") },
-            { "Pokémon", new GameDesc("6", "51") }, {"Force of Will",new GameDesc("7", "1018") },
-            { "Cardfight!! Vanguard", new GameDesc("8", "1019") }, { "Final Fantasy", new GameDesc("9", "1022") },
-            { "Weiß Schwarz",new GameDesc("10", "1040") }, { "Dragoborne", new GameDesc("11", "1039") },
-            { "My Little Pony", new GameDesc("12", "1041") }, {"Dragon Ball Super", new GameDesc("13", "1049") }
-        };
+    {
+        { "Magic the Gathering", new GameDesc("1", "1") }, { "World of Warcraft TCG", new GameDesc("2", "3") },
+        { "Yugioh", new GameDesc("3", "5") }, { "The Spoils", new GameDesc("5", "22") },
+        { "Pokémon", new GameDesc("6", "51") }, {"Force of Will",new GameDesc("7", "1018") },
+        { "Cardfight!! Vanguard", new GameDesc("8", "1019") }, { "Final Fantasy", new GameDesc("9", "1022") },
+        { "Weiß Schwarz",new GameDesc("10", "1040") }, { "Dragoborne", new GameDesc("11", "1039") },
+        { "My Little Pony", new GameDesc("12", "1041") }, {"Dragon Ball Super", new GameDesc("13", "1049") }
+    };
 
+    public struct PriceGuideDesc
+    {
+      public PriceGuideDesc(string code, string doc)
+      {
+        Code = code;
+        Documentation = doc;
+      }
+      public string Code { get; }
+      public string Documentation { get; }
+    }
+
+    // key == name MKM uses as column name in the PriceGuides request
+    public static Dictionary<string, PriceGuideDesc> PriceGuides = new Dictionary<string, PriceGuideDesc>
+    {
+      {"Avg. Sell Price", new PriceGuideDesc("SELL",
+        "The average sell price as shown in the chart at the website for non-foils") },
+      {"Low Price", new PriceGuideDesc("LOW",
+        "The lowest price at the market for non-foils") },
+      {"Trend Price", new PriceGuideDesc("TREND",
+        "The trend price as shown at the website (and in the chart) for non-foils") },
+      {"German Pro Low", new PriceGuideDesc("LOWGERMAN",
+        "The lowest sell price from German professional sellers") },
+      {"Suggested Price", new PriceGuideDesc("SUGGESTED",
+        "A suggested sell price for professional users, determined by an internal algorithm; this algorithm will not be made public") },
+      {"Foil Sell", new PriceGuideDesc("SELLFOIL",
+        "The average sell price as shown in the chart at the website for foils") },
+      {"Foil Low", new PriceGuideDesc("LOWFOIL",
+        "The lowest price at the market as shown at the website(for condition EX+) for foils") },
+      {"Foil Trend", new PriceGuideDesc("TRENDFOIL",
+        "The trend price as shown at the website(and in the chart) for foils") },
+      {"Low Price Ex+", new PriceGuideDesc("LOWEX+",
+        "The lowest price at the market for non-foils with condition EX or better") },
+      {"AVG1", new PriceGuideDesc("AVG1",
+        "The average sale price over the last day") },
+      {"AVG7", new PriceGuideDesc("AVG7",
+        "The average sale price over the last 7 days") },
+      {"AVG30", new PriceGuideDesc("AVG30",
+        "The average sale price over the last 30 days") },
+      {"Foil AVG1", new PriceGuideDesc("AVG1FOIL",
+        "The average sale price over the last day for foils") },
+      {"Foil AVG7", new PriceGuideDesc("AVG7FOIL",
+        "The average sale price over the last 7 days for foils") },
+      {"Foil AVG30", new PriceGuideDesc("AVG30FOIL",
+        "The average sale price over the last 30 days for foils") }
+    };
 
     /// A three-state boolean allowing "any" as the third state.
     public enum Bool3 { False = 0, True = 1, Any = 2 }

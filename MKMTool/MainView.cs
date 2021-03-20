@@ -211,10 +211,12 @@ namespace MKMTool
       {
         var doc2 = MKMInteract.RequestHelper.GetAccount();
 
+        var account = doc2["response"]["account"];
         if (Config.MyCountryCode == "") // signifies user wants auto-detect, otherwise the chosen setting overrides what we get from MKM
-          Config.MyCountryCode = doc2["response"]["account"]["country"].InnerText;
-        MKMHelpers.SMyId = doc2["response"]["account"]["idUser"].InnerText;
-        MKMHelpers.SMyCurrencyId = doc2["response"]["account"]["moneyDetails"]["idCurrency"].InnerText;
+          Config.MyCountryCode = account["country"].InnerText;
+        MKMHelpers.SMyId = account["idUser"].InnerText;
+        MKMHelpers.SMyCurrencyId = account["moneyDetails"]["idCurrency"].InnerText;
+        MKMHelpers.SAmCommercial = account["isCommercial"].InnerText != "0";
       }
       catch (Exception eError)
       {

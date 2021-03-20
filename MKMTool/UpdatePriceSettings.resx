@@ -120,6 +120,9 @@
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>366, 17</value>
   </metadata>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>366, 17</value>
+  </metadata>
   <data name="comboBoxPriceEstMinPriceMatch.ToolTip" xml:space="preserve">
     <value>Decides how are cards from myStock.csv matched to updated articles for determining minPrice: best matches with the myStock entry with the most filled in columns, highest will take the highest matching price</value>
   </data>

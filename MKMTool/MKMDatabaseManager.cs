@@ -60,6 +60,76 @@ namespace MKMTool
     /// Subset of Inventory, only single cards from games selected in config.
     public DataRow[] InventorySinglesOnly { get; private set; } = { };
 
+    /// Gets the price guides. Checks that the file storing them is not older than 2 hours, if it is, downloads new ones.
+    /// <value>The price guides. Null for non-commercial accounts or if fetching the guides fails. </value>
+    public DataTable PriceGuides 
+    {
+      private set
+      {
+        priceGuidesPriv = value;
+      }
+      get
+      {
+        if (SAmCommercial)
+        {
+          List<DataTable> gameGuides = new List<DataTable>();
+          foreach (var game in MainView.Instance.Config.Games)
+          {
+            string filename = @".\\PriceGuideDatabase\\priceguides_" + game.GameID + ".csv";
+            if (!File.Exists(filename))
+              MainView.Instance.LogMainWindow("Local price guides for game ID " + game.GameID + " not found, downloading...");
+            else if ((DateTime.Now - File.GetLastWriteTime(filename)).TotalHours > 2)
+              MainView.Instance.LogMainWindow("Local price guides for game ID " + game.GameID + " outdated, downloading...");
+            else
+            {
+              try
+              {
+                var guide = ConvertCSVtoDataTable(@".\\PriceGuideDatabase\\priceguides_" + game.GameID + ".csv");
+                gameGuides.Add(guide);
+              }
+              catch (Exception ex)
+              {
+                LogError("reading price guide files", "error reading files for game ID " + game.GameID + ": " + ex.Message, false);
+                return null;
+              }
+              continue; // do not reload the database
+            }
+
+            DataTable guides = updatePriceGuidesFiles(game);
+            if (guides != null)
+              MainView.Instance.LogMainWindow("Database created.");
+            else return null;// updateExpansionsDatabaseFiles reported the error
+            gameGuides.Add(guides);
+          }
+          if (gameGuides.Count > 0)
+          {
+            // concatenate the results into a single table
+            DataTable allGuides = gameGuides[0];
+            for (int i = 1; i < gameGuides.Count; i++)
+              allGuides.Merge(gameGuides[i]);
+            try
+            {
+              foreach (DataColumn column in allGuides.Columns)
+              {
+                if (MKMHelpers.PriceGuides.ContainsKey(column.ColumnName))
+                  column.ColumnName = MKMHelpers.PriceGuides[column.ColumnName].Code;
+              }
+            }
+            catch (Exception ex)
+            {
+              LogError("reading price guides", "unexpected column name: "
+                + ex.Message + "\nPrice guides will not be used!", true);
+              return null;
+            }
+            priceGuidesPriv = allGuides;
+            priceGuidesPriv.PrimaryKey = new DataColumn[] { priceGuidesPriv.Columns[MCAttribute.ProductID] };
+          }
+        }
+        return priceGuidesPriv; // null for non-commercial
+      }
+    }
+    private DataTable priceGuidesPriv = null;
+
     /// Hashes the indices of rows in InventorySinglesOnly by the product ID.
     /// This significantly speeds up queries in which we know product id.
     private Dictionary<string, int> singlesByProductId { get; set; }
@@ -222,7 +292,7 @@ namespace MKMTool
                 + nExpansion[ExpansionsFields.ReleaseDate].InnerText + "\"");
           }
         }
-        MainView.Instance.LogMainWindow("MKM expansions database updated.");
+        MainView.Instance.LogMainWindow("MKM expansions database for game " + game.GameID + " updated.");
       }
       catch (Exception eError)
       {
@@ -254,6 +324,39 @@ namespace MKMTool
           LogError("parsing expansion database", eError.Message, true);
         }
       }
+    }
+
+    /// Fetches the latest price guides for a given game from MKM and stores it as a CSV file.
+    /// Does NOT re-load the internal database manager structures - loadPriceGuidesDatabase has to be called once all games are up to date.
+    /// <param name="game">The game for which to load the database.</param>
+    /// <returns><c>Null</c> in case the update failed either due to bad response from MKM or IO problems,
+    /// otherwise the table with the guides.</returns>
+    private DataTable updatePriceGuidesFiles(GameDesc game)
+    {
+      if (MainView.Instance.Config.Games.Count == 0)
+      {
+        LogError("updating price guides database", "No games specified in config.xml.", true);
+        return null;
+      }
+      try
+      {
+        MainView.Instance.LogMainWindow("Updating MKM price guides database...");
+        // build expansions
+        var guidesFile = MKMInteract.RequestHelper.GetPriceGuideFile(game.GameID);
+        if (guidesFile == null || guidesFile.Length == 0)
+          return null;
+        var gameGuides = ConvertCSVtoDataTable(guidesFile);
+
+        if (!Directory.Exists(@".\\PriceGuideDatabase)"))
+          Directory.CreateDirectory(@".\\PriceGuideDatabase");
+        WriteTableAsCSV(@".\\PriceGuideDatabase\\priceguides_" + game.GameID + ".csv", gameGuides);
+        return gameGuides;
+      }
+      catch (Exception eError)
+      {
+        LogError("downloading MKM price guides", eError.Message, true);
+      }
+      return null;
     }
 
     /// Checks if the files need to be updated, if yes, calls UpdateDatabaseFiles, otherwise just loads the files.

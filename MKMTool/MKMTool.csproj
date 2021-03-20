@@ -112,6 +112,7 @@
     <Compile Include="PopupListbox.Designer.cs">
       <DependentUpon>PopupListbox.cs</DependentUpon>
     </Compile>
+    <Compile Include="MKMPriceAsFormula.cs" />
     <Compile Include="PriceExternalList.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -40,6 +40,7 @@ using System.Collections.Generic;
 
 namespace MKMTool
 {
+  using MyStock = Dictionary<string, List<MKMMetaCard>>;
   public enum PriceSetMethod { ByAverage, ByPercentageOfLowestPrice, ByPercentageOfHighestPrice };
   public enum AcceptedCondition
   {
@@ -73,10 +74,12 @@ namespace MKMTool
     /// How is min price used during price estimation.
     public enum UpdateMode
     {
-      FullUpdate, // original behaviour - the price estimation algorithm runs in full and in the end compares
-                  // computed value with minPrice, if it is lower, sets price to min price. if no price is computed, at least ensures min price
-      UpdateOnlyBelowMinPrice, // runs full update only for articles with current price below minPrice
-      OnlyEnsureMinPrice // does not run update, only checks if current price is below minPrice, if yes, sets minPrice as current
+      TOSS, // original behaviour - the price estimation algorithm based on traversal of other seller's stock (TOSS)
+                  // runs in full and in the end compares computed value with minPrice,
+                  // if it is lower, sets price to min price. if no price is computed, at least ensures min price
+      UpdateOnlyBelowMinPrice, // runs TOSS only for articles with current price below minPrice
+      OnlyEnsureMinPrice, // does not run TOSS, only checks if current price is below minPrice, if yes, sets minPrice as current
+      UsePriceGuides // uses price guides, TOSS is used only if a specific setting says so.
     }
 
     /// How is the min price from myStock matched 
@@ -122,8 +125,48 @@ namespace MKMTool
     public bool TestMode; // if set to true, price updates will be computed and logged, but not sent to MKM
     public bool SearchWorldwide; // if the minimum of items is not found in the sellers country, do a search ignoring country - used only when nothing is culled!
     public string Description; // overall description of what is this setting expected to do, written in the GUI
-    public UpdateMode MinPriceUpdateMode;
+    public UpdateMode PriceUpdateMode;
     public MinPriceMatch MyStockMinPriceMatch;
+
+    /// Price guide settings
+    public string GuideNonFoil { get; private set; }
+    public string GuideFoil { get; private set; }
+    public string GuideModsNonFoil { get; private set; }
+    public string GuideModsFoil { get; private set; }
+    public bool GuideUseTOSSOnFail, GuideLogOnFail;
+    public MKMPriceAsFormula GuideNonFoil_formula { get; private set; } = null;
+    public MKMPriceAsFormula GuideFoil_formula { get; private set; } = null;
+
+    /// Sets the formula for computing price by price guides of non-foil cards.
+    /// <param name="guideNonFoil">The first operand in the equation - must be valid price guide.</param>
+    /// <param name="guideModsNonFoil">The remainder of the formula, starting with the first operand, can be empty.</param>
+    /// <returns>True if the formula is valid.</returns>
+    public bool SetGuideNonFoil(string guideNonFoil, string guideModsNonFoil)
+    {
+      MKMPriceAsFormula formula = new MKMPriceAsFormula();
+      if (formula.Parse(guideNonFoil + guideModsNonFoil))
+      {
+        GuideNonFoil = guideNonFoil;
+        GuideModsNonFoil = guideModsNonFoil;
+        GuideNonFoil_formula = formula;
+        return true;
+      }
+      return false;
+    }
+
+    // like SetGuideNonFoil but for foils
+    public bool SetGuideFoil(string guideFoil, string guideModsFoil)
+    {
+      MKMPriceAsFormula formula = new MKMPriceAsFormula();
+      if (formula.Parse(guideFoil + guideModsFoil))
+      {
+        GuideFoil = guideFoil;
+        GuideModsFoil = guideModsFoil;
+        GuideFoil_formula = formula;
+        return true;
+      }
+      return false;
+    }
 
     public MKMBotSettings()
     {
@@ -160,8 +203,12 @@ namespace MKMTool
       LogHighPriceVariance = true;
 
       TestMode = false;
-      MinPriceUpdateMode = UpdateMode.FullUpdate;
+      PriceUpdateMode = UpdateMode.TOSS;
       MyStockMinPriceMatch = MinPriceMatch.Highest;
+
+      GuideFoil = GuideNonFoil = GuideModsFoil = GuideModsNonFoil = "";
+      GuideLogOnFail = true;
+      GuideUseTOSSOnFail = false;
     }
 
     /// Copies all settings from the specified reference settings.
@@ -202,8 +249,15 @@ namespace MKMTool
       TestMode = refSettings.TestMode;
       Description = refSettings.Description;
       SearchWorldwide = refSettings.SearchWorldwide;
-      MinPriceUpdateMode = refSettings.MinPriceUpdateMode;
+      PriceUpdateMode = refSettings.PriceUpdateMode;
       MyStockMinPriceMatch = refSettings.MyStockMinPriceMatch;
+
+      GuideFoil = refSettings.GuideFoil;
+      GuideLogOnFail = refSettings.GuideLogOnFail;
+      GuideModsFoil = refSettings.GuideModsFoil;
+      GuideModsNonFoil = refSettings.GuideModsNonFoil;
+      GuideLogOnFail = refSettings.GuideLogOnFail;
+      GuideUseTOSSOnFail = refSettings.GuideUseTOSSOnFail;
     }
 
     /// Fills this instance from data stored in XML.
@@ -340,14 +394,17 @@ namespace MKMTool
             {
               switch (att.Value)
               {
-                case "FullUpdate":
-                  temp.MinPriceUpdateMode = UpdateMode.FullUpdate;
+                case "TOSS":
+                  temp.PriceUpdateMode = UpdateMode.TOSS;
                   break;
                 case "UpdateOnlyBelowMinPrice":
-                  temp.MinPriceUpdateMode = UpdateMode.UpdateOnlyBelowMinPrice;
+                  temp.PriceUpdateMode = UpdateMode.UpdateOnlyBelowMinPrice;
                   break;
                 case "OnlyEnsureMinPrice":
-                  temp.MinPriceUpdateMode = UpdateMode.OnlyEnsureMinPrice;
+                  temp.PriceUpdateMode = UpdateMode.OnlyEnsureMinPrice;
+                  break;
+                case "UsePriceGuides":
+                  temp.PriceUpdateMode = UpdateMode.UsePriceGuides;
                   break;
               }
               break;
@@ -367,6 +424,24 @@ namespace MKMTool
             }
           case "description":
             temp.Description = att.Value;
+            break;
+          case "GuideNonFoil":
+            temp.GuideNonFoil = att.Value;
+            break;
+          case "GuideModsNonFoil":
+            temp.GuideModsNonFoil = att.Value;
+            break;
+          case "GuideFoil":
+            temp.GuideFoil = att.Value;
+            break;
+          case "GuideModsFoil":
+            temp.GuideModsFoil = att.Value;
+            break;
+          case "GuideUseTOSSOnFail":
+            temp.GuideUseTOSSOnFail = bool.Parse(att.Value);
+            break;
+          case "GuideLogOnFail":
+            temp.GuideLogOnFail = bool.Parse(att.Value);
             break;
         }
       }
@@ -448,16 +523,19 @@ namespace MKMTool
       root.SetAttribute("logHighPriceVariance", LogHighPriceVariance.ToString());
 
       root.SetAttribute("testMode", TestMode.ToString());
-      switch (MinPriceUpdateMode)
+      switch (PriceUpdateMode)
       {
-        case UpdateMode.FullUpdate:
-          root.SetAttribute("updateMode", "FullUpdate");
+        case UpdateMode.TOSS:
+          root.SetAttribute("updateMode", "TOSS");
           break;
         case UpdateMode.UpdateOnlyBelowMinPrice:
           root.SetAttribute("updateMode", "UpdateOnlyBelowMinPrice");
           break;
         case UpdateMode.OnlyEnsureMinPrice:
           root.SetAttribute("updateMode", "OnlyEnsureMinPrice");
+          break;
+        case UpdateMode.UsePriceGuides:
+          root.SetAttribute("updateMode", "UsePriceGuides");
           break;
       }
 
@@ -472,6 +550,17 @@ namespace MKMTool
       }
 
       root.SetAttribute("description", Description);
+
+      // save guides-related settings only for commercial users, non-commercial cannot use it anyway
+      if (MKMHelpers.SAmCommercial)
+      {
+        root.SetAttribute("GuideNonFoil", GuideNonFoil);
+        root.SetAttribute("GuideFoil", GuideFoil);
+        root.SetAttribute("GuideModsNonFoil", GuideModsNonFoil);
+        root.SetAttribute("GuideModsFoil", GuideModsFoil);
+        root.SetAttribute("GuideLogOnFail", GuideLogOnFail.ToString());
+        root.SetAttribute("GuideUseTOSSOnFail", GuideUseTOSSOnFail.ToString());
+      }
 
       s.AppendChild(root);
       return s;
@@ -575,19 +664,28 @@ namespace MKMTool
         MainView.Instance.LogMainWindow("All seller types excluded, need to include at least one type to be able to estimate prices.");
         return;
       }
+      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides && 
+        (settings.GuideFoil_formula == null || settings.GuideNonFoil_formula == null))
+      {
+        MainView.Instance.LogMainWindow("The update mode is set to use price guides, but invalid formulas were specified (check the formatting), cannot proceed.");
+        return;
+      }
       settings.PriceMaxChangeLimits.Clear();
       settings.LogLargePriceChangeTooHigh = false;
       settings.LogLargePriceChangeTooLow = false;
 
       MainView.Instance.LogMainWindow("Appraising card list...");
-      Dictionary<string, List<MKMMetaCard>> myStock = useMyStock ? loadMyStock() : new Dictionary<string, List<MKMMetaCard>>();
+      MyStock myStock = useMyStock ? loadMyStock() : new MyStock();
+      DataTable priceGuides = null;
+      if (myStockPriceGuidesUsage(myStock) || settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+        priceGuides = MKMDbManager.Instance.PriceGuides;
       foreach (MKMMetaCard mc in cardList)
       {
         if (isAllowedExpansion(mc.GetAttribute(MCAttribute.Expansion)))
         {
           string backupMKMPrice = mc.GetAttribute(MCAttribute.MKMPrice);
           mc.SetAttribute(MCAttribute.MKMPrice, "-9999");
-          appraiseArticle(mc, myStock);
+          appraiseArticle(mc, myStock, priceGuides);
           if (backupMKMPrice != "")
             mc.SetAttribute(MCAttribute.MKMPrice, backupMKMPrice);
           else
@@ -599,10 +697,9 @@ namespace MKMTool
     }
 
     /// Reads the myStock.csv file used for setting minimal prices during appraisal.
-    /// <returns>Dictionary of cards, key == card name or empty string for MetaCards that should ignore names.</returns>
-    private Dictionary<string, List<MKMMetaCard>> loadMyStock()
+    private MyStock loadMyStock()
     {
-      Dictionary<string, List<MKMMetaCard>> myStock = new Dictionary<string, List<MKMMetaCard>>();
+      MyStock myStock = new MyStock();
       if (File.Exists(@".//myStock.csv"))
       {
         MainView.Instance.LogMainWindow("Found myStock.csv, parsing minimal prices...");
@@ -634,6 +731,34 @@ namespace MKMTool
       return myStock;
     }
 
+    /// Checks if any of the fields in myStock uses price guides.
+    /// If our account is not commercial, they will be removed (can't get price guides).
+    /// <param name="myStock">My stock.</param>
+    /// <returns>True if any of the fields in myStock requires price guides.</returns>
+    bool myStockPriceGuidesUsage(MyStock myStock)
+    {
+      foreach (var templatesByName in myStock)
+      {
+        foreach (var metacard in templatesByName.Value)
+        {
+          if (metacard.MinPrice.UsesPriceGuides()) // is surely not null, otherwise it would not be in myStock
+          {
+            if (MKMHelpers.SAmCommercial)
+            {
+              return true;
+            }
+            else
+            {
+              metacard.RemoveAttribute(MCAttribute.MinPrice);
+              MKMHelpers.LogError("initializing MinPrice from MyStock.csv", "template for \"" + templatesByName.Key +
+                "\" uses a price guide, but you do not have a commercial account, cannot fetch price guides, this MinPrice will be ignored", false);
+            }
+          }
+        }
+      }
+      return false;
+    }
+
     public void UpdatePrices()
     {
       if (!settings.IncludePrivateSellers && !settings.IncludeProfessionalSellers && !settings.IncludePowersellers)
@@ -644,6 +769,12 @@ namespace MKMTool
       if (settings.PriceSetPriceBy == PriceSetMethod.ByPercentageOfLowestPrice && settings.PriceMaxChangeLimits.Count == 0)
       {
         MainView.Instance.LogMainWindow("Setting price according to lowest price is very risky - specify limits for maximal price change first!");
+        return;
+      }
+      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides &&
+         (settings.GuideFoil_formula == null || settings.GuideNonFoil_formula == null))
+      {
+        MainView.Instance.LogMainWindow("The update mode is set to use price guides, but invalid formulas were specified (check the formatting), cannot proceed.");
         return;
       }
       List<MKMMetaCard> articles;
@@ -657,7 +788,10 @@ namespace MKMTool
         return;
       }
       // load file with lowest prices
-      Dictionary<string, List<MKMMetaCard>> myStock = loadMyStock();
+      var myStock = loadMyStock();
+      DataTable priceGuides = null;
+      if (myStockPriceGuidesUsage(myStock) || settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+        priceGuides = MKMDbManager.Instance.PriceGuides;
 
       MainView.Instance.LogMainWindow("Updating Prices...");
       int putCounter = 0;
@@ -678,7 +812,7 @@ namespace MKMTool
 #endif
         if (isAllowedExpansion(MKMCard.GetAttribute(MCAttribute.Expansion)))
         {
-          appraiseArticle(MKMCard, myStock);
+          appraiseArticle(MKMCard, myStock, priceGuides);
           string newPrice = MKMCard.GetAttribute(MCAttribute.MKMToolPrice);
           if (newPrice != "")
           {
@@ -776,7 +910,8 @@ namespace MKMTool
     /// and also from domestic seller if worldwide search is not enabled in the settings. If price cannot be computed, the attribute will be empty.</param>
     /// <param name="myStock">A list of cards with minPrice set to compare with the computed price - MKMToolPrice will never be lower 
     /// then the highest minPrice among all matching cards in this list. Hashed by the card name.</param>
-    private void appraiseArticle(MKMMetaCard article, Dictionary<string, List<MKMMetaCard>> myStock)
+    /// <param name="priceGuides">Database with all price guides. Null if not needed.</param>
+    private void appraiseArticle(MKMMetaCard article, MyStock myStock, DataTable priceGuides)
     {
       string productID = article.GetAttribute(MCAttribute.ProductID);
       string articleName = article.GetAttribute(MCAttribute.Name);
@@ -807,11 +942,18 @@ namespace MKMTool
       string logMessage = productID + ">> " + articleName + " (" + articleExpansion + ", " +
               (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine;
 
+      // the database is empty if we know we don't need this,
+      // so this call should not be too wasteful even if for this particular card the guides are not used
+      DataRow cardGuides = null; // using null can crash calls to evaluate, but it should be set as non-null in the next line if it is used
+      if (priceGuides != null)
+        cardGuides = priceGuides.Rows.Find(productID);
+
       // compute min price first
       // Check if the card itself has MinPrice defined - won't happen for traditional update, but can for External List Appraisal
       string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
-      if (double.TryParse(sOwnMinPrice, out double dOwnMinPrice))
+      if (article.MinPrice != null)
       {
+        double dOwnMinPrice = article.MinPrice.Evaluate(cardGuides);
         if (minPricePlayset < dOwnMinPrice)
         {
           minPricePlayset = minPriceSingle = dOwnMinPrice;
@@ -826,8 +968,9 @@ namespace MKMTool
         listArticles.AddRange(myStock[articleName]);
       if (listArticles.Count > 0)
       {
-        //reset the min price - card.Equals would otherwise resolve an equal card as not equal because the cards coming from MKM do not have the Min Price
-        article.SetAttribute(MCAttribute.MinPrice, "");
+        // temporarily remove min price - card.Equals would otherwise resolve an equal card 
+        // as not equal because the cards coming from MKM do not have the Min Price
+        article.RemoveAttribute(MCAttribute.MinPrice);
         foreach (MKMMetaCard card in listArticles)
         {
           if (card.Equals(article))
@@ -844,8 +987,8 @@ namespace MKMTool
               }
               bestMatchCount = noAtts; // if its bigger or the same
             }
-            string sMinPriceTemp = card.GetAttribute(MCAttribute.MinPrice);
-            double dMinPriceTemp = Convert.ToDouble(sMinPriceTemp, CultureInfo.InvariantCulture);
+
+            double dMinPriceTemp = card.MinPrice.Evaluate(cardGuides);
             if (minPricePlayset < dMinPriceTemp)
             {
               minPricePlayset = minPriceSingle = dMinPriceTemp;
@@ -858,7 +1001,7 @@ namespace MKMTool
       }
 
       string sNewPrice = "";
-      if (settings.MinPriceUpdateMode == MKMBotSettings.UpdateMode.OnlyEnsureMinPrice)
+      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.OnlyEnsureMinPrice)
       {
         if (minPricePlayset - dArticlePlayset > 0.009)
         {
@@ -872,16 +1015,48 @@ namespace MKMTool
         }
         return;
       }
-      if (settings.MinPriceUpdateMode == MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice && minPricePlayset <= dArticlePlayset)
+      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice && minPricePlayset <= dArticlePlayset)
         return;
       
-      // run the TOSS
       double priceEstimationSingle = dArticleSingle; // assume the price will not change -> new price is the orig price
-      var tossResult = performTOSS(article, ref logMessage);
-      if (tossResult.EstimatedPrice > 0)
-        priceEstimationSingle = tossResult.EstimatedPrice;
-      bool forceLog = tossResult.ForceLog;
-      // postprocess the estimated price - add markup for multiple copies and ensure it does not cross the max change
+      bool useToss = settings.PriceUpdateMode == MKMBotSettings.UpdateMode.TOSS;
+      bool forceLog = false;
+      // string describing the way the price was calculated. If nothing is calculated, the only way price is changed is
+      // by ensuring min price of the current price
+      string basedOnLog = "previous price being under MinPrice.";
+      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+      {
+        double estPrice = performPriceGuideEstimation(cardGuides, article.GetAttribute(MCAttribute.Foil) == "true");
+        if (estPrice != double.NaN)
+        {
+          priceEstimationSingle = estPrice;
+          basedOnLog = "price guides.";
+        }
+        else
+        {
+          useToss = settings.GuideUseTOSSOnFail;
+          if (settings.GuideLogOnFail)
+          {
+            logMessage += "Guides not found" + (useToss ? (", using TOSS." + Environment.NewLine) : ", price not computed.");
+            forceLog = true;
+          }
+        }
+      }
+      if (useToss)
+      {
+        var tossResult = performTOSS(article, ref logMessage);
+        if (tossResult.EstimatedPrice > 0)
+        {
+          priceEstimationSingle = tossResult.EstimatedPrice;
+          basedOnLog = tossResult.NumberOfItemsInSequence + " items" + (tossResult.UsedWorldWideSearch ?
+            " - worldwide search! " : ". ");
+        }
+        if (tossResult.ForceLog)
+        {
+          forceLog = tossResult.ForceLog; // only set it if it is true, don't reset to false
+        }
+      }
+      // post process the estimated price - add markup for multiple copies and ensure it does not cross the max change
       if (priceEstimationSingle > 0)
       {
         // increase the estimate based on how many of those articles do we have in stock
@@ -921,8 +1096,7 @@ namespace MKMTool
                   settings.LogLargePriceChangeTooLow && priceDif < 0)
               {
                 logMessage += "NOT UPDATED - change too large: Current Price: "
-                    + articlePrice + ", Calculated Price:" + sNewPrice +
-                    ((tossResult.UsedWorldWideSearch && tossResult.EstimatedPrice > 0) ? " - worldwide search! " : ". ");
+                    + articlePrice + ", Calculated Price:" + sNewPrice + ", based on " + basedOnLog;
                 forceLog = true;
               }
             }
@@ -930,8 +1104,9 @@ namespace MKMTool
           }
         }
       }
+    
       bool calculatedPrice = true;
-      if (priceEstimationSingle < minPriceSingle)
+      if (priceEstimationSingle < minPriceSingle) // check the current price is not below minPrice, even if no new price computed - 
       {
         double priceEstimPlayset = priceEstimationSingle; // just for log
         if (isPlayset == "true")
@@ -953,10 +1128,8 @@ namespace MKMTool
         {
           if (calculatedPrice)
           {
-            string basedOn = tossResult.EstimatedPrice > 0 ? tossResult.NumberOfItemsInSequence + " items" +
-                (tossResult.UsedWorldWideSearch ? " - worldwide search! " : ". ") : "previous price being under MinPrice.";
             logMessage += "Current Price: " + articlePrice + ", Calculated Price:" + sNewPrice +
-                ", based on " + basedOn;
+                ", based on " + basedOnLog;
           }
           MainView.Instance.LogMainWindow(logMessage);
         }
@@ -1183,6 +1356,23 @@ namespace MKMTool
       return res;
     }
 
+    /// Estimates price based on price guides.
+    /// <param name="article">The article being appraised.</param>
+    /// <param name="logMessage">Messages that should be written to log are appended to this, but not printed in the console.</param>
+    /// <returns>NaN if the price guides for the given card are not found, otherwise the price computed by either
+    /// the foil or non-foil rule.</returns>
+    private double performPriceGuideEstimation(DataRow cardGuides, bool isFoil)
+    {
+      if (cardGuides == null) // should basically never happen unless there is some error in the database
+      {
+        MKMHelpers.LogError("estimating price by price guides", " product not found in the price guide database", false);
+        return double.NaN;
+      }
+      if (isFoil)
+        return settings.GuideFoil_formula.Evaluate(cardGuides);
+      else
+        return settings.GuideNonFoil_formula.Evaluate(cardGuides);
+    }
     private string getTimestamp(DateTime now)
     {
       return now.ToString("dd.MM.yyyy HH:mm:ss");

@@ -351,6 +351,26 @@ namespace MKMTool
         return MakeRequest("https://api.cardmarket.com/ws/v2.0/wantslist/" + sID, "GET");
       }
 
+      public static byte[] GetPriceGuideFile(string gameId)
+      {
+        var doc = MakeRequest("https://api.cardmarket.com/ws/v2.0/priceguide?idGame="
+            + gameId, "GET");
+
+        var node = doc.GetElementsByTagName("response");
+
+        if (node.Count > 0 && node.Item(0)["priceguidefile"].InnerText != null)
+        {
+          var data = Convert.FromBase64String(node.Item(0)["priceguidefile"].InnerText);
+          var aDecompressed = MKMHelpers.GzDecompress(data);
+          return aDecompressed;
+        }
+        else
+        {
+          MKMHelpers.LogError("getting price guide file", "failed to get the price guide file from MKM.", false);
+          return null;
+        }
+      }
+
       /// Gets our stock.
       /// <param name="start">How many first items in the stock to skip.</param>
       /// <returns>Returns the users stock, starting from the specified item and grabbing the largest amount of 
