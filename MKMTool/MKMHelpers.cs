@@ -182,7 +182,7 @@ namespace MKMTool
         "The lowest price at the market as shown at the website(for condition EX+) for foils") },
       {"Foil Trend", new PriceGuideDesc("TRENDFOIL",
         "The trend price as shown at the website(and in the chart) for foils") },
-      {"Low Price Ex+", new PriceGuideDesc("LOWEX+",
+      {"Low Price Ex+", new PriceGuideDesc("LOWEX",
         "The lowest price at the market for non-foils with condition EX or better") },
       {"AVG1", new PriceGuideDesc("AVG1",
         "The average sale price over the last day") },

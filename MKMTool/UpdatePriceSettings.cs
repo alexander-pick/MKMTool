@@ -338,7 +338,11 @@ namespace MKMTool
           comboBoxPriceEstUpdateMode.SelectedIndex = 2;
           break;
         case MKMBotSettings.UpdateMode.UsePriceGuides:
-          comboBoxPriceEstUpdateMode.SelectedIndex = 3;
+          // in case a profile created with commercial account is used by non-commercial
+          if (comboBoxPriceEstUpdateMode.Items.Count > 3)
+            comboBoxPriceEstUpdateMode.SelectedIndex = 3;
+          else
+            comboBoxPriceEstUpdateMode.SelectedIndex = 0;
           break;
       }
       switch (settings.MyStockMinPriceMatch)
