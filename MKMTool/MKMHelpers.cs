@@ -32,6 +32,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -263,7 +264,19 @@ namespace MKMTool
     public static bool IsBetterOrSameCondition(string itemCond, string reference)
     {
       return convertCondition(itemCond) >= convertCondition(reference);
+    }
 
+    /// Tries to convert a double first by InvariantCulture (. as separator), if it fails,
+    /// tries current culture.
+    /// <param name="toConvert">String to convert to double.</param>
+    /// <returns>Converted number or NaN if conversion failed.</returns>
+    public static double ConvertDoubleAnySep(string toConvert)
+    {
+      if (double.TryParse(toConvert, NumberStyles.Float, CultureInfo.InvariantCulture, out double resInv))
+        return resInv;
+      if (double.TryParse(toConvert, NumberStyles.Float, CultureInfo.CurrentCulture, out double resCur))
+        return resCur;
+      return double.NaN;
     }
 
     /// From a xml response object with prices extracts the price in the currency of our account.

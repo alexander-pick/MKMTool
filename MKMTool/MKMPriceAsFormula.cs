@@ -1,7 +1,6 @@
 ﻿
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 
 namespace MKMTool
 {
@@ -67,11 +66,10 @@ namespace MKMTool
     {
       foreach (var guideTerm in guidesToResolve)
       {
-        if (double.TryParse(priceGuides[guideTerm.Value].ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double term))
-        {
-          operands[guideTerm.Key] = term;
-        }
-        else return double.NaN;
+        double term = MKMHelpers.ConvertDoubleAnySep(priceGuides[guideTerm.Value].ToString());
+        if (double.IsNaN(term))
+          return term;
+        operands[guideTerm.Key] = term;
       }
       double val = operands[0];
       for (int i = 0; i < operators.Count; i++)
@@ -93,12 +91,8 @@ namespace MKMTool
     /// <returns>False if the parsing failed.</returns>
     private bool parseAndAddOperand(string operand)
     {
-      if (double.TryParse(operand, NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
-      {
-        operands.Add(number);
-        return true;
-      }
-      else
+      double number = MKMHelpers.ConvertDoubleAnySep(operand);
+      if (double.IsNaN(number))
       {
         foreach (var guide in MKMHelpers.PriceGuides)
         {
@@ -109,6 +103,11 @@ namespace MKMTool
             return true;
           }
         }
+      }
+      else
+      {
+        operands.Add(number);
+        return true;
       }
       return false;
     }

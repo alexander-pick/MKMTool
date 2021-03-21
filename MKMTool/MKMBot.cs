@@ -281,8 +281,8 @@ namespace MKMTool
               string[] limits = child.InnerText.Split(';');
               for (int i = 1; i < limits.Length; i += 2)
               {
-                threshold = double.Parse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture);
-                allowedChange = double.Parse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture);
+                threshold = MKMHelpers.ConvertDoubleAnySep(limits[i - 1]);
+                allowedChange = MKMHelpers.ConvertDoubleAnySep(limits[i]);
                 temp.PriceMaxChangeLimits.Add(threshold, allowedChange);
               }
               break;
@@ -292,8 +292,8 @@ namespace MKMTool
               string[] limits = child.InnerText.Split(';');
               for (int i = 1; i < limits.Length; i += 2)
               {
-                threshold = double.Parse(limits[i - 1], NumberStyles.Float, CultureInfo.InvariantCulture);
-                allowedChange = double.Parse(limits[i], NumberStyles.Float, CultureInfo.InvariantCulture);
+                threshold = MKMHelpers.ConvertDoubleAnySep(limits[i - 1]);
+                allowedChange = MKMHelpers.ConvertDoubleAnySep(limits[i]);
                 temp.PriceMaxDifferenceLimits.Add(threshold, allowedChange);
               }
               break;
@@ -316,7 +316,7 @@ namespace MKMTool
         switch (att.Name)
         {
           case "priceMinRarePrice":
-            temp.PriceMinRarePrice = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceMinRarePrice = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceMinSimilarItems":
             temp.PriceMinSimilarItems = int.Parse(att.Value, CultureInfo.InvariantCulture);
@@ -328,22 +328,22 @@ namespace MKMTool
             temp.PriceSetPriceBy = (PriceSetMethod)Enum.Parse(typeof(PriceSetMethod), att.Value);
             break;
           case "priceFactor":
-            temp.PriceFactor = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceFactor = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceFactorWorldwide":
-            temp.PriceFactorWorldwide = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceFactorWorldwide = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceMarkup2":
-            temp.PriceMarkup2 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceMarkup2 = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceMarkup3":
-            temp.PriceMarkup3 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceMarkup3 = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceMarkup4":
-            temp.PriceMarkup4 = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceMarkup4 = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceMarkupCap":
-            temp.PriceMarkupCap = double.Parse(att.Value, CultureInfo.InvariantCulture);
+            temp.PriceMarkupCap = MKMHelpers.ConvertDoubleAnySep(att.Value);
             break;
           case "priceIgnorePlaysets":
             temp.PriceIgnorePlaysets = bool.Parse(att.Value);
@@ -1059,13 +1059,9 @@ namespace MKMTool
         bool useToss = settings.PriceUpdateMode == MKMBotSettings.UpdateMode.TOSS;
         if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
         {
-          double estPrice = performPriceGuideEstimation(cardGuides, article.GetAttribute(MCAttribute.Foil) == "true");
+          bool bIsFoil = article.GetAttribute(MCAttribute.Foil) == "true";
+          double estPrice = performPriceGuideEstimation(cardGuides, bIsFoil);
           if (double.IsNaN(estPrice))
-          {
-            priceEstimationSingle = estPrice;
-            basedOnLog = "price guides.";
-          }
-          else
           {
             useToss = settings.GuideUseTOSSOnFail;
             if (settings.GuideLogOnFail)
@@ -1073,6 +1069,12 @@ namespace MKMTool
               logMessage += "Guides not found" + (useToss ? (", using TOSS." + Environment.NewLine) : ", price not computed.");
               forceLog = true;
             }
+          }
+          else
+          {
+            priceEstimationSingle = estPrice;
+            basedOnLog = "Price Guides: " + (bIsFoil ? settings.GuideFoil + settings.GuideModsFoil :
+              settings.GuideNonFoil + settings.GuideModsNonFoil);
           }
         }
         if (useToss)
