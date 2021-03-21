@@ -1029,7 +1029,7 @@ namespace MKMTool
       if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice && minPricePlayset <= dArticlePlayset)
         return;
       
-      double priceEstimationSingle = dArticleSingle; // assume the price will not change -> new price is the orig price
+      double priceEstimationSingle = double.NaN;
       bool forceLog = false;
       // string describing the way the price was calculated. If nothing is calculated, the only way price is changed is
       // by ensuring min price of the current price
@@ -1038,7 +1038,7 @@ namespace MKMTool
       if (bestMatchMyStockTemplate != null && bestMatchMyStockTemplate.PrescribedPrice_formula != null)
       {
         double price = bestMatchMyStockTemplate.PrescribedPrice_formula.Evaluate(cardGuides);
-        if (price == double.NaN)
+        if (double.IsNaN(price))
         {
           logMessage += "Prescribed price " + bestMatchMyStockTemplate.GetAttribute(MCAttribute.PrescribedPrice) +
             " failed to evaluate, updating price as if it did not exist..." + Environment.NewLine;
@@ -1060,7 +1060,7 @@ namespace MKMTool
         if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
         {
           double estPrice = performPriceGuideEstimation(cardGuides, article.GetAttribute(MCAttribute.Foil) == "true");
-          if (estPrice != double.NaN)
+          if (double.IsNaN(estPrice))
           {
             priceEstimationSingle = estPrice;
             basedOnLog = "price guides.";
@@ -1078,21 +1078,21 @@ namespace MKMTool
         if (useToss)
         {
           var tossResult = performTOSS(article, ref logMessage);
-          if (tossResult.EstimatedPrice > 0)
+          if (!double.IsNaN(tossResult.EstimatedPrice))
           {
             priceEstimationSingle = tossResult.EstimatedPrice;
             basedOnLog = tossResult.NumberOfItemsInSequence + " items" + (tossResult.UsedWorldWideSearch ?
               " - worldwide search! " : ". ");
           }
-          if (tossResult.ForceLog)
+          if (tossResult.ForceLog)  // only set it if it is true, don't reset to false
           {
-            forceLog = tossResult.ForceLog; // only set it if it is true, don't reset to false
+            forceLog = tossResult.ForceLog;
           }
         }        
       }
 
       // post process the estimated price - add markup for multiple copies and ensure it does not cross the max change
-      if (priceEstimationSingle > 0)
+      if (!double.IsNaN(priceEstimationSingle))
       {
         // increase the estimate based on how many of those articles do we have in stock
         double markupValue = 0;
@@ -1139,6 +1139,8 @@ namespace MKMTool
           }
         }
       }
+      else
+        priceEstimationSingle = dArticleSingle; // no price computed, use current price to check for minPrice
 
       bool calculatedPrice = true;
       if (priceEstimationSingle < minPriceSingle) // check the current price is not below minPrice, even if no new price computed - 
@@ -1289,11 +1291,11 @@ namespace MKMTool
     /// Performs the algorithm for estimating price based on other seller's stock.
     /// <param name="article">The article that is being appraised.</param>
     /// <param name="logMessage">Messages that should be written to log are appended to this, but not printed in the console.</param>
-    /// <returns>The estimated price, or -9999 in case price can't be estimated</returns>
+    /// <returns>The estimated price and other flags, NaN if it failed to compute.</returns>
     private TOSSResult performTOSS(MKMMetaCard article, ref string logMessage)
     {
       TOSSResult res;
-      res.EstimatedPrice = -9999;
+      res.EstimatedPrice = double.NaN;
       res.NumberOfItemsInSequence = 0;
       res.UsedWorldWideSearch = false;
       res.ForceLog = false;
