@@ -678,7 +678,15 @@ namespace MKMTool
       MyStock myStock = useMyStock ? loadMyStock() : new MyStock();
       DataTable priceGuides = null;
       if (myStockPriceGuidesUsage(myStock) || settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+      {
         priceGuides = MKMDbManager.Instance.PriceGuides;
+        if (priceGuides == null)
+        {
+          MKMHelpers.LogError("loading price guides",
+            "price guides are needed but there was an error loading them, aborting appraisal", false);
+          return;
+        }
+      }
       foreach (MKMMetaCard mc in cardList)
       {
         if (isAllowedExpansion(mc.GetAttribute(MCAttribute.Expansion)))
@@ -797,7 +805,16 @@ namespace MKMTool
       var myStock = loadMyStock();
       DataTable priceGuides = null;
       if (myStockPriceGuidesUsage(myStock) || settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
+      {
         priceGuides = MKMDbManager.Instance.PriceGuides;
+        if (priceGuides == null)
+        {
+          MKMHelpers.LogError("loading price guides", 
+            "price guides are needed but there was an error loading them, aborting price update", false);
+          RunUpdate = false;
+          return;
+        }
+      }
 
       MainView.Instance.LogMainWindow("Updating Prices...");
       int putCounter = 0;
