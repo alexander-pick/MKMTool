@@ -265,24 +265,45 @@ namespace MKMTool
         stockViewWindow.Show(this);
     }
 
-    private void updatePriceRun()
+    private void updatePriceRun(uint startFrom)
     {
-      bot.UpdatePrices();
+      bot.UpdatePrices(startFrom);
     }
 
     private async void updatePriceButton_Click(object sender, EventArgs e)
     {
-      if (settingsWindow.GenerateBotSettings(out MKMBotSettings s))
+      if (bot.RunUpdate)
       {
-        bot.SetSettings(s);
+        bot.RunUpdate = false;
+        updatePriceButton.Text = "Stopping update...";
         updatePriceButton.Enabled = false;
-        updatePriceButton.Text = "Updating...";
-        await Task.Run(() => updatePriceRun());
-        updatePriceButton.Text = "Update Prices";
-        updatePriceButton.Enabled = true;
       }
       else
-        logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
+      {
+        if (settingsWindow.GenerateBotSettings(out MKMBotSettings s))
+        {
+          uint lastUpdated = (uint)Properties.Settings.Default["LastUpdatedArticle"];
+          if (lastUpdated > 0u)
+          {
+            var result = MessageBox.Show("Last update did not finish (stopped with article #" + lastUpdated +
+              "), continue? (press No to restart from beginning, Cancel to cancel the update)",
+              "Continue last price update?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
+              lastUpdated++; // start from the next one
+            else if (result == DialogResult.No)
+              lastUpdated = 0u;
+            else
+              return;
+          }
+          bot.SetSettings(s);
+          updatePriceButton.Text = "Updating...\nClick to stop";
+          await Task.Run(() => updatePriceRun(lastUpdated));
+          updatePriceButton.Enabled = true;
+          updatePriceButton.Text = "Update Prices";
+        }
+        else
+          logBox.AppendText("Update abandoned, incorrect setting parameters." + Environment.NewLine);
+      }
     }
 
     private void updateDatabaseButton_Click(object sender, EventArgs e)
@@ -347,7 +368,7 @@ namespace MKMTool
       {
         bot.SetSettings(s);
         updatePriceButton.Text = "Updating...";
-        bot.UpdatePrices(); //mainForm
+        bot.UpdatePrices(0); //mainForm
         updatePriceButton.Text = "Update Prices";
       }
       else

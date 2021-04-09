@@ -610,7 +610,11 @@ namespace MKMTool
   internal class MKMBot
   {
     private MKMBotSettings settings;
-
+    // Is true while UpdatePrice is running, otherwise false. 
+    // Switch to false during run to terminate it prematurely.
+    // It will wait to process the current article and then terminate.
+    // The last not yet sent articles, but already computed, will be sent.
+    public bool RunUpdate { get; set; }
     public MKMBot()
     {
       settings = new MKMBotSettings();
@@ -773,7 +777,11 @@ namespace MKMTool
       return false;
     }
 
-    public void UpdatePrices()
+    /// <summary>
+    /// Updates the prices of singles in our stock.
+    /// </summary>
+    /// <param name="startFrom">Set to 0 to start from beginning of our stock, or higher to skip first N articles.</param>
+    public void UpdatePrices(uint startFrom)
     {
       if (!settings.IncludePrivateSellers && !settings.IncludeProfessionalSellers && !settings.IncludePowersellers)
       {
@@ -791,6 +799,7 @@ namespace MKMTool
         MainView.Instance.LogMainWindow("The update mode is set to use price guides, but invalid formulas were specified (check the formatting), cannot proceed.");
         return;
       }
+      RunUpdate = true;
       List<MKMMetaCard> articles;
       try
       {
@@ -799,6 +808,7 @@ namespace MKMTool
       catch (Exception error)
       {
         MKMHelpers.LogError("reading own stock, cannot continue price update", error.Message, true);
+        RunUpdate = false;
         return;
       }
       // load file with lowest prices
@@ -819,20 +829,10 @@ namespace MKMTool
       MainView.Instance.LogMainWindow("Updating Prices...");
       int putCounter = 0;
       string sRequestXML = "";
-      // to process only a limited amount of articles (to save on API requests) change the "false" on next line to "true"
-#if false
-            int startFrom = 0; // first item that will be processed - you only need to change this
-            int batchSize = 3000; // size of the batch to process at one go
-            int end = startFrom + batchSize;
-            if (end > articles.Count)
-                end = articles.Count;
-            for (; startFrom < end; startFrom++)
-            {
-                MKMMetaCard MKMCard = articles[startFrom];
-#else
-      foreach (MKMMetaCard MKMCard in articles)
+      int end = articles.Count;
+      for (; startFrom < end && RunUpdate; startFrom++)
       {
-#endif
+        MKMMetaCard MKMCard = articles[(int)startFrom];
         if (isAllowedExpansion(MKMCard.GetAttribute(MCAttribute.Expansion)))
         {
           appraiseArticle(MKMCard, myStock, priceGuides);
@@ -846,6 +846,8 @@ namespace MKMTool
               MKMInteract.RequestHelper.SendStockUpdate(sRequestXML, "PUT");
               putCounter = 0;
               sRequestXML = "";
+              Properties.Settings.Default["LastUpdatedArticle"] = startFrom;
+              Properties.Settings.Default.Save();
             }
             else
               putCounter++;
@@ -864,10 +866,16 @@ namespace MKMTool
       {
         MainView.Instance.LogMainWindow("Done. No valid/meaningful price updates created.");
       }
+      if (startFrom == end)
+        Properties.Settings.Default["LastUpdatedArticle"] = 0u; // 0 means all finished
+      else
+        Properties.Settings.Default["LastUpdatedArticle"] = startFrom;
+      Properties.Settings.Default.Save();
 
       string timeStamp = getTimestamp(DateTime.Now);
 
       MainView.Instance.LogMainWindow("Last Run finished: " + timeStamp);
+      RunUpdate = false;
     }
 
     /// For a specified card, makes an API request and gets articles on sale with the same product ID

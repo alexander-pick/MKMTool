@@ -129,7 +129,7 @@ namespace MKMTool
             if (requestCount >= requestLimit)
             {
               denyAdditionalRequests = true;
-              denyTime = System.DateTime.UtcNow;
+              denyTime = DateTime.UtcNow;
             }
             MainView.Instance.Invoke(new MainView.UpdateRequestCountCallback(MainView.Instance.UpdateRequestCount), requestCount, requestLimit);
             break;

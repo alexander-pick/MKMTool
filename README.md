@@ -7,10 +7,12 @@
 ## Latest changes
 
 **Version 0.8.2.0, 30.3.2021**
-+ Added support for setting price by price guide, but only for commercial sellers (private sellers have access to necessary API requests blocked by cardmarket - not MKMTool's fault). Price is specified as a simplified formula using numbers or any of the valid price guides as operands and multiplication, addition and subtraction as operators (no parenthesis). See documentation in the [Price Update](#Price-Update) section for details.
++ Added support for setting price by price guide, but only for commercial sellers (private sellers have access to necessary API requests blocked by Cardmarket - not MKMTool's fault). Price is specified as a simplified formula using numbers or any of the valid price guides as operands and multiplication, addition and subtraction as operators (no parenthesis). See documentation in the [Price Update](#Price-Update) section for details.
 + MinPrice in myStock.csv can be defined as a formula using price guides.
 + Added "PrescribedPrice" attribute for entries in myStock.csv. It can be specified as a formula (allows using price guides). If the "best matching template" (= most columns in myStock filled with non-empty values) has a PrescribedPrice, it will be used to set the price over any algorithm set in the Update Price settings GUI. It will still use markup for multiple copies and respect max price change limits and minPrice.
 + Rearranged Update Price Settings GUI to separate settings related to traversal of other seller's stock from other settings
++ When Update Price is running (not in bot mode) you can now stop it by pressing the update price button again. See [Price Update documentation](#Price-Update) for details.
++ You can now continue Price Update from where it ended last time if it did not process all your cards. Message box will ask you when pressing the Price Update button. See [Price Update documentation](#Price-Update) for details.
 
 **Version 0.8.1.0, 22.2.2021**
 + In order to deal with recent drop in Cardmarket's API reliability, requests that time out either on MKMTool's or Cardmarket's side are now automatically repeated (after an additional 1.5s delay) up to a MaxTimeoutRepeat times (new parameter in config.xml, default is 4). You will still receive a "request timed out" error if all repeated attempts fail.
@@ -213,6 +215,10 @@ This function will update all your card sale prices, all you need to do is press
 The base algorithm is called "TOSS" - Traversal of Other Seller's Stock. It is based on analyzing "similar items" being sold. This is a sequence of cards sold by **other** MKM users in **the same country as you** that are the same as the one you are trying to sell. "The same" means they have the same name, expansion, foil/nonfoil, signed/altered and playset/single statuses. Condition is always either the same or better and will be discussed later. Once the sequence is determined, the price is computed based either on the average or on the lowest or highest prices from the sequence. The sequence is always ordered from the cheapest items up. If the algorithm at some points finds out that it does not need another similar item, it stops reading them and just the ones found so far are used to compute the price. Hence the prices will always be a bit skewed towards the cheaper offers.
 
 If you have a commercial account (professional or powerseller), you can also use price guides instead of / in combination with TOSS (the API does not provide the necessary request to non-commercial sellers, not MKMTool's fault).
+
+ When Update Price is running (not in bot mode) you can stop it by pressing the update price button again. MKMTool will finish processing the current article (can take a few seconds if it is waiting on some API request) and then send to Cardmarket the articles that were already computed but not yet sent (normally MKMTool sends them in batches of 100).
+
+MKMTool remembers the number of the last updated (sent to Cardmarket) article. If price update finishes prematurely (closing MKMTool or stopping price update), next time you run Price Update a message box will ask you if you want to continue from the last time or restart. Note that if your stock has changed significantly, some articles can be missed if you continue: MKMTool remembers simply how many articles were processed, not which ones.
 
 The following figure shows the settings window. Each of the parameters will now be described in details, going from top to bottom, left to right:
 
