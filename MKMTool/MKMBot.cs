@@ -718,12 +718,13 @@ namespace MKMTool
         try
         {
           DataTable stock = MKMCsvUtils.ConvertCSVtoDataTable(@".//myStock.csv");
-          if (stock.Columns.Contains(MCAttribute.MinPrice))
+          if (stock.Columns.Contains(MCAttribute.MinPrice) || stock.Columns.Contains(MCAttribute.PrescribedPrice))
           {
             foreach (DataRow dr in stock.Rows)
             {
               MKMMetaCard card = new MKMMetaCard(dr);
-              if (card.GetAttribute(MCAttribute.MinPrice) != "") // if it does not have defined min price, it will be useless here
+              // if it does not have defined min or prescribed price, it will be useless here
+              if (card.GetAttribute(MCAttribute.MinPrice) != "" || card.GetAttribute(MCAttribute.PrescribedPrice) != "")
               {
                 string name = card.GetAttribute(MCAttribute.Name);
                 if (!myStock.ContainsKey(name))
@@ -753,7 +754,7 @@ namespace MKMTool
       {
         foreach (var metacard in templatesByName.Value)
         {
-          bool minPriceUsesGuides = metacard.MinPrice_formula.UsesPriceGuides();// is surely not null, otherwise it would not be in myStock
+          bool minPriceUsesGuides = metacard.MinPrice_formula != null && metacard.MinPrice_formula.UsesPriceGuides();
           bool presPriceUsesGuides = metacard.PrescribedPrice_formula != null && metacard.PrescribedPrice_formula.UsesPriceGuides();
           if (minPriceUsesGuides || presPriceUsesGuides)
           {
@@ -1008,28 +1009,30 @@ namespace MKMTool
           if (card.Equals(article))
           {
             int noAtts = card.GetNumberOfAttributes();
-
-            if (settings.MyStockMinPriceMatch == MKMBotSettings.MinPriceMatch.Best)
+            if (card.MinPrice_formula != null)
             {
-              if (noAtts > bestMatchCount)// erase previous minPrice, we want this one
+              if (settings.MyStockMinPriceMatch == MKMBotSettings.MinPriceMatch.Best)
               {
-                minPricePlayset = -9999;
-                minPriceSingle = -9999;
+                if (noAtts > bestMatchCount)// erase previous minPrice, we want this one
+                {
+                  minPricePlayset = -9999;
+                  minPriceSingle = -9999;
+                }
+                else continue;
               }
-              else continue;
+
+              double dMinPriceTemp = card.MinPrice_formula.Evaluate(cardGuides);
+              if (minPricePlayset < dMinPriceTemp)
+              {
+                minPricePlayset = minPriceSingle = dMinPriceTemp;
+                if (isPlayset == "true")
+                  minPriceSingle /= 4;
+              }
             }
             if (noAtts > bestMatchCount)
             {
               bestMatchMyStockTemplate = card;
               bestMatchCount = noAtts; // if its bigger or the same
-            }
-
-            double dMinPriceTemp = card.MinPrice_formula.Evaluate(cardGuides);
-            if (minPricePlayset < dMinPriceTemp)
-            {
-              minPricePlayset = minPriceSingle = dMinPriceTemp;
-              if (isPlayset == "true")
-                minPriceSingle /= 4;
             }
           }
         }
