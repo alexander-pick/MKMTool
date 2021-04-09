@@ -253,7 +253,7 @@ namespace MKMTool
       MyStockMinPriceMatch = refSettings.MyStockMinPriceMatch;
 
       GuideFoil = refSettings.GuideFoil;
-      GuideLogOnFail = refSettings.GuideLogOnFail;
+      GuideNonFoil = refSettings.GuideNonFoil;
       GuideModsFoil = refSettings.GuideModsFoil;
       GuideModsNonFoil = refSettings.GuideModsNonFoil;
       GuideLogOnFail = refSettings.GuideLogOnFail;
@@ -956,19 +956,19 @@ namespace MKMTool
       // **playset are equal to **single in non-playset case, all string prices are always prices for playset when applicable
       double dArticlePlayset = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
       double dArticleSingle = dArticlePlayset;
-      double minPricePlayset = 0.005;// minimum price MKM accepts for a single article is 0.02€
+      double minPriceSingle = 0.02;// minimum price MKM accepts for a single article is 0.02€
       string articleRarity = article.GetAttribute(MCAttribute.Rarity);
       int bestMatchCount = 0; // used for MKMBotSettings.MinPriceMatch.Best, treat it as 1 if we matched by rarity from
       if (articleRarity == "Rare" || articleRarity == "Mythic")
       {
-        minPricePlayset = settings.PriceMinRarePrice;
+        minPriceSingle = settings.PriceMinRarePrice;
         bestMatchCount = 1;
       }
-      double minPriceSingle = minPricePlayset;
+      double minPricePlayset = minPriceSingle;
       if (isPlayset == "true")
       {
         dArticleSingle /= 4;
-        minPricePlayset *= 4;
+        minPriceSingle /= 4;
       }
       string logMessage = productID + ">> " + articleName + " (" + articleExpansion + ", " +
               (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine;
@@ -1008,11 +1008,6 @@ namespace MKMTool
           if (card.Equals(article))
           {
             int noAtts = card.GetNumberOfAttributes();
-            if (noAtts > bestMatchCount)
-            {
-              bestMatchMyStockTemplate = card;
-              bestMatchCount = noAtts; // if its bigger or the same
-            }
 
             if (settings.MyStockMinPriceMatch == MKMBotSettings.MinPriceMatch.Best)
             {
@@ -1022,6 +1017,11 @@ namespace MKMTool
                 minPriceSingle = -9999;
               }
               else continue;
+            }
+            if (noAtts > bestMatchCount)
+            {
+              bestMatchMyStockTemplate = card;
+              bestMatchCount = noAtts; // if its bigger or the same
             }
 
             double dMinPriceTemp = card.MinPrice_formula.Evaluate(cardGuides);
