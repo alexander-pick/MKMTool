@@ -648,7 +648,8 @@ namespace MKMTool
 
     private void comboBoxPriceGuidesFoils_SelectedIndexChanged(object sender, EventArgs e)
     {
-      if (!comboBoxPriceGuidesFoils.SelectedItem.ToString().Contains("FOIL"))
+      var chosenText = comboBoxPriceGuidesFoils.SelectedItem.ToString();
+      if (!chosenText.Contains("FOIL") && chosenText != "CURRENT")
       {
         MessageBox.Show("Warning: using a NON-FOIL trend for pricing FOIL cards!",
           "NON-FOIL trend used for FOIL cards", MessageBoxButtons.OK, MessageBoxIcon.Warning);

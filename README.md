@@ -7,6 +7,7 @@
 ## Latest changes
 
 **Version 0.8.2.0, 30.3.2021**
++ **Changed the meaning of minPrice in mystock.csv for playsets: ** before, the minPrice meant the price of the entire playset. Now, minPrice is always price of a single card, whether you sell it as a playset or not.
 + Added support for setting price by price guide, but only for commercial sellers (private sellers have access to necessary API requests blocked by Cardmarket - not MKMTool's fault). Price is specified as a simplified formula using numbers or any of the valid price guides as operands and multiplication, addition and subtraction as operators (no parenthesis). See documentation in the [Price Update](#Price-Update) section for details.
 + MinPrice in myStock.csv can be defined as a formula using price guides.
 + Added "PrescribedPrice" attribute for entries in myStock.csv. It can be specified as a formula (allows using price guides). If the "best matching template" (= most columns in myStock filled with non-empty values) has a PrescribedPrice, it will be used to set the price over any algorithm set in the Update Price settings GUI. It will still use markup for multiple copies and respect max price change limits and minPrice.
@@ -279,6 +280,7 @@ We are always getting 150 cheapest articles to use for the price estimation, so 
   + AVG1FOIL: The average sale price over the last day for foils
   + AVG7FOIL: The average sale price over the last 7 days for foils
   + AVG30FOIL: The average sale price over the last 30 days for foils
+  + CURRENT: Not really a price guide, this is your current price of the card
 
 + Use TOSS when price guide not found: In some cases, particular price guides might not be available for a given card (e.g. for cards that do not sell often, data might not be available). If this checkbox is checked, TOSS will be used as a failsafe in this case.
 + Write to log when price guide not found: Whether to log the failure or not to find the guides.
@@ -439,11 +441,11 @@ The following is the list of all recognized attributes. **Note that all of the a
 + **Foil**: whether it is foil or not. Valid values are (all case insensitive): "true" or "foil" for foil cards, "false" for non-foil cards, "null" or empty for when you do not care. Synonyms: Foil?.
 + **Signed**: whether it is signed or not. Valid values are (all case insensitive): "true" or "signed" for signed cards, "false" for non-signed cards, "null" or empty for when you do not care. Synonyms: Signed?.
 + **Altered**: whether it is altered or not. Valid values are (all case insensitive): "true" or "altered" for altered cards, "false" for non-altered cards, "null" or empty for when you do not care. Synonyms: Altered Art, Altered?.
-+ **Playset**: whether it is a playset or not. Valid values are (all case insensitive): "true" for playsets, "false" for non-playsets cards, "null" or empty for when you do not care. Note that for playsets, the MinPrice is the price for the entire playset, not a single unit, regardless of whether you are using the "treat playsets as single cards" option or not. Synonyms: Playset?.
++ **Playset**: whether it is a playset or not. Valid values are (all case insensitive): "true" for playsets, "false" for non-playsets cards, "null" or empty for when you do not care. Note that for playsets, the MinPrice is still the price of a single card, regardless of whether you are using the "treat playsets as single cards" option or not. Synonyms: Playset?.
 + **idMetaproduct**: MKM's identification number of the metaproduct this product belongs to. Metaproducts gather all cards with the same name, but from different expansions.
 + **Count**: the number of the items. It is recommended *not* to use this in you myStock.csv file. If you do, the match will be required. So if you for example have 5x some card, you write the count down in the list, then you sell one later, you will no longer get a match next time you do price update unless you manually update the Count in the myStock.csv. Synonyms: Amount.
 + **Rarity**: rarity of the card, full word, case sensitive. Valid values are: Masterpiece, Mythic, Rare, Special, Time Shifted, Uncommon, Common, Land, Token, Arena Code Card, Tip Card.
-+ **MinPrice**: the minimal price MKMTool will use when updating prices, in EUR or GBP as a formula (can be a single number), see [MyStock](#MyStock).
++ **MinPrice**: the minimal price MKMTool will use when updating prices, in EUR or GBP as a formula (can be a single number), see [MyStock](#MyStock). Note that this is always price of a single card, even if your article is a playset (the minPrice will be multiplied by 4 as necessary, you just enter price for a single).
 + **PrescribedPrice**: the price prescribed for a particular template in Mystoc.csv, in EUR or GBP as a formula (can be a single number), see [MyStock](#MyStock).
 + **MKMTool Price**: the price assigned to the article by MKMTool, in € (not relevant for Price Update, should not be used for myStock.csv).
 + **Price - Cheapest Similar**: the price of the cheapest article currently on sale with the same attributes (not relevant for Price Update, should not be used for myStock.csv).

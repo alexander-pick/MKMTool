@@ -953,23 +953,21 @@ namespace MKMTool
       string articleExpansion = article.GetAttribute(MCAttribute.Expansion);
       string articleLanguage = article.GetAttribute(MCAttribute.Language);
       string articlePrice = article.GetAttribute(MCAttribute.MKMPrice);
-      string isPlayset = article.GetAttribute(MCAttribute.Playset);
-      // **playset are equal to **single in non-playset case, all string prices are always prices for playset when applicable
-      double dArticlePlayset = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
-      double dArticleSingle = dArticlePlayset;
+      bool isPlayset = article.GetAttribute(MCAttribute.Playset) == "true";
+      double dArticleCurPrice = Convert.ToDouble(articlePrice, CultureInfo.InvariantCulture);
+      double dArticleSingle = dArticleCurPrice;
       double minPriceSingle = 0.02;// minimum price MKM accepts for a single article is 0.02€
+      if (isPlayset)
+      {
+        minPriceSingle /= 4;
+        dArticleSingle /= 4;
+      }
       string articleRarity = article.GetAttribute(MCAttribute.Rarity);
       int bestMatchCount = 0; // used for MKMBotSettings.MinPriceMatch.Best, treat it as 1 if we matched by rarity from
       if (articleRarity == "Rare" || articleRarity == "Mythic")
       {
         minPriceSingle = settings.PriceMinRarePrice;
         bestMatchCount = 1;
-      }
-      double minPricePlayset = minPriceSingle;
-      if (isPlayset == "true")
-      {
-        dArticleSingle /= 4;
-        minPriceSingle /= 4;
       }
       string logMessage = productID + ">> " + articleName + " (" + articleExpansion + ", " +
               (articleLanguage != "" ? articleLanguage : "unknown language") + ")" + Environment.NewLine;
@@ -985,12 +983,10 @@ namespace MKMTool
       string sOwnMinPrice = article.GetAttribute(MCAttribute.MinPrice);
       if (article.MinPrice_formula != null)
       {
-        double dOwnMinPrice = article.MinPrice_formula.Evaluate(cardGuides);
-        if (minPricePlayset < dOwnMinPrice)
+        double dOwnMinPrice = article.MinPrice_formula.Evaluate(cardGuides, dArticleSingle);
+        if (minPriceSingle < dOwnMinPrice)
         {
-          minPricePlayset = minPriceSingle = dOwnMinPrice;
-          if (isPlayset == "true")
-            minPriceSingle /= 4;
+          minPriceSingle = dOwnMinPrice;
         }
       }
       List<MKMMetaCard> listArticles = new List<MKMMetaCard>();
@@ -1015,18 +1011,15 @@ namespace MKMTool
               {
                 if (noAtts > bestMatchCount)// erase previous minPrice, we want this one
                 {
-                  minPricePlayset = -9999;
                   minPriceSingle = -9999;
                 }
                 else continue;
               }
 
-              double dMinPriceTemp = card.MinPrice_formula.Evaluate(cardGuides);
-              if (minPricePlayset < dMinPriceTemp)
+              double dMinPriceTemp = card.MinPrice_formula.Evaluate(cardGuides, dArticleSingle);
+              if (minPriceSingle < dMinPriceTemp)
               {
-                minPricePlayset = minPriceSingle = dMinPriceTemp;
-                if (isPlayset == "true")
-                  minPriceSingle /= 4;
+                minPriceSingle = dMinPriceTemp;
               }
             }
             if (noAtts > bestMatchCount)
@@ -1042,11 +1035,12 @@ namespace MKMTool
       string sNewPrice = "";
       if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.OnlyEnsureMinPrice)
       {
-        if (minPricePlayset - dArticlePlayset > 0.009)
+        if (minPriceSingle - dArticleSingle > 0.009)
         {
-          sNewPrice = minPricePlayset.ToString("f2", CultureInfo.InvariantCulture);
+          var minPriceArticle = isPlayset ? minPriceSingle * 4 : minPriceSingle;
+          sNewPrice = minPriceArticle.ToString("f2", CultureInfo.InvariantCulture);
           article.SetAttribute(MCAttribute.MKMToolPrice, sNewPrice);
-          if (settings.LogSmallPriceChange || minPricePlayset > dArticlePlayset + settings.PriceMinRarePrice)
+          if (settings.LogSmallPriceChange || minPriceArticle > dArticleCurPrice + settings.PriceMinRarePrice)
           {
             logMessage += "Current Price: " + articlePrice + ", using minPrice:" + sNewPrice + ".";
             MainView.Instance.LogMainWindow(logMessage);
@@ -1054,7 +1048,8 @@ namespace MKMTool
         }
         return;
       }
-      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice && minPricePlayset <= dArticlePlayset)
+      if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UpdateOnlyBelowMinPrice 
+        && minPriceSingle <= dArticleSingle)
         return;
       
       double priceEstimationSingle = double.NaN;
@@ -1065,7 +1060,7 @@ namespace MKMTool
       bool doUpdate = true;
       if (bestMatchMyStockTemplate != null && bestMatchMyStockTemplate.PrescribedPrice_formula != null)
       {
-        double price = bestMatchMyStockTemplate.PrescribedPrice_formula.Evaluate(cardGuides);
+        double price = bestMatchMyStockTemplate.PrescribedPrice_formula.Evaluate(cardGuides, dArticleSingle);
         if (double.IsNaN(price))
         {
           logMessage += "Prescribed price " + bestMatchMyStockTemplate.GetAttribute(MCAttribute.PrescribedPrice) +
@@ -1075,9 +1070,10 @@ namespace MKMTool
         else
         {
           priceEstimationSingle = price;
-          sNewPrice = priceEstimationSingle.ToString("f2", CultureInfo.InvariantCulture);
-          if (isPlayset == "true")
-            priceEstimationSingle /= 4;
+          if (isPlayset)
+            sNewPrice = (priceEstimationSingle * 4).ToString("f2", CultureInfo.InvariantCulture);
+          else
+            sNewPrice = priceEstimationSingle.ToString("f2", CultureInfo.InvariantCulture);
           basedOnLog = "PrescribedPrice " + bestMatchMyStockTemplate.GetAttribute(MCAttribute.PrescribedPrice) + ".";
           doUpdate = false;
         }
@@ -1088,7 +1084,7 @@ namespace MKMTool
         if (settings.PriceUpdateMode == MKMBotSettings.UpdateMode.UsePriceGuides)
         {
           bool bIsFoil = article.GetAttribute(MCAttribute.Foil) == "true";
-          double estPrice = performPriceGuideEstimation(cardGuides, bIsFoil);
+          double estPrice = performPriceGuideEstimation(cardGuides, bIsFoil, dArticleSingle);
           if (double.IsNaN(estPrice))
           {
             useToss = settings.GuideUseTOSSOnFail;
@@ -1126,7 +1122,7 @@ namespace MKMTool
       {
         // increase the estimate based on how many of those articles do we have in stock
         double markupValue = 0;
-        if (settings.PriceIgnorePlaysets && isPlayset == "true")
+        if (settings.PriceIgnorePlaysets && isPlayset)
           markupValue = priceEstimationSingle * settings.PriceMarkup4;
         else if (int.TryParse(article.GetAttribute(MCAttribute.Count), NumberStyles.Any,
             CultureInfo.InvariantCulture, out int iCount))
@@ -1145,7 +1141,7 @@ namespace MKMTool
         // just a temporary to correctly convert priceEstimation to string based on is/isn't playset; is/isn't less than minimum allowed price (0.02€)
         double priceToSet = priceEstimationSingle;
         // if we are ignoring the playset flag -> dPrice/priceEstim are for single item, but sPrices for 4x
-        if (settings.PriceIgnorePlaysets && isPlayset == "true")
+        if (settings.PriceIgnorePlaysets && isPlayset)
           priceToSet *= 4;
         sNewPrice = priceToSet.ToString("f2", CultureInfo.InvariantCulture);
         // check it is not above the max price change limits
@@ -1175,12 +1171,11 @@ namespace MKMTool
       bool calculatedPrice = true;
       if (priceEstimationSingle < minPriceSingle) // check the current price is not below minPrice, even if no new price computed - 
       {
-        double priceEstimPlayset = priceEstimationSingle; // just for log
-        if (isPlayset == "true")
-          priceEstimPlayset *= 4;
+        double priceEstimCalculated = isPlayset ? priceEstimationSingle * 4 : priceEstimationSingle;
         priceEstimationSingle = minPriceSingle;
-        sNewPrice = minPricePlayset.ToString("f2", CultureInfo.InvariantCulture);
-        string sEstim = priceEstimPlayset.ToString("f2", CultureInfo.InvariantCulture);
+        var minPriceArticle = isPlayset ? minPriceSingle * 4 : minPriceSingle;
+        sNewPrice = minPriceArticle.ToString("f2", CultureInfo.InvariantCulture);
+        string sEstim = priceEstimCalculated.ToString("f2", CultureInfo.InvariantCulture);
         logMessage += "Calculated price too low (" + sEstim + "), using minPrice " + sNewPrice;
         calculatedPrice = false;
       }
@@ -1426,9 +1421,10 @@ namespace MKMTool
     /// Estimates price based on price guides.
     /// <param name="article">The article being appraised.</param>
     /// <param name="logMessage">Messages that should be written to log are appended to this, but not printed in the console.</param>
+    /// <param name="article">The single price of the article being appraised.</param>
     /// <returns>NaN if the price guides for the given card are not found, otherwise the price computed by either
     /// the foil or non-foil rule.</returns>
-    private double performPriceGuideEstimation(DataRow cardGuides, bool isFoil)
+    private double performPriceGuideEstimation(DataRow cardGuides, bool isFoil, double currenPriceSingle)
     {
       if (cardGuides == null) // should basically never happen unless there is some error in the database
       {
@@ -1436,9 +1432,9 @@ namespace MKMTool
         return double.NaN;
       }
       if (isFoil)
-        return settings.GuideFoil_formula.Evaluate(cardGuides);
+        return settings.GuideFoil_formula.Evaluate(cardGuides, currenPriceSingle);
       else
-        return settings.GuideNonFoil_formula.Evaluate(cardGuides);
+        return settings.GuideNonFoil_formula.Evaluate(cardGuides, currenPriceSingle);
     }
     private string getTimestamp(DateTime now)
     {

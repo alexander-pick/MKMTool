@@ -196,7 +196,9 @@ namespace MKMTool
       {"Foil AVG7", new PriceGuideDesc("AVG7FOIL",
         "The average sale price over the last 7 days for foils") },
       {"Foil AVG30", new PriceGuideDesc("AVG30FOIL",
-        "The average sale price over the last 30 days for foils") }
+        "The average sale price over the last 30 days for foils") },
+      {"Current", new PriceGuideDesc("CURRENT",
+        "Not really a price guide, this is your current price of the card") }
     };
 
     /// A three-state boolean allowing "any" as the third state.

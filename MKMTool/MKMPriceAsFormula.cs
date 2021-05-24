@@ -61,12 +61,17 @@ namespace MKMTool
     /// Uses the provided price guides to compute the price according to the formula.
     /// <param name="priceGuides">Row from the priceGuides table containing guides for the card for which to evaluate this formula.
     /// If this formula UsesPriceGuides, must be set to contain all the columns, otherwise exception is thrown.</param>
+    /// <param name="currentPrice">Our current sale price of the card (can be used as a guide).</param>
     /// <returns>The final price this formula evaluates to. NaN if the necessary guides are not found.</returns>
-    public double Evaluate(DataRow priceGuides)
+    public double Evaluate(DataRow priceGuides, double currentPriceSingle)
     {
+      double term;
       foreach (var guideTerm in guidesToResolve)
       {
-        double term = MKMHelpers.ConvertDoubleAnySep(priceGuides[guideTerm.Value].ToString());
+        if (guideTerm.Value == "CURRENT")
+          term = currentPriceSingle;
+        else
+          term = MKMHelpers.ConvertDoubleAnySep(priceGuides[guideTerm.Value].ToString());
         if (double.IsNaN(term))
           return term;
         operands[guideTerm.Key] = term;
