@@ -7,6 +7,7 @@
 ## Latest changes
 
 **Version 0.8.2.0, 30.3.2021**
+Note: releasing on 29.9.2021, while API is still not fully functional. The new features were tested back in March on a professional account, it is unclear if and how they will work further on.
 + **Changed the meaning of minPrice in mystock.csv for playsets: ** before, the minPrice meant the price of the entire playset. Now, minPrice is always price of a single card, whether you sell it as a playset or not.
 + Added support for setting price by price guide, but only for commercial sellers (private sellers have access to necessary API requests blocked by Cardmarket - not MKMTool's fault). Price is specified as a simplified formula using numbers or any of the valid price guides as operands and multiplication, addition and subtraction as operators (no parenthesis). See documentation in the [Price Update](#Price-Update) section for details.
 + MinPrice in myStock.csv can be defined as a formula using price guides.
@@ -171,7 +172,7 @@ The preferred way is to compile MKMTool yourself, which is easier than it sounds
 
 If you do not want to do that, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.8.1.0.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
+https://tomasjanak.github.io/MKMTool0.8.2.0.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile: on the cardmarket website, click Account -> API Settings and generate tokens for "Dedicated App" (you can put anything you want as the app name). You need an account which is able to sell to use most of the seller functions. Once you generate it, four random strings of letters and numbers will appear there, copy-pasete those to your config.xml (see how-to run below for details).
 
