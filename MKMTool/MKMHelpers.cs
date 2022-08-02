@@ -150,7 +150,9 @@ namespace MKMTool
         { "Pokémon", new GameDesc("6", "51") }, {"Force of Will",new GameDesc("7", "1018") },
         { "Cardfight!! Vanguard", new GameDesc("8", "1019") }, { "Final Fantasy", new GameDesc("9", "1022") },
         { "Weiß Schwarz",new GameDesc("10", "1040") }, { "Dragoborne", new GameDesc("11", "1039") },
-        { "My Little Pony", new GameDesc("12", "1041") }, {"Dragon Ball Super", new GameDesc("13", "1049") }
+        { "My Little Pony", new GameDesc("12", "1041") }, {"Dragon Ball Super", new GameDesc("13", "1049") },
+        { "Star Wars: Destiny", new GameDesc("15", "1072") }, { "Flesh and Blood", new GameDesc("16", "1601") },
+        { "Digimon", new GameDesc("17", "1611") }
     };
 
     public struct PriceGuideDesc

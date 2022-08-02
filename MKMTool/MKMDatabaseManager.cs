@@ -218,6 +218,11 @@ namespace MKMTool
         var node = doc.GetElementsByTagName("response");
         var data = Convert.FromBase64String(node.Item(0)["productsfile"].InnerText);
         var aDecompressed = GzDecompress(data);
+
+        // temp fix for missing header
+        string header = "\"idProduct\",\"Name\",\"Category ID\",\"Category\",\"Expansion ID\",\"Metacard ID\",\"Date Added\"\n";
+        var headerBytes = Encoding.ASCII.GetBytes(header);
+        aDecompressed = headerBytes.Concat(aDecompressed).ToArray();
         var downloadedProducts = ConvertCSVtoDataTable(aDecompressed);
 
         // only join the downloaded with the current version, so that we don't overwrite other

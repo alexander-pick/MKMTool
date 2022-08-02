@@ -51,6 +51,9 @@
       <!-- Dragoborne; -->
       <!-- My Little Pony; -->
       <!-- Dragon Ball Super; -->
+      <!-- Star Wars: Destiny; -->
+      <!-- Flesh and Blood; -->
+      <!-- Digimon; -->
     </Games>
     <!--separator for columns for exported CSVs, should be ; or , use anything else at your own risk-->
     <CSVExportSeparator>,</CSVExportSeparator>
