@@ -155,6 +155,8 @@ namespace MKMTool
         { "Digimon", new GameDesc("17", "1611") }
     };
 
+    public const int MaxNbItemsPerRequest = 100; // limit by MKM
+
     public struct PriceGuideDesc
     {
       public PriceGuideDesc(string code, string doc)

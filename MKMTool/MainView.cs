@@ -98,8 +98,17 @@ namespace MKMTool
                 break;
               case "ArticleCountFetched":
                 if (int.TryParse(setting.InnerText, out int maxArticlesFetched))
+                {
                   // must be positive, but at most 1000
                   MaxArticlesFetched = Math.Min(Math.Max(maxArticlesFetched, 1), 1000);
+                  if (MaxArticlesFetched > MKMHelpers.MaxNbItemsPerRequest)
+                  {
+                    MainView.Instance.LogMainWindow("Warning: ArticleCountFetched set to more than " +
+                      MKMHelpers.MaxNbItemsPerRequest + ", one API request per each " + MKMHelpers.MaxNbItemsPerRequest +
+                      " is needed. Your setting will use " + (((MaxArticlesFetched - 1) / MKMHelpers.MaxNbItemsPerRequest) + 1) + 
+                      " requests per article when using TOSS");
+                  }
+                }
                 break;
               case "MaxTimeoutRepeat":
                 if (int.TryParse(setting.InnerText, out int maxTimeoutRepeat))

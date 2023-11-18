@@ -917,14 +917,38 @@ namespace MKMTool
           userType = "commercial"; // includes professional sellers and powersellers
         else if (settings.IncludePowersellers)
           userType = "powerseller";
-        sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
-                    (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
-                    (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
-                    (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
-                    (isFirstEd != "" ? "&isFirstEd=" + isFirstEd : "") + (userType != "" ? "&userType=" + userType : "") +
-                    "&start=0&maxResults=" + maxNbItems;
 
-        return MKMInteract.RequestHelper.MakeRequest(sUrl, "GET").GetElementsByTagName("article");
+        var nItemsToFetch = Math.Min(MKMHelpers.MaxNbItemsPerRequest, maxNbItems);
+        XmlDocument allArticles = new XmlDocument();
+        var rootElement = allArticles.CreateElement("root");
+        var start = 0;
+        while (maxNbItems > 0)
+        {
+          sUrl = "https://api.cardmarket.com/ws/v2.0/articles/" + productID +
+                      (languageID != "" ? "?idLanguage=" + card.GetAttribute(MCAttribute.LanguageID) : "") +
+                      (condition != "" ? "&minCondition=" + condition : "") + (isFoil != "" ? "&isFoil=" + isFoil : "") +
+                      (isSigned != "" ? "&isSigned=" + isSigned : "") + (isAltered != "" ? "&isAltered=" + isAltered : "") +
+                      (isFirstEd != "" ? "&isFirstEd=" + isFirstEd : "") + (userType != "" ? "&userType=" + userType : "") +
+                      "&start=" + start + "&maxResults=" + nItemsToFetch;
+          var fetchedArticlesDocument = MKMInteract.RequestHelper.MakeRequest(sUrl, "GET");
+          var fetchedArticles = fetchedArticlesDocument.GetElementsByTagName("article");
+          foreach (XmlNode node in fetchedArticles)
+          {
+            XmlNode imported = allArticles.ImportNode(node, true);
+            rootElement.AppendChild(imported);
+          }
+          if (fetchedArticles.Count == nItemsToFetch)
+          {
+            maxNbItems -= nItemsToFetch;
+            nItemsToFetch = Math.Min(MKMHelpers.MaxNbItemsPerRequest, maxNbItems);
+            start += nItemsToFetch;
+          }
+          else 
+          {
+            break;
+          }
+        }
+        return rootElement.ChildNodes; // select all nodes, we appended only article nodes anyway
       }
       catch (Exception eError)
       {
