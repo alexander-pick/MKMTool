@@ -99,6 +99,7 @@ namespace MKMTool
               row += separ + card[i].ToString().Replace("\"", "\"\"") + "\"";
             exp.WriteLine(row);
           }
+          exp.Flush();
         }
       }
       catch (Exception eError)

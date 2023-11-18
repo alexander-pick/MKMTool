@@ -177,7 +177,10 @@ namespace MKMTool
       buildDatabase();
     }
 
-    ~MKMDbManager()
+    /// If the database got updated, save it to a .csv file.
+    /// Do not call from destructor - we want the main view to still be operational
+    /// so that we can correctly report errors in writing the database.
+    public void OnBeforeMKMToolCloses()
     {
       if (inventory.GetChanges() != null)
       {

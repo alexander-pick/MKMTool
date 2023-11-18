@@ -452,5 +452,10 @@ namespace MKMTool
       else
         priceExternalListWindow.Show(this);
     }
+
+    private void mainView_FormClosing(object sender, FormClosingEventArgs e)
+    {
+      MKMDbManager.Instance.OnBeforeMKMToolCloses();
+    }
   }
 }

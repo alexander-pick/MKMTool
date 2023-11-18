@@ -70,9 +70,9 @@
       // 
       // logBox
       // 
-      this.logBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-      | System.Windows.Forms.AnchorStyles.Left)
-      | System.Windows.Forms.AnchorStyles.Right)));
+      this.logBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.logBox.Location = new System.Drawing.Point(109, 11);
       this.logBox.Margin = new System.Windows.Forms.Padding(2);
       this.logBox.Multiline = true;
@@ -269,6 +269,7 @@
       this.MinimumSize = new System.Drawing.Size(760, 462);
       this.Name = "MainView";
       this.Text = "MKMTool 0.6 - Alexander Pick 2017 - Licensed under GPL v3 ";
+      this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.mainView_FormClosing);
       this.groupBox1.ResumeLayout(false);
       this.groupBox1.PerformLayout();
       this.ResumeLayout(false);
