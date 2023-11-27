@@ -6,6 +6,12 @@
 
 ## Latest changes
 
+**Version 0.8.2.1, 28.11.2023**
++ Fix price update failing when using ArticleCountFetched config setting of more than 100. Now still works with up to 1000, but each 100 costs 1 API call per cards -> default set to 100
++ Fix local cards database saved as corrupted file when closing MKMTool, so that local data had to be refreshed every run, using up a lot of request to fetch rarities and slowing appraisal
++ Fix foil cards being priced as non-foil
++ Fix foil cards from foil-only set not being updated
+
 **Version 0.8.2.0, 30.3.2021**
 Note: releasing on 29.9.2021, while API is still not fully functional. The new features were tested back in March on a professional account, it is unclear if and how they will work further on.
 + **Changed the meaning of minPrice in mystock.csv for playsets: ** before, the minPrice meant the price of the entire playset. Now, minPrice is always price of a single card, whether you sell it as a playset or not.
@@ -172,7 +178,7 @@ The preferred way is to compile MKMTool yourself, which is easier than it sounds
 
 If you do not want to do that, here is a build for Windows (64-bit):
 
-https://tomasjanak.github.io/MKMTool0.8.2.0.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
+https://github.com/tomasjanak/tomasjanak.github.io/blob/master/MKMTool0.8.2.1.zip, compiled by [Tomas Janak](https://github.com/tomasjanak)). **IF YOU ARE UPDATING FROM A VERSION OLDER THAN 1.12.2020, delete mkminventory.csv file in your bin folder before starting MKMTool. But from now on, try to always keep this file even as you update to new versions, it will store additional data about cards in your stock so that MKMTool can use less API requests and be faster.**
 
 Before you can use the tool please rename config_template.xml to config.xml and add the apptoken details you can generate in your magiccardmarket profile: on the cardmarket website, click Account -> API Settings and generate tokens for "Dedicated App" (you can put anything you want as the app name). You need an account which is able to sell to use most of the seller functions. Once you generate it, four random strings of letters and numbers will appear there, copy-pasete those to your config.xml (see how-to run below for details).
 

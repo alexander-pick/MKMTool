@@ -191,10 +191,12 @@ namespace MKMTool
       /// <returns>The body of the API request.</returns>
       public static string ChangeStockArticleBody(MKMMetaCard card, string sNewPrice)
       {
+        bool isFoil = card.GetAttribute(MCAttribute.Foil) == "true";
         var XMLContent = "<article>" +
                          "<idArticle>" + card.GetAttribute(MCAttribute.ArticleID) + "</idArticle>" +
                          "<price>" + sNewPrice + "</price>" +
                          "<idLanguage>" + card.GetAttribute(MCAttribute.LanguageID) + "</idLanguage>" +
+                         (isFoil ? "<isFoil>true</isFoil>" : "") +
                          new XElement("comments", card.GetAttribute(MCAttribute.Comments)) + // to escape special characters (&, <, > etc.)
                          "<count>" + card.GetAttribute(MCAttribute.Count) + "</count>" +
                          "<condition>" + card.GetAttribute(MCAttribute.Condition) + "</condition>" +
@@ -278,14 +280,21 @@ namespace MKMTool
           {
             var xUpdatedArticles = rdoc.GetElementsByTagName("updatedArticles");
             var xNotUpdatedArticles = rdoc.GetElementsByTagName("notUpdatedArticles");
-            foreach (XmlNode node in xNotUpdatedArticles)
-              failed += node.InnerText;
             // there is always at least one element of each updated and notUpdated articles, but it can be empty if nothing succeeded/failed
             // problem is, if exactly one failed, there will still be one element, so we need to disambiguate it
             iUpdated = xUpdatedArticles.Count;
             if (iUpdated == 1 && xUpdatedArticles[0].InnerText == "")
               iUpdated = 0;
-            iFailed = failed == "" ? 0 : xNotUpdatedArticles.Count;
+            iFailed = xNotUpdatedArticles.Count;
+            if (iFailed == 1 && xNotUpdatedArticles[0].InnerText == "")
+            {
+              iFailed = 0;
+            }
+            else if (iFailed > 0)
+            {
+              foreach (XmlNode node in xNotUpdatedArticles)
+                failed += node.InnerXml.ToString() + System.Environment.NewLine;
+            }
           }
           else if (method == "POST")
           {
