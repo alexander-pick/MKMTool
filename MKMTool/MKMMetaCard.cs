@@ -581,9 +581,11 @@ NOT STORED          reprint: [                  // Reprint entities for each sim
           break;
         case "yes":
         case "x": // this is used by GET STOCK FILE
+        case "1":
           toWrite = "true";
           break;
         case "no":
+        case "0":
           toWrite = "false";
           break;
         case "any":
