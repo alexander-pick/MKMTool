@@ -238,6 +238,8 @@ namespace MKMTool
       checkDisplayPricesWindow = new CheckDisplayPrices();
       wantlistEditorViewWindow = new WantlistEditorView();
       priceExternalListWindow = new PriceExternalList();
+      
+      //dumpGames();
     }
 
     /// Logs a messages in the application's main window within the main thread by using Delegate.Invoke
@@ -465,6 +467,19 @@ namespace MKMTool
     private void mainView_FormClosing(object sender, FormClosingEventArgs e)
     {
       MKMDbManager.Instance.OnBeforeMKMToolCloses();
+    }
+
+    /// Dumps the games supported by MKM to file. Currently used only for updating the source code
+    /// manually -> there is no permanent hook for it. 
+    /// TODO: make MKMHelpers.GameIDsByName read the games from file created by this.
+    private void dumpGames()
+    {
+      var allGames = MKMInteract.RequestHelper.ReadGames();
+      using (StreamWriter sw = new StreamWriter(@".\\gameslist.xml"))
+      {
+        sw.Write(allGames.InnerXml);
+        sw.Flush();
+      }
     }
   }
 }

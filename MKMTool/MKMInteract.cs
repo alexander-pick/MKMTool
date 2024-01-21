@@ -560,6 +560,10 @@ namespace MKMTool
         return MakeRequest("https://api.cardmarket.com/ws/v2.0/products/find?search="
             + cardname + "&idGame=1&maxResults=100&idLanguage=" + languageID + "&start=" + start, "GET");
       }
+      public static XmlDocument ReadGames()
+      {
+        return MakeRequest("https://api.cardmarket.com/ws/v2.0/games", "GET");
+      }
     }
   }
 }

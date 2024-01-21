@@ -152,7 +152,8 @@ namespace MKMTool
         { "Weiß Schwarz",new GameDesc("10", "1040") }, { "Dragoborne", new GameDesc("11", "1039") },
         { "My Little Pony", new GameDesc("12", "1041") }, {"Dragon Ball Super", new GameDesc("13", "1049") },
         { "Star Wars: Destiny", new GameDesc("15", "1072") }, { "Flesh and Blood", new GameDesc("16", "1601") },
-        { "Digimon", new GameDesc("17", "1611") }
+        { "Digimon", new GameDesc("17", "1611") }, { "One Piece", new GameDesc("18", "1621") },
+        { "Lorcana", new GameDesc("19", "1629") }, { "Battle Spirits Saga", new GameDesc("20", "1633") }
     };
 
     public const int MaxNbItemsPerRequest = 100; // limit by MKM
@@ -169,6 +170,7 @@ namespace MKMTool
     }
 
     // key == name MKM uses as column name in the PriceGuides request
+    // ! keep in sync with MKMMetaCard.priceGuidesDatabaseDictionary
     public static Dictionary<string, PriceGuideDesc> PriceGuides = new Dictionary<string, PriceGuideDesc>
     {
       {"Avg. Sell Price", new PriceGuideDesc("SELL",
@@ -184,9 +186,9 @@ namespace MKMTool
       {"Foil Sell", new PriceGuideDesc("SELLFOIL",
         "The average sell price as shown in the chart at the website for foils") },
       {"Foil Low", new PriceGuideDesc("LOWFOIL",
-        "The lowest price at the market as shown at the website(for condition EX+) for foils") },
+        "The lowest price at the market as shown at the website (for condition EX+) for foils") },
       {"Foil Trend", new PriceGuideDesc("TRENDFOIL",
-        "The trend price as shown at the website(and in the chart) for foils") },
+        "The trend price as shown at the website (and in the chart) for foils") },
       {"Low Price Ex+", new PriceGuideDesc("LOWEX",
         "The lowest price at the market for non-foils with condition EX or better") },
       {"AVG1", new PriceGuideDesc("AVG1",

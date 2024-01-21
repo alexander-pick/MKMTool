@@ -54,6 +54,9 @@
       <!-- Star Wars: Destiny; -->
       <!-- Flesh and Blood; -->
       <!-- Digimon; -->
+      <!-- One Piece; -->
+      <!-- Lorcana; -->
+      <!-- Battle Spirits Saga; -->
     </Games>
     <!--separator for columns for exported CSVs, should be ; or , use anything else at your own risk-->
     <CSVExportSeparator>,</CSVExportSeparator>
