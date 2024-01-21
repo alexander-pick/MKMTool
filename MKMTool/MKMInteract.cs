@@ -56,10 +56,12 @@ namespace MKMTool
       /// <param name="url">The http URL of the API.</param>
       /// <param name="method">The name of the request method (PUT, GET, etc.).</param>
       /// <param name="body">The body containing parameters of the method if applicable.</param>
+      /// <param name="timeout">Timeout for the request in ms, default is 100s.</param>
       /// <returns>Document containing the response from MKM. In some cases this can empty (when the response is "nothing matches your request").</returns>
       /// <exception cref="HttpListenerException">429 - Too many requests. Wait for 0:00 CET for request counter to reset.</exception>
       /// <exception cref="APIProcessingExceptions">Many different network-based exceptions.</exception>
-      public static XmlDocument MakeRequest(string url, string method, string body = null)
+      public static XmlDocument MakeRequest(string url, string method, 
+        string body = null, int timeout = 100000)
       {
         // throw the exception ourselves to prevent sending requests to MKM that would end with this error 
         // because MKM tends to revoke the user's app token if it gets too many requests above the limit
@@ -114,6 +116,7 @@ namespace MKMTool
               writer.Close();
             }
 
+            request.Timeout = timeout;
             var response = request.GetResponse() as HttpWebResponse;
 
             // just for checking EoF, it is not accessible directly from the Stream object
@@ -401,7 +404,7 @@ namespace MKMTool
       private static byte[] getStockFile(string gameId)
       {
         var doc = MakeRequest("https://api.cardmarket.com/ws/v2.0/stock/file?idGame="
-            + gameId, "GET");
+            + gameId, "GET", null, System.Threading.Timeout.Infinite);
 
         var node = doc.GetElementsByTagName("response");
 
